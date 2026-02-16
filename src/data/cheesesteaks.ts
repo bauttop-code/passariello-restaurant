@@ -1,0 +1,68 @@
+import { Product } from '../components/ProductCard';
+
+export const cheesesteaksProducts: Product[] = [
+  {
+    id: 'chstk1',
+    name: 'Create Your Own Cheesesteak',
+    description: 'Served on a 10" Italian Hoagie Roll.',
+    price: '$11.49',
+    image: 'https://drive.google.com/thumbnail?id=1PwM-L0U02a1w5xXAjtV0R_ZMvx-rQF-e&sz=w1000',
+    category: 'cheesesteaks',
+  },
+  {
+    id: 'chstk2',
+    name: 'Create Your Own Chicken Cheesesteak',
+    description: 'Served on a 10" Italian Hoagie Roll.',
+    price: '$11.49',
+    image: 'https://drive.google.com/thumbnail?id=1Fx0PHxIDwjvFEbffTUTgh2xDPkreB4lJ&sz=w1000',
+    category: 'cheesesteaks',
+  },
+  {
+    id: 'chstk3',
+    name: 'Chicken Cheesesteak Hoagie',
+    description: 'Shredded lettuce, sliced tomato, raw onions, american cheese, salt, oregano, and olive oil. Served on a 10" Italian Hoagie Roll.',
+    price: '$13.49',
+    image: 'https://drive.google.com/thumbnail?id=1L7-DTkegOJhGo-uUa35fSO63POdj48Iu&sz=w1000',
+    category: 'cheesesteaks',
+  },
+  {
+    id: 'chstk4',
+    name: 'Cooper Passiesteak',
+    description: '12 Oz of steak, grilled onions, and cooper sharp american cheese. Served on a 10" Italian Hoagie Roll.',
+    price: '$16.49',
+    image: 'https://drive.google.com/thumbnail?id=1m-BNxQhjF7T5Uh4niUXZ9k-FgUmCN0QC&sz=w1000',
+    category: 'cheesesteaks',
+  },
+  {
+    id: 'chstk5',
+    name: 'Buffalo Chicken Cheesesteak',
+    description: 'Mixed with our homemade spicy buffalo sauce and topped with american cheese. Served on a 10" Italian Hoagie Roll.',
+    price: '$13.49',
+    image: 'https://drive.google.com/thumbnail?id=1wdi20gglk8r1UeMCGYqL8HtF5eXapqvj&sz=w1000',
+    category: 'cheesesteaks',
+  },
+  {
+    id: 'chstk6',
+    name: 'Cheesesteak Hoagie',
+    description: 'Shredded lettuce, sliced tomato, raw onions, american cheese, salt, oregano, and olive oil. Served on a 10" Italian Hoagie Roll.',
+    price: '$13.49',
+    image: 'https://drive.google.com/thumbnail?id=1l1uQAlK4gjIFIRYBhEliMi3bdUwbbG-4&sz=w1000',
+    category: 'cheesesteaks',
+  },
+  {
+    id: 'chstk7',
+    name: "Passariello's Cheesesteak",
+    description: 'Grilled onions, mixed sweet peppers, mushrooms and american cheese. Served on a 10" Italian Hoagie Roll.',
+    price: '$13.99',
+    image: 'https://drive.google.com/thumbnail?id=1hJiubSoOK4bBdSl5vI85hKuI_vk3T4CN&sz=w1000',
+    category: 'cheesesteaks',
+  },
+  {
+    id: 'chstk8',
+    name: 'Pizza Steak',
+    description: 'Pomodoro sauce and melted mozzarella. Served on a 10" Italian Hoagie Roll.',
+    price: '$13.49',
+    image: 'https://drive.google.com/thumbnail?id=1yclsRCsLvgsOwwBoXqfJfgUu6nLyQiXi&sz=w1000',
+    category: 'cheesesteaks',
+  },
+];

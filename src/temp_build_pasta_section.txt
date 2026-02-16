@@ -1,0 +1,206 @@
+
+          {/* Build Your Own Pasta Customization - Only for cp-1 */}
+          {product.id === 'cp-1' && (
+            <>
+              {/* Pasta Type Selection */}
+              <Collapsible open={isIncludedOpen} onOpenChange={setIsIncludedOpen}>
+                <CollapsibleTrigger asChild>
+                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
+                    <div className="flex flex-col items-start gap-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>1. Pasta Type</span>
+                        <span className="text-white font-bold" style={{fontSize: 'calc(1em + 3px)'}}>(Required)</span>
+                      </div>
+                    </div>
+                    {isIncludedOpen ? (
+                      <ChevronUp className="w-6 h-6" />
+                    ) : (
+                      <ChevronDown className="w-6 h-6" />
+                    )}
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="relative border border-t-0 rounded-b-lg p-5">
+                  <div 
+                    className="absolute inset-0 pointer-events-none opacity-30 rounded-b-lg"
+                    style={{ 
+                      backgroundImage: `url(${backgroundTexture})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center'
+                    }}
+                  />
+                  <div className="relative z-10 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {kidsPastaTypes.map((pastaType) => {
+                        const isSelected = selectedBuildPastaType === pastaType.id;
+                        return (
+                          <div
+                            key={pastaType.id}
+                            onClick={() => setSelectedBuildPastaType(pastaType.id)}
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-white ${
+                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            }`}
+                          >
+                            <div className="w-14 h-14 flex-shrink-0 relative">
+                              <ImageWithFallback
+                                src={KIDS_PASTA_TYPE_IMAGES[pastaType.id]}
+                                alt={pastaType.name}
+                                className="w-full h-full object-cover"
+                              />
+                              {isSelected && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                  <div className="bg-white rounded-full p-0.5">
+                                    <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 px-4 py-3 flex items-center justify-between">
+                              <span className="text-gray-900">{pastaType.name}</span>
+                              {pastaType.price > 0 && (
+                                <span className="text-sm text-gray-900">+${pastaType.price.toFixed(2)}</span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+
+              {/* Select Your Preferred Type (Sauce) */}
+              <Collapsible open={isSideToppingsOpen} onOpenChange={setIsSideToppingsOpen}>
+                <CollapsibleTrigger asChild>
+                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between mt-4">
+                    <div className="flex flex-col items-start gap-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>2. Select Your Preferred Type</span>
+                        <span className="text-white font-bold" style={{fontSize: 'calc(1em + 3px)'}}>(Required)</span>
+                      </div>
+                    </div>
+                    {isSideToppingsOpen ? (
+                      <ChevronUp className="w-6 h-6" />
+                    ) : (
+                      <ChevronDown className="w-6 h-6" />
+                    )}
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="relative border border-t-0 rounded-b-lg p-5">
+                  <div 
+                    className="absolute inset-0 pointer-events-none opacity-30 rounded-b-lg"
+                    style={{ 
+                      backgroundImage: `url(${backgroundTexture})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center'
+                    }}
+                  />
+                  <div className="relative z-10 space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {kidsPastaSauces.map((sauce) => {
+                        const isSelected = selectedBuildPastaSauce === sauce.id;
+                        return (
+                          <div
+                            key={sauce.id}
+                            onClick={() => setSelectedBuildPastaSauce(sauce.id)}
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-white ${
+                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            }`}
+                          >
+                            <div className="w-14 h-14 flex-shrink-0 relative">
+                              <ImageWithFallback
+                                src={KIDS_PASTA_SAUCE_IMAGES[sauce.id]}
+                                alt={sauce.name}
+                                className="w-full h-full object-cover"
+                              />
+                              {isSelected && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                  <div className="bg-white rounded-full p-0.5">
+                                    <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 px-4 py-3 flex items-center justify-between">
+                              <span className="text-gray-900">{sauce.name}</span>
+                              {sauce.price > 0 && (
+                                <span className="text-sm text-gray-900">+${sauce.price.toFixed(2)}</span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+
+              {/* Add Toppings */}
+              <Collapsible open={isAdditionalOpen} onOpenChange={setIsAdditionalOpen}>
+                <CollapsibleTrigger asChild>
+                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between mt-4">
+                    <div className="flex flex-col items-start gap-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>3. Add Toppings</span>
+                      </div>
+                    </div>
+                    {isAdditionalOpen ? (
+                      <ChevronUp className="w-6 h-6" />
+                    ) : (
+                      <ChevronDown className="w-6 h-6" />
+                    )}
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="relative border border-t-0 rounded-b-lg p-5">
+                  <div 
+                    className="absolute inset-0 pointer-events-none opacity-30 rounded-b-lg"
+                    style={{ 
+                      backgroundImage: `url(${backgroundTexture})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center'
+                    }}
+                  />
+                  <div className="relative z-10 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {kidsPastaToppings.map((topping) => {
+                        const isSelected = selectedBuildPastaToppings.includes(topping.id);
+                        return (
+                          <div
+                            key={topping.id}
+                            onClick={() => {
+                              if (isSelected) {
+                                setSelectedBuildPastaToppings(selectedBuildPastaToppings.filter(id => id !== topping.id));
+                              } else {
+                                setSelectedBuildPastaToppings([...selectedBuildPastaToppings, topping.id]);
+                              }
+                            }}
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-white ${
+                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            }`}
+                          >
+                            <div className="w-14 h-14 flex-shrink-0 relative">
+                              <ImageWithFallback
+                                src={KIDS_PASTA_TOPPING_IMAGES[topping.id]}
+                                alt={topping.name}
+                                className="w-full h-full object-cover"
+                              />
+                              {isSelected && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                  <div className="bg-white rounded-full p-0.5">
+                                    <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 px-4 py-3 flex items-center justify-between">
+                              <span className="text-gray-900">{topping.name}</span>
+                              <span className="text-sm text-gray-900">+${topping.price.toFixed(2)}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            </>
+          )}

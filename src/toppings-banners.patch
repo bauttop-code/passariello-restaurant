@@ -1,0 +1,244 @@
+diff --git a/components/ProductDetailPage.tsx b/components/ProductDetailPage.tsx
+index original..modified 100644
+--- a/components/ProductDetailPage.tsx
++++ b/components/ProductDetailPage.tsx
+@@ -7993,1 +7993,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between mt-4">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between mt-4">
+@@ -8100,1 +8100,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between mt-4">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between mt-4">
+@@ -8183,1 +8183,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -8393,1 +8393,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -8769,1 +8769,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -9010,1 +9010,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -9251,1 +9251,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -9500,1 +9500,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -9918,1 +9918,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -10160,1 +10160,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -10319,1 +10319,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -10373,1 +10373,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -10609,1 +10609,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -10776,1 +10776,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -10830,1 +10830,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -11657,1 +11657,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -11715,1 +11715,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -11773,1 +11773,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -12172,1 +12172,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -12231,1 +12231,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -12289,1 +12289,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -12419,1 +12419,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -12559,1 +12559,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -12633,1 +12633,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -12711,1 +12711,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -12808,1 +12808,1 @@
+-                    <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                    <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -12885,1 +12885,1 @@
+-                    <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between mt-4">
++                    <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between mt-4">
+@@ -12978,1 +12978,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between mt-4">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between mt-4">
+@@ -13047,1 +13047,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between mt-4">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between mt-4">
+@@ -13133,1 +13133,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -13213,1 +13213,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between mt-4">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between mt-4">
+@@ -13292,1 +13292,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between mt-4">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between mt-4">
+@@ -13361,1 +13361,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between mt-4">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between mt-4">
+@@ -13432,1 +13432,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -13504,1 +13504,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between mt-4">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between mt-4">
+@@ -13573,1 +13573,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between mt-4">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between mt-4">
+@@ -13726,1 +13726,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between mt-4">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between mt-4">
+@@ -13790,1 +13790,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between mt-4">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between mt-4">
+@@ -13864,1 +13864,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -14157,1 +14157,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -14219,1 +14219,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -14281,1 +14281,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -14343,1 +14343,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -14406,1 +14406,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -14546,1 +14546,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -14620,1 +14620,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -14698,1 +14698,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -14760,1 +14760,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -14823,1 +14823,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -14885,1 +14885,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -14956,1 +14956,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -15027,1 +15027,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -15098,1 +15098,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -15169,1 +15169,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -15231,1 +15231,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -15293,1 +15293,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -15354,1 +15354,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -15471,1 +15471,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -15581,1 +15581,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -15691,1 +15691,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -15801,1 +15801,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -15922,1 +15922,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -16151,1 +16151,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -16229,1 +16229,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -16309,1 +16309,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -16373,1 +16373,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -16892,1 +16892,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -17411,1 +17411,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -18028,1 +18028,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -18510,1 +18510,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -19238,1 +19238,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -19562,1 +19562,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -20005,1 +20005,1 @@
+-              <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++              <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -20326,1 +20326,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -20385,1 +20385,1 @@
+-                    <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                    <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -20474,1 +20474,1 @@
+-                  <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                  <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -20538,1 +20538,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -20935,1 +20935,1 @@
+-                <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -21187,1 +21187,1 @@
+-              <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++              <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+@@ -21324,1 +21324,1 @@
+-              <button className="w-full bg-[#A72020] text-white p-5 rounded-lg flex items-center justify-between">
++              <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
