@@ -5037,7 +5037,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
           switch (category) {
             case 'Side Soups, Salads, & Extra Bread':
                // Parse traditional dinners salads/bread
-               if (product.category === 'traditional-dinners') {
+               if (product.category === 'traditional-dinners' || (product.category === 'seafood' && (product.id === 'sf-11' || product.id === 'sf-12'))) {
                  items.forEach(itemStr => {
                     // 1. Extra Bread xN
                     const breadMatch = itemStr.match(/Extra Bread x(\d+)/i);
@@ -5255,6 +5255,16 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       }
     }
   }, [isEditMode, editingCartItem, allProducts]);
+
+  // Reset cross-product add-on state when opening a new product in non-edit mode.
+  // Without this, dessert/beverage quantities can leak between products (e.g. showing x3 unexpectedly).
+  useEffect(() => {
+    if (isEditMode) return;
+    setSelectedDesserts({});
+    setSelectedBeverages({});
+    setActiveDessertItem(null);
+    setActiveBeverageItem(null);
+  }, [product.id, isEditMode]);
   
   // Pre-select Mozzarella cheese for Pizza Steak
   useEffect(() => {
@@ -6374,6 +6384,15 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
         return rest;
       }
       return { ...prev, [id]: current - 1 };
+    });
+  };
+
+  const handleSaladToppingToggle = (toppingId: string) => {
+    setSelectedSaladToppings(prev => {
+      const isSelected = prev.includes(toppingId);
+      if (isSelected) return prev.filter(id => id !== toppingId);
+      if (prev.length >= 5) return prev;
+      return [...prev, toppingId];
     });
   };
 
@@ -13162,11 +13181,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           key={topping.id}
                           onClick={() => {
                             if (!canSelect && !isSelected) return;
-                            if (isSelected) {
-                              setSelectedSaladToppings(selectedSaladToppings.filter(id => id !== topping.id));
-                            } else {
-                              setSelectedSaladToppings([...selectedSaladToppings, topping.id]);
-                            }
+                            handleSaladToppingToggle(topping.id);
                           }}
                           className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
                             isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
@@ -15288,19 +15303,17 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {saladToppingsOptions.map((option) => {
                       const isSelected = selectedSaladToppings.includes(option.id);
+                      const canSelect = selectedSaladToppings.length < 5 || isSelected;
                       return (
                         <div
                           key={option.id}
                           onClick={() => {
-                            if (isSelected) {
-                              setSelectedSaladToppings(selectedSaladToppings.filter(id => id !== option.id));
-                            } else {
-                              setSelectedSaladToppings([...selectedSaladToppings, option.id]);
-                            }
+                            if (!canSelect && !isSelected) return;
+                            handleSaladToppingToggle(option.id);
                           }}
                           className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
                             isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
-                          }`}
+                          } ${!canSelect && !isSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative">
                             <ImageWithFallback
@@ -15446,7 +15459,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
                   <div className="flex flex-col items-start gap-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>1. Add Toppings:</span>
+                      <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>1. Choose Your Sauce (Required)</span>
                     </div>
                   </div>
                   {isAdditionalOpen ? (
@@ -16482,12 +16495,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg">
                     <span className="font-semibold">Choose Your Sauce (Required)</span>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {calamariSubSauceOptions.map((sauce) => {
-                      let imageSrc = '';
-                      if (sauce.id === 'cal1') imageSrc = BUILD_PASTA_SAUCE_IMAGES['bps4'];
-                      else if (sauce.id === 'cal2') imageSrc = 'https://images.unsplash.com/photo-1616444029952-056498a34f0f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3aGl0ZSUyMHdpbmUlMjBnYXJsaWMlMjBzYXVjZSUyMHBhc3RhfGVufDF8fHx8MTc3MDM5NTI2Nnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral';
-                      
                       const isSelected = selectedCalamariSubSauce === sauce.id;
 
                       return (
@@ -16497,28 +16506,17 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedCalamariSubSauce(sauce.id);
                             setCalamariAppetizerSauceError(false);
                           }}
-                          className={`flex flex-col h-56 overflow-hidden rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border-gray-200 hover:border-gray-300'
+                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
-                          <div className="h-[60%] w-full relative">
-                            <ImageWithFallback
-                              src={imageSrc}
-                              alt={sauce.name}
-                              className="w-full h-full object-cover"
-                            />
-                            {isSelected && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">
-                                <div className="bg-white rounded-full p-0.5">
-                                  <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
-                                </div>
-                              </div>
-                            )}
+                          <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            isSelected ? 'bg-[#A72020] border-[#A72020]' : 'border-gray-300'
+                          }`}>
+                            {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                           </div>
-                          <div className="h-[40%] w-full p-3 flex flex-col justify-center bg-white border-t border-gray-100">
-                            <span className="text-gray-900 font-medium text-sm leading-tight text-center">{sauce.name}</span>
-                            <span className="text-gray-600 text-xs mt-1 font-semibold text-center">${sauce.price.toFixed(2)}</span>
-                          </div>
+                          <span className="text-gray-900 flex-1">{sauce.name}</span>
+                          <span className="text-sm text-gray-900">${sauce.price.toFixed(2)}</span>
                         </div>
                       );
                     })}
@@ -16543,7 +16541,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
                   <div className="flex flex-col items-start gap-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>1. Add Toppings:</span>
+                      <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>1. Choose Your Sauce (Required)</span>
                     </div>
                   </div>
                   {isAdditionalOpen ? (
@@ -16565,15 +16563,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 />
                 <div className="relative z-10 space-y-6">
                   {/* Sauce Choice Section */}
-                  <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg flex items-start gap-2">
+                  <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg">
                     <span className="font-semibold">Choose Your Sauce (Required)</span>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {musselsSauceOptions.map((sauce) => {
-                      let imageSrc = '';
-                      if (sauce.id === 'mus2') imageSrc = BUILD_PASTA_SAUCE_IMAGES['bps4'];
-                      else if (sauce.id === 'mus1') imageSrc = 'https://images.unsplash.com/photo-1616444029952-056498a34f0f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3aGl0ZSUyMHdpbmUlMjBnYXJsaWMlMjBzYXVjZSUyMHBhc3RhfGVufDF8fHx8MTc3MDM5NTI2Nnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral';
-                      
                       const isSelected = selectedMusselsSauce === sauce.id;
 
                       return (
@@ -16583,28 +16577,17 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedMusselsSauce(sauce.id);
                             setMusselsAppetizerSauceError(false);
                           }}
-                          className={`flex flex-col h-56 overflow-hidden rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border-gray-200 hover:border-gray-300'
+                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
-                          <div className="h-[60%] w-full relative">
-                            <ImageWithFallback
-                              src={imageSrc}
-                              alt={sauce.name}
-                              className="w-full h-full object-cover"
-                            />
-                            {isSelected && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">
-                                <div className="bg-white rounded-full p-0.5">
-                                  <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
-                                </div>
-                              </div>
-                            )}
+                          <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            isSelected ? 'bg-[#A72020] border-[#A72020]' : 'border-gray-300'
+                          }`}>
+                            {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                           </div>
-                          <div className="h-[40%] w-full p-3 flex flex-col justify-center bg-white border-t border-gray-100">
-                            <span className="text-gray-900 font-medium text-sm leading-tight text-center">{sauce.name}</span>
-                            <span className="text-gray-600 text-xs mt-1 font-semibold text-center">${sauce.price.toFixed(2)}</span>
-                          </div>
+                          <span className="text-gray-900 flex-1">{sauce.name}</span>
+                          <span className="text-sm text-gray-900">${sauce.price.toFixed(2)}</span>
                         </div>
                       );
                     })}
@@ -16629,7 +16612,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
                   <div className="flex flex-col items-start gap-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>1. Add Toppings:</span>
+                      <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>1. Choose Your Sauce (Required)</span>
                     </div>
                   </div>
                   {isAdditionalOpen ? (
@@ -16651,15 +16634,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 />
                 <div className="relative z-10 space-y-6">
                   {/* Sauce Choice Section */}
-                  <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg flex items-start gap-2">
+                  <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg">
                     <span className="font-semibold">Choose Your Sauce (Required)</span>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {seafoodComboSauceOptions.map((sauce) => {
-                      let imageSrc = '';
-                      if (sauce.id === 'sfc1') imageSrc = BUILD_PASTA_SAUCE_IMAGES['bps4'];
-                      else if (sauce.id === 'sfc2') imageSrc = 'https://images.unsplash.com/photo-1616444029952-056498a34f0f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3aGl0ZSUyMHdpbmUlMjBnYXJsaWMlMjBzYXVjZSUyMHBhc3RhfGVufDF8fHx8MTc3MDM5NTI2Nnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral';
-                      
                       const isSelected = selectedSeafoodComboSauce === sauce.id;
 
                       return (
@@ -16669,28 +16648,17 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSeafoodComboSauce(sauce.id);
                             setSeafoodComboAppetizerSauceError(false);
                           }}
-                          className={`flex flex-col h-56 overflow-hidden rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border-gray-200 hover:border-gray-300'
+                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
-                          <div className="h-[60%] w-full relative">
-                            <ImageWithFallback
-                              src={imageSrc}
-                              alt={sauce.name}
-                              className="w-full h-full object-cover"
-                            />
-                            {isSelected && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">
-                                <div className="bg-white rounded-full p-0.5">
-                                  <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
-                                </div>
-                              </div>
-                            )}
+                          <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            isSelected ? 'bg-[#A72020] border-[#A72020]' : 'border-gray-300'
+                          }`}>
+                            {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                           </div>
-                          <div className="h-[40%] w-full p-3 flex flex-col justify-center bg-white border-t border-gray-100">
-                            <span className="text-gray-900 font-medium text-sm leading-tight text-center">{sauce.name}</span>
-                            <span className="text-gray-600 text-xs mt-1 font-semibold text-center">${sauce.price.toFixed(2)}</span>
-                          </div>
+                          <span className="text-gray-900 flex-1">{sauce.name}</span>
+                          <span className="text-sm text-gray-900">${sauce.price.toFixed(2)}</span>
                         </div>
                       );
                     })}
@@ -16715,7 +16683,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
                   <div className="flex flex-col items-start gap-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>1. Add Toppings:</span>
+                      <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>1. Choose Your Sauce (Required)</span>
                     </div>
                   </div>
                   {isAdditionalOpen ? (
@@ -16737,15 +16705,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 />
                 <div className="relative z-10 space-y-6">
                   {/* Sauce Choice Section */}
-                  <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg flex items-start gap-2">
-                    <span className="font-semibold">Sauce Choice</span>
+                  <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg">
+                    <span className="font-semibold">Choose Your Sauce (Required)</span>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {musselsSauceOptions.map((sauce) => {
-                      let imageSrc = '';
-                      if (sauce.id === 'mus2') imageSrc = BUILD_PASTA_SAUCE_IMAGES['bps4'];
-                      else if (sauce.id === 'mus1') imageSrc = 'https://images.unsplash.com/photo-1616444029952-056498a34f0f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3aGl0ZSUyMHdpbmUlMjBnYXJsaWMlMjBzYXVjZSUyMHBhc3RhfGVufDF8fHx8MTc3MDM5NTI2Nnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral';
-                      
                       const isSelected = selectedMusselsSauce === sauce.id;
 
                       return (
@@ -16756,28 +16720,17 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSeafoodSauceId(sauce.id);
                             setMusselsSauceAppetizerError(false);
                           }}
-                          className={`flex flex-col h-56 overflow-hidden rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border-gray-200 hover:border-gray-300'
+                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
-                          <div className="h-[60%] w-full relative">
-                            <ImageWithFallback
-                              src={imageSrc}
-                              alt={sauce.name}
-                              className="w-full h-full object-cover"
-                            />
-                            {isSelected && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">
-                                <div className="bg-white rounded-full p-0.5">
-                                  <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
-                                </div>
-                              </div>
-                            )}
+                          <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            isSelected ? 'bg-[#A72020] border-[#A72020]' : 'border-gray-300'
+                          }`}>
+                            {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                           </div>
-                          <div className="h-[40%] w-full p-3 flex flex-col justify-center bg-white border-t border-gray-100">
-                            <span className="text-gray-900 font-medium text-sm leading-tight text-center">{sauce.name}</span>
-                            <span className="text-gray-600 text-xs mt-1 font-semibold text-center">${sauce.price.toFixed(2)}</span>
-                          </div>
+                          <span className="text-gray-900 flex-1">{sauce.name}</span>
+                          <span className="text-sm text-gray-900">${sauce.price.toFixed(2)}</span>
                         </div>
                       );
                     })}
@@ -16802,7 +16755,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
                   <div className="flex flex-col items-start gap-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>1. Add Toppings:</span>
+                      <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>1. Choose Your Sauce (Required)</span>
                     </div>
                   </div>
                   {isAdditionalOpen ? (
@@ -16824,15 +16777,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 />
                 <div className="relative z-10 space-y-6">
                   {/* Sauce Choice Section */}
-                  <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg flex items-start gap-2">
-                    <span className="font-semibold">Sauce Choice</span>
+                  <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg">
+                    <span className="font-semibold">Choose Your Sauce (Required)</span>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {seafoodComboSauceOptions.map((sauce) => {
-                      let imageSrc = '';
-                      if (sauce.id === 'sfc1') imageSrc = BUILD_PASTA_SAUCE_IMAGES['bps4'];
-                      else if (sauce.id === 'sfc2') imageSrc = 'https://images.unsplash.com/photo-1616444029952-056498a34f0f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3aGl0ZSUyMHdpbmUlMjBnYXJsaWMlMjBzYXVjZSUyMHBhc3RhfGVufDF8fHx8MTc3MDM5NTI2Nnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral';
-                      
                       const isSelected = selectedSeafoodComboSauce === sauce.id;
 
                       return (
@@ -16843,28 +16792,17 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSeafoodSauceId(sauce.id);
                             setSeafoodComboSauceAppetizerError(false);
                           }}
-                          className={`flex flex-col h-56 overflow-hidden rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border-gray-200 hover:border-gray-300'
+                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
-                          <div className="h-[60%] w-full relative">
-                            <ImageWithFallback
-                              src={imageSrc}
-                              alt={sauce.name}
-                              className="w-full h-full object-cover"
-                            />
-                            {isSelected && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">
-                                <div className="bg-white rounded-full p-0.5">
-                                  <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
-                                </div>
-                              </div>
-                            )}
+                          <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            isSelected ? 'bg-[#A72020] border-[#A72020]' : 'border-gray-300'
+                          }`}>
+                            {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                           </div>
-                          <div className="h-[40%] w-full p-3 flex flex-col justify-center bg-white border-t border-gray-100">
-                            <span className="text-gray-900 font-medium text-sm leading-tight text-center">{sauce.name}</span>
-                            <span className="text-gray-600 text-xs mt-1 font-semibold text-center">${sauce.price.toFixed(2)}</span>
-                          </div>
+                          <span className="text-gray-900 flex-1">{sauce.name}</span>
+                          <span className="text-sm text-gray-900">${sauce.price.toFixed(2)}</span>
                         </div>
                       );
                     })}
@@ -17166,12 +17104,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   <div ref={calamariAppetizerSauceRef} className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg">
                     <span className="font-semibold">Choose Your Sauce (Required)</span>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {calamariSubSauceOptions.map((sauce) => {
-                      let imageSrc = '';
-                      if (sauce.id === 'cal1') imageSrc = BUILD_PASTA_SAUCE_IMAGES['bps4'];
-                      else if (sauce.id === 'cal2') imageSrc = 'https://images.unsplash.com/photo-1616444029952-056498a34f0f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3aGl0ZSUyMHdpbmUlMjBnYXJsaWMlMjBzYXVjZSUyMHBhc3RhfGVufDF8fHx8MTc3MDM5NTI2Nnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral';
-                      
                       const isSelected = selectedCalamariSubSauce === sauce.id;
 
                       return (
@@ -17182,28 +17116,17 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSeafoodSauceId(selectedCalamariSubSauce === sauce.id ? '' : sauce.id);
                             setCalamariAppetizerSauceError(false);
                           }}
-                          className={`flex flex-col h-56 overflow-hidden rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border-gray-200 hover:border-gray-300'
+                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
-                          <div className="h-[60%] w-full relative">
-                            <ImageWithFallback
-                              src={imageSrc}
-                              alt={sauce.name}
-                              className="w-full h-full object-cover"
-                            />
-                            {isSelected && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">
-                                <div className="bg-white rounded-full p-0.5">
-                                  <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
-                                </div>
-                              </div>
-                            )}
+                          <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            isSelected ? 'bg-[#A72020] border-[#A72020]' : 'border-gray-300'
+                          }`}>
+                            {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                           </div>
-                          <div className="h-[40%] w-full p-3 flex flex-col justify-center bg-white border-t border-gray-100">
-                            <span className="text-gray-900 font-medium text-sm leading-tight text-center">{sauce.name}</span>
-                            <span className="text-gray-600 text-xs mt-1 font-semibold text-center">${sauce.price.toFixed(2)}</span>
-                          </div>
+                          <span className="text-gray-900 flex-1">{sauce.name}</span>
+                          <span className="text-sm text-gray-900">${sauce.price.toFixed(2)}</span>
                         </div>
                       );
                     })}
@@ -17307,7 +17230,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       </div>
                     )}
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {babyClamSauceChoices.map((sauce) => (
                       <div
                         key={sauce.id}
@@ -17321,13 +17244,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <Circle 
-                            className={`w-5 h-5 flex-shrink-0 ${
-                              selectedBabyClamSauceChoice === sauce.id 
-                                ? 'fill-[#a6bba1] text-[#a6bba1]' 
-                                : 'text-gray-300'
-                            }`}
-                          />
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            selectedBabyClamSauceChoice === sauce.id ? 'bg-[#A72020] border-[#A72020]' : 'border-gray-300'
+                          }`}>
+                            {selectedBabyClamSauceChoice === sauce.id && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                          </div>
                           <span className="text-gray-700">{sauce.name}</span>
                         </div>
                         <span className="text-gray-600">${sauce.price.toFixed(2)}</span>
@@ -17422,15 +17343,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   )}
 
                   {/* Sauce Choice Section */}
-                  <div ref={musselsAppetizerSauceRef} className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg flex items-start gap-2">
+                  <div ref={musselsAppetizerSauceRef} className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg">
                     <span className="font-semibold">Choose Your Sauce (Required)</span>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {musselsSauceOptions.map((sauce) => {
-                      let imageSrc = '';
-                      if (sauce.id === 'mus2') imageSrc = BUILD_PASTA_SAUCE_IMAGES['bps4'];
-                      else if (sauce.id === 'mus1') imageSrc = 'https://images.unsplash.com/photo-1616444029952-056498a34f0f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3aGl0ZSUyMHdpbmUlMjBnYXJsaWMlMjBzYXVjZSUyMHBhc3RhfGVufDF8fHx8MTc3MDM5NTI2Nnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral';
-                      
                       const isSelected = selectedMusselsSauce === sauce.id;
 
                       return (
@@ -17441,28 +17358,17 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSeafoodSauceId(sauce.id);
                             setMusselsAppetizerSauceError(false);
                           }}
-                          className={`flex flex-col h-56 overflow-hidden rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border-gray-200 hover:border-gray-300'
+                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
-                          <div className="h-[60%] w-full relative">
-                            <ImageWithFallback
-                              src={imageSrc}
-                              alt={sauce.name}
-                              className="w-full h-full object-cover"
-                            />
-                            {isSelected && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">
-                                <div className="bg-white rounded-full p-0.5">
-                                  <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
-                                </div>
-                              </div>
-                            )}
+                          <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            isSelected ? 'bg-[#A72020] border-[#A72020]' : 'border-gray-300'
+                          }`}>
+                            {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                           </div>
-                          <div className="h-[40%] w-full p-3 flex flex-col justify-center bg-white border-t border-gray-100">
-                            <span className="text-gray-900 font-medium text-sm leading-tight text-center">{sauce.name}</span>
-                            <span className="text-gray-600 text-xs mt-1 font-semibold text-center">${sauce.price.toFixed(2)}</span>
-                          </div>
+                          <span className="text-gray-900 flex-1">{sauce.name}</span>
+                          <span className="text-sm text-gray-900">${sauce.price.toFixed(2)}</span>
                         </div>
                       );
                     })}
@@ -17555,15 +17461,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   )}
 
                   {/* Sauce Choice Section */}
-                  <div ref={seafoodComboAppetizerSauceRef} className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg flex items-start gap-2">
+                  <div ref={seafoodComboAppetizerSauceRef} className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg">
                     <span className="font-semibold">Choose Your Sauce (Required)</span>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {seafoodComboSauceOptions.map((sauce) => {
-                      let imageSrc = '';
-                      if (sauce.id === 'sfc1') imageSrc = BUILD_PASTA_SAUCE_IMAGES['bps4'];
-                      else if (sauce.id === 'sfc2') imageSrc = 'https://images.unsplash.com/photo-1616444029952-056498a34f0f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3aGl0ZSUyMHdpbmUlMjBnYXJsaWMlMjBzYXVjZSUyMHBhc3RhfGVufDF8fHx8MTc3MDM5NTI2Nnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral';
-                      
                       const isSelected = selectedSeafoodComboSauce === sauce.id;
 
                       return (
@@ -17574,28 +17476,17 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSeafoodSauceId(sauce.id);
                             setSeafoodComboAppetizerSauceError(false);
                           }}
-                          className={`flex flex-col h-56 overflow-hidden rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border-gray-200 hover:border-gray-300'
+                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
-                          <div className="h-[60%] w-full relative">
-                            <ImageWithFallback
-                              src={imageSrc}
-                              alt={sauce.name}
-                              className="w-full h-full object-cover"
-                            />
-                            {isSelected && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">
-                                <div className="bg-white rounded-full p-0.5">
-                                  <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
-                                </div>
-                              </div>
-                            )}
+                          <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            isSelected ? 'bg-[#A72020] border-[#A72020]' : 'border-gray-300'
+                          }`}>
+                            {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                           </div>
-                          <div className="h-[40%] w-full p-3 flex flex-col justify-center bg-white border-t border-gray-100">
-                            <span className="text-gray-900 font-medium text-sm leading-tight text-center">{sauce.name}</span>
-                            <span className="text-gray-600 text-xs mt-1 font-semibold text-center">${sauce.price.toFixed(2)}</span>
-                          </div>
+                          <span className="text-gray-900 flex-1">{sauce.name}</span>
+                          <span className="text-sm text-gray-900">${sauce.price.toFixed(2)}</span>
                         </div>
                       );
                     })}
@@ -17691,7 +17582,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   <div ref={shrimpMarinaraSubSauceRef} className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg">
                     <span className="font-semibold">Choose Your Sauce (Required)</span>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {[
                       { id: 'marinara', name: 'Marinara Sauce', price: 0.00 },
                       { id: 'white', name: 'White wine garlic sauce', price: 0.00 }
@@ -17708,13 +17599,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <Circle 
-                            className={`w-5 h-5 flex-shrink-0 ${
-                              selectedShrimpMarinaraSubSauce === sauce.id 
-                                ? 'fill-[#a6bba1] text-[#a6bba1]' 
-                                : 'text-gray-300'
-                            }`}
-                          />
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            selectedShrimpMarinaraSubSauce === sauce.id ? 'bg-[#A72020] border-[#A72020]' : 'border-gray-300'
+                          }`}>
+                            {selectedShrimpMarinaraSubSauce === sauce.id && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                          </div>
                           <span className="text-gray-700">{sauce.name}</span>
                         </div>
                         <span className="text-gray-600">${sauce.price.toFixed(2)}</span>
@@ -26018,6 +25907,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   groupTitle: 'Dressing',
                   type: 'dressing'
                 });
+                registerOptionsToLookup(selectionLookup, saladDressingInstructions, {
+                  groupId: 'salad_dressing_instructions',
+                  groupTitle: 'Dressing Instructions',
+                  type: 'special_instruction'
+                });
                 registerOptionsToLookup(selectionLookup, kidsPastaTypes, {
                   groupId: 'kids_pasta_type',
                   groupTitle: 'Pasta Type',
@@ -26858,7 +26752,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 
                 // Add salad customizations (REQUIRED)
                 if (selectedSaladBase) {
-                  const baseName = saladBases.find(b => b.id === selectedSaladBase)?.name;
+                  const baseName = saladBaseOptions.find(b => b.id === selectedSaladBase)?.name;
                   if (baseName) {
                     // LEGACY
                     customizations.push({
@@ -26877,7 +26771,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 }
                 
                 if (selectedSaladDressing) {
-                  const dressingName = saladDressings.find(d => d.id === selectedSaladDressing)?.name;
+                  const dressingName = saladDressingOptions.find(d => d.id === selectedSaladDressing)?.name;
                   if (dressingName) {
                     // LEGACY
                     customizations.push({
@@ -26918,8 +26812,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         id: toppingId,
                         label: topping.name,
                         type: 'topping',
-                        groupId: groupInfo.groupId,
-                        groupTitle: groupInfo.groupTitle
+                        groupId: groupInfo?.groupId || 'salad_toppings',
+                        groupTitle: groupInfo?.groupTitle || 'Choose Your Toppings'
                       });
                     }
                   });
@@ -26948,8 +26842,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         id: toppingId,
                         label: topping.name,
                         type: 'topping',
-                        groupId: groupInfo.groupId,
-                        groupTitle: groupInfo.groupTitle
+                        groupId: groupInfo?.groupId || 'salad_extra_toppings',
+                        groupTitle: groupInfo?.groupTitle || 'Extra Toppings'
                       });
                     }
                   });
@@ -26976,10 +26870,31 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       selections.push({
                         id: dressingId,
                         label: dressing.name,
-                        type: 'other' // or could be 'extra_dressing' if we add that type
+                        type: 'side',
+                        groupId: 'salad_extra_dressing',
+                        groupTitle: 'Extra Dressing',
+                        productId: product.id
                       });
                     }
                   });
+                }
+
+                // Add salad dressing instructions
+                if (selectedDressingInstructions) {
+                  const instructionName = saladDressingInstructions.find(i => i.id === selectedDressingInstructions)?.name;
+                  if (instructionName) {
+                    customizations.push({
+                      category: 'Dressing Instructions',
+                      items: [instructionName]
+                    });
+                    selections.push({
+                      id: selectedDressingInstructions,
+                      label: instructionName,
+                      type: 'special_instruction',
+                      groupId: 'salad_dressing_instructions',
+                      groupTitle: 'Dressing Instructions'
+                    });
+                  }
                 }
                 
                 // Add selected desserts (RECORD version)
@@ -28582,7 +28497,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 // ============================================================
                 // TRADITIONAL DINNERS LOGIC (Manual Registration)
                 // ============================================================
-                if (product.category === 'traditional-dinners') {
+                if (product.category === 'traditional-dinners' || (product.category === 'seafood' && (product.id === 'sf-11' || product.id === 'sf-12'))) {
                    // 1. Register Sides
                    registerSelectionsFromIds(selectedTraditionalDinnersSides, {
                       debugKey: "selectedTraditionalDinnersSides",
@@ -29251,8 +29166,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 }
 
                 let filteredSelections = filterSelectionsByProduct(selections, modifiedProduct);
-                // CREATE-PASTA final normalization: rebuild soup/salad rows with canonical IDs + removals.
-                if (product.category === 'create-pasta') {
+                // PASTA/CREATE-PASTA final normalization: rebuild soup/salad rows with canonical IDs + removals.
+                if (product.category === 'create-pasta' || product.category === 'pasta') {
                   const soupIdSet = new Set((buildPastaSoups || []).map(s => String(s.id)));
                   const soupNameSet = new Set((buildPastaSoups || []).map(s => String(s.name || '').toLowerCase().trim()));
                   const isSoupLabel = (value: string): boolean => {
@@ -29454,10 +29369,26 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                        filteredSelections.splice(i, 1);
                     }
                   }
+                  // Remove stale Seafood pasta-type entries before re-adding deterministically.
+                  for (let i = filteredSelections.length - 1; i >= 0; i--) {
+                    const s = filteredSelections[i];
+                    const gid = String(s?.groupId || '').toLowerCase();
+                    const gtitle = String(s?.groupTitle || '').toLowerCase();
+                    const stype = String(s?.type || '').toLowerCase();
+                    if (
+                      gid === 'seafood_pasta_type_required' ||
+                      gid === 'seafood_pasta_type' ||
+                      (gtitle.includes('pasta') && gtitle.includes('type')) ||
+                      stype === 'pasta_type'
+                    ) {
+                      filteredSelections.splice(i, 1);
+                    }
+                  }
                   
                   // Clean customizations
                   for (let i = customizations.length - 1; i >= 0; i--) {
-                    if (customizations[i].category === "Cheese") {
+                    const cat = String(customizations[i]?.category || '').toLowerCase();
+                    if (cat === "cheese" || cat === "pasta type") {
                        customizations.splice(i, 1);
                     }
                   }
@@ -29466,7 +29397,27 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                      console.log('[SEAFOOD] after cleanup selections:', JSON.stringify(filteredSelections));
                   }
 
-                  // 2) Push required sauce
+                  // 2) Push required pasta type ("Your Choice of Pasta")
+                  if (selectedSeafoodPastaType) {
+                    const pastaOption = seafoodPastaTypes.find(x => x.id === selectedSeafoodPastaType);
+                    const pastaLabel = pastaOption?.name || getItemName(selectedSeafoodPastaType);
+                    if (pastaLabel) {
+                      filteredSelections.push({
+                        id: selectedSeafoodPastaType,
+                        label: pastaLabel,
+                        type: "required_option",
+                        groupId: "seafood_pasta_type_required",
+                        groupTitle: "Pasta Type",
+                        productId: product.id,
+                      });
+                      customizations.push({
+                        category: "Pasta Type",
+                        items: [pastaLabel]
+                      });
+                    }
+                  }
+
+                  // 3) Push required sauce
                   let sauceLabel = seafoodSauceOptions.find(x => x.id === selectedSeafoodSauceId)?.label;
                   
                   // Fallback lookup
@@ -30542,6 +30493,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     groupTitle: 'Dressing',
                     type: 'dressing'
                   });
+                  registerOptionsToLookup(selectionLookupDesktop, saladDressingInstructions, {
+                    groupId: 'salad_dressing_instructions',
+                    groupTitle: 'Dressing Instructions',
+                    type: 'special_instruction'
+                  });
                   registerOptionsToLookup(selectionLookupDesktop, kidsPastaTypes, {
                     groupId: 'kids_pasta_type',
                     groupTitle: 'Pasta Type',
@@ -31173,21 +31129,37 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   
                   // Add salad customizations
                   if (selectedSaladBase) {
-                    const baseName = saladBases.find(b => b.id === selectedSaladBase)?.name;
+                    const baseName = saladBaseOptions.find(b => b.id === selectedSaladBase)?.name;
                     if (baseName) {
                       customizations.push({
                         category: 'Salad Base',
                         items: [baseName]
                       });
+                      selections.push({
+                        id: selectedSaladBase,
+                        label: baseName,
+                        type: 'required_option',
+                        groupId: 'salad_base_required',
+                        groupTitle: 'Choose Your Base (Required)',
+                        productId: product.id
+                      });
                     }
                   }
                   
                   if (selectedSaladDressing) {
-                    const dressingName = saladDressings.find(d => d.id === selectedSaladDressing)?.name;
+                    const dressingName = saladDressingOptions.find(d => d.id === selectedSaladDressing)?.name;
                     if (dressingName) {
                       customizations.push({
                         category: 'Dressing',
                         items: [dressingName]
+                      });
+                      selections.push({
+                        id: selectedSaladDressing,
+                        label: dressingName,
+                        type: 'required_option',
+                        groupId: 'salad_dressing_required',
+                        groupTitle: 'Choose Your Dressing (Required)',
+                        productId: product.id
                       });
                     }
                   }
@@ -31215,8 +31187,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           id: toppingId,
                           label: topping.name,
                           type: 'topping',
-                          groupId: groupInfo.groupId,
-                          groupTitle: groupInfo.groupTitle
+                          groupId: groupInfo?.groupId || 'salad_toppings',
+                          groupTitle: groupInfo?.groupTitle || 'Choose Your Toppings'
                         });
                       }
                     });
@@ -31245,8 +31217,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           id: toppingId,
                           label: topping.name,
                           type: 'topping',
-                          groupId: groupInfo.groupId,
-                          groupTitle: groupInfo.groupTitle
+                          groupId: groupInfo?.groupId || 'salad_extra_toppings',
+                          groupTitle: groupInfo?.groupTitle || 'Extra Toppings'
                         });
                       }
                     });
@@ -31273,10 +31245,31 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         selections.push({
                           id: dressingId,
                           label: dressing.name,
-                          type: 'other' // or could be 'extra_dressing' if we add that type
+                          type: 'side',
+                          groupId: 'salad_extra_dressing',
+                          groupTitle: 'Extra Dressing',
+                          productId: product.id
                         });
                       }
                     });
+                  }
+
+                  // Add salad dressing instructions
+                  if (selectedDressingInstructions) {
+                    const instructionName = saladDressingInstructions.find(i => i.id === selectedDressingInstructions)?.name;
+                    if (instructionName) {
+                      customizations.push({
+                        category: 'Dressing Instructions',
+                        items: [instructionName]
+                      });
+                      selections.push({
+                        id: selectedDressingInstructions,
+                        label: instructionName,
+                        type: 'special_instruction',
+                        groupId: 'salad_dressing_instructions',
+                        groupTitle: 'Dressing Instructions'
+                      });
+                    }
                   }
                   
                   // Add selected desserts (RECORD version)
@@ -32155,7 +32148,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   }
 
                   let filteredSelections = filterSelectionsByProduct(selections, modifiedProduct);
-                  if (product.category === 'create-pasta') {
+                  if (product.category === 'create-pasta' || product.category === 'pasta') {
                     const soupIdSet = new Set((buildPastaSoups || []).map(s => String(s.id)));
                     const soupNameSet = new Set((buildPastaSoups || []).map(s => String(s.name || '').toLowerCase().trim()));
                     const isSoupLabel = (value: string): boolean => {
@@ -32336,32 +32329,68 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   // ============================================================
                   // SEAFOOD FIX: CLEANUP AND PUSH SAUCE
                   // ============================================================
-                  if (product.category === 'seafood') {
-                    if (debugCartEnabled) {
-                       console.log('[SEAFOOD] before cleanup selections:', JSON.stringify(filteredSelections));
+                if (product.category === 'seafood') {
+                  if (debugCartEnabled) {
+                     console.log('[SEAFOOD] before cleanup selections:', JSON.stringify(filteredSelections));
+                  }
+                  
+                  // 1) Clean contamination (burger_cheese, etc)
+                  for (let i = filteredSelections.length - 1; i >= 0; i--) {
+                    const s = filteredSelections[i];
+                    if (s.groupId === "burger_cheese" || s.groupTitle === "Cheese" || s.type === "cheese") {
+                       filteredSelections.splice(i, 1);
                     }
-                    
-                    // 1) Clean contamination (burger_cheese, etc)
-                    for (let i = filteredSelections.length - 1; i >= 0; i--) {
-                      const s = filteredSelections[i];
-                      if (s.groupId === "burger_cheese" || s.groupTitle === "Cheese" || s.type === "cheese") {
-                         filteredSelections.splice(i, 1);
-                      }
+                  }
+                  // Remove stale Seafood pasta-type entries before re-adding deterministically.
+                  for (let i = filteredSelections.length - 1; i >= 0; i--) {
+                    const s = filteredSelections[i];
+                    const gid = String(s?.groupId || '').toLowerCase();
+                    const gtitle = String(s?.groupTitle || '').toLowerCase();
+                    const stype = String(s?.type || '').toLowerCase();
+                    if (
+                      gid === 'seafood_pasta_type_required' ||
+                      gid === 'seafood_pasta_type' ||
+                      (gtitle.includes('pasta') && gtitle.includes('type')) ||
+                      stype === 'pasta_type'
+                    ) {
+                      filteredSelections.splice(i, 1);
                     }
-                    
-                    // Clean customizations
-                    for (let i = customizations.length - 1; i >= 0; i--) {
-                      if (customizations[i].category === "Cheese") {
-                         customizations.splice(i, 1);
-                      }
+                  }
+                  
+                  // Clean customizations
+                  for (let i = customizations.length - 1; i >= 0; i--) {
+                    const cat = String(customizations[i]?.category || '').toLowerCase();
+                    if (cat === "cheese" || cat === "pasta type") {
+                       customizations.splice(i, 1);
                     }
+                  }
 
-                    if (debugCartEnabled) {
-                       console.log('[SEAFOOD] after cleanup selections:', JSON.stringify(filteredSelections));
-                    }
+                  if (debugCartEnabled) {
+                     console.log('[SEAFOOD] after cleanup selections:', JSON.stringify(filteredSelections));
+                  }
 
-                    // 2) Push required sauce
-                    let sauceLabel = seafoodSauceOptions.find(x => x.id === selectedSeafoodSauceId)?.label;
+                  // 2) Push required pasta type ("Your Choice of Pasta")
+                  if (selectedSeafoodPastaType) {
+                    const pastaOption = seafoodPastaTypes.find(x => x.id === selectedSeafoodPastaType);
+                    const pastaLabel = pastaOption?.name || getItemName(selectedSeafoodPastaType);
+                    if (pastaLabel) {
+                      filteredSelections.push({
+                        id: selectedSeafoodPastaType,
+                        label: pastaLabel,
+                        type: "required_option",
+                        groupId: "seafood_pasta_type_required",
+                        groupTitle: "Pasta Type",
+                        productId: product.id,
+                      });
+                      customizations.push({
+                        category: "Pasta Type",
+                        items: [pastaLabel]
+                      });
+                    }
+                  }
+
+                  // 3) Push required sauce
+                  let sauceLabel = seafoodSauceOptions.find(x => x.id === selectedSeafoodSauceId)?.label;
                     
                     // Fallback lookup
                     if (!sauceLabel) {
@@ -32428,7 +32457,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   // ============================================================
                   // TRADITIONAL DINNERS FIX: REMOVALS & FORMATTING
                   // ============================================================
-                  if (product.category === 'traditional-dinners') {
+                  if (product.category === 'traditional-dinners' || (product.category === 'seafood' && (product.id === 'sf-11' || product.id === 'sf-12'))) {
                      const gardenRemoved = sideGardenSaladRemovedIngredients;
                      const caesarRemoved = sideCaesarSaladRemovedIngredients;
                      
