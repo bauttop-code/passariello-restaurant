@@ -1174,6 +1174,409 @@ const buildSpecialtySaladLines = (item: CartItem, rawLines: { text: string; orig
     ];
 };
 
+// --- SOUPS (STRICT DETERMINISTIC BUILDER) ---
+const buildSoupsLines = (item: CartItem, rawLines: { text: string; originalSel?: CartSelection }[], itemQty: number): string[] => {
+    const normalized = (value: string): string =>
+      String(value || '')
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    const parseTrailingQty = (value: string): { base: string; qty: number } => {
+      const text = String(value || '').trim();
+      const m = text.match(/^(.*?)\s*x\s*(\d+)$/i);
+      if (!m) return { base: text, qty: 1 };
+      return { base: String(m[1] || '').trim(), qty: parseInt(m[2], 10) || 1 };
+    };
+
+    const bucketText = () => ({ order: [] as string[], map: new Map<string, string>() });
+    const bucketCount = () => ({ order: [] as string[], map: new Map<string, { base: string; qty: number }>() });
+
+    const substitute = bucketText();
+    const specialInstructions = bucketText();
+    const desserts = bucketCount();
+    const beverages = bucketCount();
+
+    const pushText = (bucket: { order: string[]; map: Map<string, string> }, value: string) => {
+      const text = String(value || '').trim();
+      if (!text) return;
+      const key = normalized(parseTrailingQty(text).base);
+      if (!key) return;
+      if (!bucket.map.has(key)) {
+        bucket.map.set(key, text);
+        bucket.order.push(key);
+      }
+    };
+
+    const pushCount = (bucket: { order: string[]; map: Map<string, { base: string; qty: number }> }, value: string) => {
+      const parsed = parseTrailingQty(value);
+      const key = normalized(parsed.base);
+      if (!key) return;
+      if (!bucket.map.has(key)) {
+        bucket.map.set(key, { base: parsed.base, qty: parsed.qty });
+        bucket.order.push(key);
+        return;
+      }
+      const prev = bucket.map.get(key)!;
+      bucket.map.set(key, {
+        base: prev.base.length >= parsed.base.length ? prev.base : parsed.base,
+        qty: Math.max(prev.qty, parsed.qty),
+      });
+    };
+
+    const isSizeArtifact = (label: string): boolean => {
+      const t = normalized(label);
+      return t === '16oz' || t === '32oz' || t === 'medium' || t === 'large';
+    };
+
+    const classify = (
+      type?: string,
+      groupTitle?: string,
+      groupId?: string,
+      category?: string,
+      id?: string,
+      label?: string
+    ): 'substitute' | 'special_instructions' | 'dessert' | 'beverage' | 'ignore' => {
+      const t = normalized(type || '');
+      const gt = normalized(groupTitle || '');
+      const gid = normalized(groupId || '');
+      const cat = normalized(category || '');
+      const sid = normalized(id || '');
+      const line = normalized(label || '');
+
+      if (isSizeArtifact(line)) return 'ignore';
+
+      if (t === 'dessert' || gt.includes('dessert') || gid.includes('dessert') || cat === 'dessert' || cat === 'desserts') return 'dessert';
+      if (t === 'beverage' || gt.includes('beverage') || gid.includes('beverage') || cat === 'beverage' || cat === 'beverages') return 'beverage';
+
+      if (
+        gid.includes('substitute') ||
+        gt.includes('substitute') ||
+        cat === 'substitute' ||
+        (sid.startsWith('pfs') && !sid.startsWith('pfsi'))
+      ) return 'substitute';
+
+      if (
+        t === 'special_instruction' ||
+        gid.includes('special_instruction') ||
+        gid.includes('pasta_fagioli_instructions') ||
+        gt.includes('special instruction') ||
+        cat === 'special instructions' ||
+        sid.startsWith('pfsi')
+      ) return 'special_instructions';
+
+      return 'ignore';
+    };
+
+    const ingest = (textRaw: string, meta?: { type?: string; groupTitle?: string; groupId?: string; category?: string; id?: string }) => {
+      const text = String(textRaw || '').trim();
+      if (!text) return;
+      const section = classify(meta?.type, meta?.groupTitle, meta?.groupId, meta?.category, meta?.id, text);
+      if (section === 'ignore') return;
+      if (section === 'substitute') return pushText(substitute, text);
+      if (section === 'special_instructions') return pushText(specialInstructions, text);
+      if (section === 'dessert') return pushCount(desserts, text);
+      if (section === 'beverage') return pushCount(beverages, text);
+    };
+
+    (item.selections || []).forEach((sel: any) => {
+      ingest(String(sel?.label || ''), {
+        type: sel?.type,
+        groupTitle: sel?.groupTitle,
+        groupId: sel?.groupId,
+        id: sel?.id,
+      });
+    });
+
+    (item.customizations || []).forEach((c: any) => {
+      const items = Array.isArray(c?.items) ? c.items : [];
+      items.forEach((raw: any) => {
+        ingest(String(raw || ''), {
+          category: c?.category,
+          groupTitle: c?.category,
+          groupId: c?.groupId,
+        });
+      });
+    });
+
+    rawLines.forEach((line) => {
+      ingest(String(line?.text || ''), {
+        type: line?.originalSel?.type,
+        groupTitle: line?.originalSel?.groupTitle,
+        groupId: line?.originalSel?.groupId,
+        id: line?.originalSel?.id,
+      });
+    });
+
+    const toTextLines = (bucket: { order: string[]; map: Map<string, string> }): string[] =>
+      bucket.order.map((k) => bucket.map.get(k)!).filter(Boolean);
+
+    const toCountLines = (bucket: { order: string[]; map: Map<string, { base: string; qty: number }> }): string[] =>
+      bucket.order.map((k) => {
+        const entry = bucket.map.get(k)!;
+        return entry.qty > 1 ? `${entry.base} x${entry.qty}` : entry.base;
+      });
+
+    return [
+      ...toTextLines(substitute),
+      ...toTextLines(specialInstructions),
+      ...toCountLines(desserts),
+      ...toCountLines(beverages),
+    ];
+};
+
+// --- KIDS MENU (STRICT DETERMINISTIC BUILDER) ---
+const buildKidsLines = (item: CartItem, rawLines: { text: string; originalSel?: CartSelection }[], itemQty: number): string[] => {
+    const normalized = (value: string): string =>
+      String(value || '')
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    const parseTrailingQty = (value: string): { base: string; qty: number } => {
+      const text = String(value || '').trim();
+      const m = text.match(/^(.*?)\s*x\s*(\d+)$/i);
+      if (!m) return { base: text, qty: 1 };
+      return { base: String(m[1] || '').trim(), qty: parseInt(m[2], 10) || 1 };
+    };
+
+    const isIdArtifact = (value: string): boolean => {
+      const text = normalized(value);
+      return /^(kpt|kps|kpat|kpsi|kbt|kpmsi|kpmt)\d+$/i.test(text);
+    };
+
+    const productId = normalized(item.productId || item.id || '');
+    const itemName = normalized(item.name || '');
+    const isKidsCreatePasta = productId === 'k1' || itemName.includes('create your own kids pasta');
+    const isKidsBaked = ['k2', 'k3', 'k4'].includes(productId) || itemName.includes('baked ziti') || itemName.includes('cheese ravioli') || itemName.includes('cheese tortellini');
+    const isKidsFingers = productId === 'k5' || itemName.includes('chicken fingers and french fries');
+    const isKidsPastaMeatball = productId === 'k6' || itemName.includes('pasta and meatball');
+
+    const bucketText = () => ({ order: [] as string[], map: new Map<string, string>() });
+    const bucketCount = () => ({ order: [] as string[], map: new Map<string, { base: string; qty: number }>() });
+
+    const choosePasta = bucketText();
+    const chooseSauce = bucketText();
+    const addToppings = bucketText();
+    const specialInstructions = bucketText();
+    const extraToppings = bucketText();
+    const liteToppings = bucketText();
+    const noToppings = bucketText();
+    const desserts = bucketCount();
+    const beverages = bucketCount();
+
+    const pushText = (bucket: { order: string[]; map: Map<string, string> }, value: string) => {
+      const text = String(value || '').trim();
+      if (!text || isIdArtifact(text)) return;
+      const key = normalized(parseTrailingQty(text).base);
+      if (!key) return;
+      if (!bucket.map.has(key)) {
+        bucket.map.set(key, text);
+        bucket.order.push(key);
+      }
+    };
+
+    const pushCount = (bucket: { order: string[]; map: Map<string, { base: string; qty: number }> }, value: string) => {
+      const parsed = parseTrailingQty(value);
+      if (!parsed.base || isIdArtifact(parsed.base)) return;
+      const key = normalized(parsed.base);
+      if (!key) return;
+      if (!bucket.map.has(key)) {
+        bucket.map.set(key, { base: parsed.base, qty: parsed.qty });
+        bucket.order.push(key);
+        return;
+      }
+      const prev = bucket.map.get(key)!;
+      bucket.map.set(key, {
+        base: prev.base.length >= parsed.base.length ? prev.base : parsed.base,
+        qty: Math.max(prev.qty, parsed.qty),
+      });
+    };
+
+    const classify = (
+      type?: string,
+      groupTitle?: string,
+      groupId?: string,
+      category?: string,
+      id?: string,
+      label?: string
+    ):
+      | 'choose_pasta'
+      | 'choose_sauce'
+      | 'add_toppings'
+      | 'special_instructions'
+      | 'extra_toppings'
+      | 'lite_toppings'
+      | 'no_toppings'
+      | 'dessert'
+      | 'beverage'
+      | 'ignore' => {
+      const t = normalized(type || '');
+      const gt = normalized(groupTitle || '');
+      const gid = normalized(groupId || '');
+      const cat = normalized(category || '');
+      const sid = normalized(id || '');
+      const line = normalized(label || '');
+
+      if (!line || isIdArtifact(line)) return 'ignore';
+      if (line === 'american') return 'ignore';
+
+      if (t === 'dessert' || gt.includes('dessert') || gid.includes('dessert') || cat === 'dessert' || cat === 'desserts') return 'dessert';
+      if (t === 'beverage' || gt.includes('beverage') || gid.includes('beverage') || cat === 'beverage' || cat === 'beverages') return 'beverage';
+
+      if (isKidsCreatePasta || isKidsPastaMeatball) {
+        if (
+          gid.includes('kids_pasta_type') ||
+          t === 'pasta_type' ||
+          gt.includes('pasta type') ||
+          gt.includes('choose a pasta') ||
+          cat === 'pasta type' ||
+          cat === 'choose a pasta' ||
+          sid.startsWith('kpt')
+        ) return 'choose_pasta';
+
+        if (
+          gid.includes('kids_pasta_sauce') ||
+          (t === 'sauce' && !gid.includes('extra')) ||
+          gt === 'sauce' ||
+          gt.includes('choose a sauce') ||
+          cat === 'sauce' ||
+          cat === 'choose a sauce' ||
+          sid.startsWith('kps')
+        ) return 'choose_sauce';
+
+        if (
+          gid.includes('kids_pasta_special_instructions') ||
+          gid.includes('kids_pasta_meatball_special_instructions') ||
+          t === 'special_instruction' ||
+          gt.includes('special instruction') ||
+          cat === 'special instructions'
+        ) return 'special_instructions';
+
+        if (
+          gid.includes('kids_pasta_add') ||
+          gid.includes('kids_meatball_add') ||
+          gt.includes('add toppings') ||
+          cat === 'add toppings' ||
+          sid.startsWith('kpat') ||
+          sid.startsWith('kpmt')
+        ) return 'add_toppings';
+      }
+
+      if (isKidsBaked) {
+        if (
+          gid.includes('kids_baked_extra') ||
+          t === 'extra_topping' ||
+          gt.includes('extra toppings') ||
+          cat === 'extra toppings' ||
+          sid === 'kbt1' ||
+          sid === 'kbt2'
+        ) return 'extra_toppings';
+        if (gid.includes('kids_baked_lite') || gt.includes('lite toppings') || cat === 'lite toppings' || sid === 'kbt3') return 'lite_toppings';
+        if (gid.includes('kids_baked_no') || t === 'no_topping' || gt.includes('no toppings') || cat === 'no toppings' || sid === 'kbt5') return 'no_toppings';
+      }
+
+      return 'ignore';
+    };
+
+    const ingest = (textRaw: string, meta?: { type?: string; groupTitle?: string; groupId?: string; category?: string; id?: string }) => {
+      const text = String(textRaw || '').trim();
+      if (!text) return;
+      const section = classify(meta?.type, meta?.groupTitle, meta?.groupId, meta?.category, meta?.id, text);
+      if (section === 'ignore') return;
+      if (section === 'choose_pasta') return pushText(choosePasta, text);
+      if (section === 'choose_sauce') return pushText(chooseSauce, text);
+      if (section === 'add_toppings') return pushText(addToppings, text);
+      if (section === 'special_instructions') return pushText(specialInstructions, text);
+      if (section === 'extra_toppings') return pushText(extraToppings, text);
+      if (section === 'lite_toppings') return pushText(liteToppings, text);
+      if (section === 'no_toppings') return pushText(noToppings, text);
+      if (section === 'dessert') return pushCount(desserts, text);
+      if (section === 'beverage') return pushCount(beverages, text);
+    };
+
+    (item.selections || []).forEach((sel: any) => {
+      ingest(String(sel?.label || ''), {
+        type: sel?.type,
+        groupTitle: sel?.groupTitle,
+        groupId: sel?.groupId,
+        id: sel?.id,
+      });
+    });
+
+    (item.customizations || []).forEach((c: any) => {
+      const items = Array.isArray(c?.items) ? c.items : [];
+      items.forEach((raw: any) => {
+        ingest(String(raw || ''), {
+          category: c?.category,
+          groupTitle: c?.category,
+          groupId: c?.groupId,
+        });
+      });
+    });
+
+    rawLines.forEach((line) => {
+      ingest(String(line?.text || ''), {
+        type: line?.originalSel?.type,
+        groupTitle: line?.originalSel?.groupTitle,
+        groupId: line?.originalSel?.groupId,
+        id: line?.originalSel?.id,
+      });
+    });
+
+    const toTextLines = (bucket: { order: string[]; map: Map<string, string> }): string[] =>
+      bucket.order.map((k) => bucket.map.get(k)!).filter(Boolean);
+
+    const toCountLines = (bucket: { order: string[]; map: Map<string, { base: string; qty: number }> }): string[] =>
+      bucket.order.map((k) => {
+        const entry = bucket.map.get(k)!;
+        return entry.qty > 1 ? `${entry.base} x${entry.qty}` : entry.base;
+      });
+
+    if (isKidsCreatePasta) {
+      return [
+        ...toTextLines(choosePasta),
+        ...toTextLines(chooseSauce),
+        ...toTextLines(addToppings),
+        ...toTextLines(specialInstructions),
+        ...toCountLines(desserts),
+        ...toCountLines(beverages),
+      ];
+    }
+
+    if (isKidsBaked) {
+      return [
+        ...toTextLines(extraToppings),
+        ...toTextLines(liteToppings),
+        ...toTextLines(noToppings),
+        ...toCountLines(desserts),
+        ...toCountLines(beverages),
+      ];
+    }
+
+    if (isKidsFingers) {
+      return [
+        ...toCountLines(desserts),
+        ...toCountLines(beverages),
+      ];
+    }
+
+    if (isKidsPastaMeatball) {
+      return [
+        ...toTextLines(choosePasta),
+        ...toTextLines(specialInstructions),
+        ...toTextLines(addToppings),
+        ...toCountLines(desserts),
+        ...toCountLines(beverages),
+      ];
+    }
+
+    return [
+      ...toCountLines(desserts),
+      ...toCountLines(beverages),
+    ];
+};
+
 const buildChickenTendersDisplayLines = (item: CartItem, rawLines: { text: string; originalSel?: CartSelection }[], itemQty: number): string[] => {
     const isQtyEcho = (text: string): boolean =>
       /^\d+\s+chicken\s+tenders\b/i.test(String(text || '').trim());
@@ -3423,13 +3826,13 @@ const getDesiredOrder = (item: CartItem): { mode: 'full' | 'tail'; sections: str
     }
     return { mode: 'full', sections: ['Choose a Pasta', 'Choose your Sauce', 'Dessert', 'Beverages'] };
   }
-  if (category === 'soups') return { mode: 'full', sections: ['Substitute', 'Special Instructions', 'Dessert', 'Beverages'] };
+  if (category === 'soups') return { mode: 'full', sections: ['Substitute', 'Special Instructions', 'Dessert', 'Beverage'] };
   if (category === 'kids' || category === 'kids-menu') {
-    if (name.includes('create your own kids pasta')) return { mode: 'full', sections: ['Choose a Pasta', 'Choose a Sauce', 'Choose your Sauce', 'Add Toppings', 'Special Instructions', 'Dessert', 'Beverages'] };
-    if (name.includes('baked ziti') || name.includes('cheese ravioli') || name.includes('cheese tortellini')) return { mode: 'full', sections: ['Extra Toppings', 'Lite Toppings', 'No Toppings', 'Dessert', 'Beverages'] };
-    if (name.includes('chicken fingers and french fries')) return { mode: 'full', sections: ['Dessert', 'Beverages'] };
-    if (name.includes('pasta and meatball')) return { mode: 'full', sections: ['Choose a Pasta', 'Special Instructions', 'Add Toppings', 'Dessert', 'Beverages'] };
-    return { mode: 'full', sections: ['Dessert', 'Beverages'] };
+    if (name.includes('create your own kids pasta')) return { mode: 'full', sections: ['Choose a Pasta', 'Choose a Sauce', 'Add Toppings', 'Special Instructions', 'Dessert', 'Beverage'] };
+    if (name.includes('baked ziti') || name.includes('cheese ravioli') || name.includes('cheese tortellini')) return { mode: 'full', sections: ['Extra Toppings', 'Lite Toppings', 'No Toppings', 'Dessert', 'Beverage'] };
+    if (name.includes('chicken fingers and french fries')) return { mode: 'full', sections: ['Desserts', 'Beverage'] };
+    if (name.includes('pasta and meatball')) return { mode: 'full', sections: ['Choose a Pasta', 'Special Instructions', 'Add Toppings', 'Dessert', 'Beverage'] };
+    return { mode: 'full', sections: ['Dessert', 'Beverage'] };
   }
   if (category === 'desserts' || category === 'pizzelle' || category === 'gelati') return { mode: 'full', sections: ['Dessert', 'Beverages'] };
   if (category === 'beverages') return { mode: 'full', sections: ['Dessert'] };
@@ -3581,6 +3984,8 @@ const applyCategoryOrdering = (item: CartItem, lines: string[]): string[] => {
   const buckets: Record<string, string[]> = {};
   const other: string[] = [];
   const sectionAliases: Record<string, string[]> = {
+    Dessert: ['Dessert', 'Desserts'],
+    Desserts: ['Desserts', 'Dessert'],
     Beverage: ['Beverage', 'Beverages'],
     Beverages: ['Beverages', 'Beverage'],
   };
@@ -3978,6 +4383,16 @@ export const buildCartDisplayLines = (item: CartItem): string[] => {
   // B.5) Specialty Fresh Salad (strict deterministic order)
   if (item.category === 'salads') {
       return buildSpecialtySaladLines(item, rawLines, itemQty);
+  }
+
+  // B.6) Soups (strict deterministic order)
+  if (item.category === 'soups') {
+      return buildSoupsLines(item, rawLines, itemQty);
+  }
+
+  // B.7) Kids Menu (strict deterministic order)
+  if (item.category === 'kids' || item.category === 'kids-menu') {
+      return buildKidsLines(item, rawLines, itemQty);
   }
 
   // C) Wings

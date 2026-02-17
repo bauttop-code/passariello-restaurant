@@ -1110,7 +1110,7 @@ const meatballsSausageSauceToppings: Topping[] = [
 // Pasta Fagioli Soup Toppings - Special Instructions and Substitute Cracker
 const pastaFagioliSpecialInstructions: Topping[] = [
   {
-    id: 'pfs1',
+    id: 'pfsi1',
     name: 'No Pasta',
     price: 0.00,
     image: 'https://images.unsplash.com/photo-1610565826403-0a8cecc8ce5e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
@@ -4718,6 +4718,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       ? '10' 
       : product.category === 'cold-hoagies' || product.category === 'hot-hoagies'
         ? 'large'
+        : product.category === 'soups'
+          ? 'medium'
         : (product.id === 'cp2' || product.id === 'cp5' || product.id === 'cp6' || product.id === 'cp11' || product.id === 'cp12')
           ? 'large'
           : product.category === 'catering-pasta'
@@ -5103,6 +5105,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
               if (items[0]?.includes('Medium')) setSelectedSize('medium');
               else if (items[0]?.includes('Large')) setSelectedSize('large');
               else if (items[0]?.includes('Jumbo')) setSelectedSize('jumbo');
+              else if (items[0]?.toLowerCase().includes('16oz')) setSelectedSize('medium');
+              else if (items[0]?.toLowerCase().includes('32oz')) setSelectedSize('large');
               break;
             
             case 'Toppings':
@@ -5265,6 +5269,14 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     setActiveDessertItem(null);
     setActiveBeverageItem(null);
   }, [product.id, isEditMode]);
+
+  // Soups should default to 16oz when opening product in non-edit mode.
+  useEffect(() => {
+    if (isEditMode) return;
+    if (product.category === 'soups') {
+      setSelectedSize('medium');
+    }
+  }, [product.id, product.category, isEditMode]);
   
   // Pre-select Mozzarella cheese for Pizza Steak
   useEffect(() => {
@@ -26117,13 +26129,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     return `${baseName} (No ${removedNames.join(', No ')})`;
                 };
                 
-                // Add Pizza Size (for pizzas)
-                if (product.category === 'pizzas' && selectedSize) {
-                  const sizeNames: Record<string, string> = {
-                    'medium': 'Medium (14")',
-                    'large': 'Large (16")',
-                    'jumbo': 'Jumbo (18")'
-                  };
+                // Add Size (pizzas + soups)
+                if ((product.category === 'pizzas' || product.category === 'soups') && selectedSize) {
+                  const sizeNames: Record<string, string> = product.category === 'soups'
+                    ? { 'medium': '16Oz', 'large': '32Oz' }
+                    : { 'medium': 'Medium (14")', 'large': 'Large (16")', 'jumbo': 'Jumbo (18")' };
                   if (sizeNames[selectedSize]) {
                     // LEGACY
                     customizations.push({
@@ -26134,7 +26144,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     selections.push({
                       id: selectedSize,
                       label: sizeNames[selectedSize],
-                      type: 'size'
+                      type: 'size',
+                      groupId: 'size_options',
+                      groupTitle: 'Size'
                     });
                   }
                 }
@@ -28104,9 +28116,35 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 });
                 
                 // Kids & Pasta
+                if (selectedKidsPastaType) {
+                  registerSelectionsFromIds([selectedKidsPastaType], {
+                    debugKey: "selectedKidsPastaType",
+                    fallbackType: "pasta_type",
+                  });
+                }
+                if (selectedKidsPastaSauce) {
+                  registerSelectionsFromIds([selectedKidsPastaSauce], {
+                    debugKey: "selectedKidsPastaSauce",
+                    fallbackType: "sauce",
+                  });
+                }
+                registerSelectionsFromIds(selectedKidsPastaSpecialInstructions, {
+                  debugKey: "selectedKidsPastaSpecialInstructions",
+                  fallbackType: "special_instruction",
+                });
                 registerSelectionsFromIds(selectedKidsPastaToppings, {
                   debugKey: "selectedKidsPastaToppings",
                   fallbackType: "topping",
+                });
+                if (selectedKidsPastaMeatballType) {
+                  registerSelectionsFromIds([selectedKidsPastaMeatballType], {
+                    debugKey: "selectedKidsPastaMeatballType",
+                    fallbackType: "pasta_type",
+                  });
+                }
+                registerSelectionsFromIds(selectedKidsPastaMeatballSpecialInstructions, {
+                  debugKey: "selectedKidsPastaMeatballSpecialInstructions",
+                  fallbackType: "special_instruction",
                 });
                 registerSelectionsFromIds(selectedKidsPastaMeatballToppings, {
                   debugKey: "selectedKidsPastaMeatballToppings",
@@ -30698,17 +30736,22 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                      }
                   }
 
-                  // Add Pizza Size (for pizzas)
-                  if (product.category === 'pizzas' && selectedSize) {
-                    const sizeNames: Record<string, string> = {
-                      'medium': 'Medium (14")',
-                      'large': 'Large (16")',
-                      'jumbo': 'Jumbo (18")'
-                    };
+                  // Add Size (pizzas + soups)
+                  if ((product.category === 'pizzas' || product.category === 'soups') && selectedSize) {
+                    const sizeNames: Record<string, string> = product.category === 'soups'
+                      ? { 'medium': '16Oz', 'large': '32Oz' }
+                      : { 'medium': 'Medium (14")', 'large': 'Large (16")', 'jumbo': 'Jumbo (18")' };
                     if (sizeNames[selectedSize]) {
                       customizations.push({
                         category: 'Size',
                         items: [sizeNames[selectedSize]]
+                      });
+                      selections.push({
+                        id: selectedSize,
+                        label: sizeNames[selectedSize],
+                        type: 'size',
+                        groupId: 'size_options',
+                        groupTitle: 'Size'
                       });
                     }
                   }
@@ -31497,6 +31540,39 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   if (selectedBrooklynInstructions.length > 0) {
                     customizations.push({ category: 'Special Instructions', items: selectedBrooklynInstructions.map(id => getItemName(id)) });
                   }
+
+                  // Pasta e Fagioli (Soups): Substitute + Special Instructions
+                  if (selectedPastaFagioliSubstitute) {
+                    const substituteName = getItemName(selectedPastaFagioliSubstitute);
+                    if (substituteName) {
+                      customizations.push({ category: 'Substitute', items: [substituteName] });
+                      selections.push({
+                        id: selectedPastaFagioliSubstitute,
+                        label: substituteName,
+                        type: 'other',
+                        groupId: 'substitute',
+                        groupTitle: 'Substitute',
+                      });
+                    }
+                  }
+                  if (selectedPastaFagioliSpecialInstructions.length > 0) {
+                    const names = selectedPastaFagioliSpecialInstructions.map(id => getItemName(id)).filter(Boolean);
+                    if (names.length > 0) {
+                      customizations.push({ category: 'Special Instructions', items: names });
+                    }
+                    selectedPastaFagioliSpecialInstructions.forEach(id => {
+                      const name = getItemName(id);
+                      if (name) {
+                        selections.push({
+                          id,
+                          label: name,
+                          type: 'special_instruction',
+                          groupId: 'pasta_fagioli_special_instructions',
+                          groupTitle: 'Special Instructions',
+                        });
+                      }
+                    });
+                  }
                   
                   // Add Pizza Dippings (Optional)
                   if (Object.keys(selectedPizzaDippings).length > 0) {
@@ -31651,7 +31727,12 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   registerSelectionsFromIds(selectedPaniniSides, { debugKey: "selectedPaniniSides", fallbackType: "side" });
                   registerSelectionsFromIds(selectedBriocheNo, { debugKey: "selectedBriocheNo", fallbackType: "no_topping" });
                   registerSelectionsFromIds(selectedBriocheSide, { debugKey: "selectedBriocheSide", fallbackType: "side" });
+                  if (selectedKidsPastaType) registerSelectionsFromIds([selectedKidsPastaType], { debugKey: "selectedKidsPastaType", fallbackType: "pasta_type" });
+                  if (selectedKidsPastaSauce) registerSelectionsFromIds([selectedKidsPastaSauce], { debugKey: "selectedKidsPastaSauce", fallbackType: "sauce" });
+                  registerSelectionsFromIds(selectedKidsPastaSpecialInstructions, { debugKey: "selectedKidsPastaSpecialInstructions", fallbackType: "special_instruction" });
                   registerSelectionsFromIds(selectedKidsPastaToppings, { debugKey: "selectedKidsPastaToppings", fallbackType: "topping" });
+                  if (selectedKidsPastaMeatballType) registerSelectionsFromIds([selectedKidsPastaMeatballType], { debugKey: "selectedKidsPastaMeatballType", fallbackType: "pasta_type" });
+                  registerSelectionsFromIds(selectedKidsPastaMeatballSpecialInstructions, { debugKey: "selectedKidsPastaMeatballSpecialInstructions", fallbackType: "special_instruction" });
                   registerSelectionsFromIds(selectedKidsPastaMeatballToppings, { debugKey: "selectedKidsPastaMeatballToppings", fallbackType: "topping" });
                   registerSelectionsFromIds(selectedKidsBakedExtraToppings, { debugKey: "selectedKidsBakedExtraToppings", fallbackType: "extra_topping" });
                   registerSelectionsFromIds(selectedKidsBakedLiteToppings, { debugKey: "selectedKidsBakedLiteToppings", fallbackType: "topping" });
@@ -31678,6 +31759,10 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   if (selectedWrapPlatterSideToppings && Object.keys(selectedWrapPlatterSideToppings).length > 0) registerWrapPlatterSelections(selectedWrapPlatterSideToppings, { groupId: "wrap_platter_side_toppings", groupTitle: "Wrap Platter • Side Toppings", debugKey: "selectedWrapPlatterSideToppings", isSide: true });
                   registerSelectionsFromIds(selectedChickenTendersSpecialInstructions, { debugKey: "selectedChickenTendersSpecialInstructions", fallbackType: "special_instruction", fallbackGroupId: "chicken_tenders_instructions", fallbackGroupTitle: "Chicken Tenders • Special Instructions" });
                   registerSelectionsFromIds(selectedWingsSpecialInstructions, { debugKey: "selectedWingsSpecialInstructions", fallbackType: "special_instruction", fallbackGroupId: "wings_instructions", fallbackGroupTitle: "Wings • Special Instructions" });
+                  if (selectedPastaFagioliSubstitute) {
+                    registerSelectionsFromIds([selectedPastaFagioliSubstitute], { debugKey: "selectedPastaFagioliSubstitute", fallbackType: "other", fallbackGroupId: "substitute", fallbackGroupTitle: "Substitute" });
+                  }
+                  registerSelectionsFromIds(selectedPastaFagioliSpecialInstructions, { debugKey: "selectedPastaFagioliSpecialInstructions", fallbackType: "special_instruction", fallbackGroupId: "pasta_fagioli_special_instructions", fallbackGroupTitle: "Special Instructions" });
                   
                   // Extra Side Sauces (Stromboli/Calzone/etc)
                   if (product.name === 'Buffalo Chicken Stromboli' && extraSideSauces && Object.keys(extraSideSauces).length > 0) {
