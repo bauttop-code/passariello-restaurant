@@ -36,11 +36,45 @@ const isWingsItem = (item: CartItem): boolean => {
 
   return (
     (item.category === 'wings') ||
+    (productId === 'capp1') ||
     (item.productId && (['w1', 'app18'].includes(item.productId) || item.productId.startsWith('wing'))) ||
     (item.name && item.name.toLowerCase().includes('wings')) ||
     (item.selections && item.selections?.some(s =>
       (s.groupId && (s.groupId.includes('wings_sauce') || s.groupId.includes('wings_extra') || s.groupId.includes('wings_dipping')))
     )) || false
+  );
+};
+
+const isChickenTendersItem = (item: CartItem): boolean => {
+  const productId = (item.productId || item.id || '').toLowerCase();
+  const name = (item.name || '').toLowerCase();
+  return (
+    productId === 'app6' ||
+    productId === 'wing3' ||
+    productId === 'capp2' ||
+    name.includes('chicken tenders') ||
+    !!item.selections?.some((s) => String(s?.groupId || '').toLowerCase().includes('chicken_tenders'))
+  );
+};
+
+const isMozzarellaSticksItem = (item: CartItem): boolean => {
+  const productId = (item.productId || item.id || '').toLowerCase();
+  const name = (item.name || '').toLowerCase();
+  return (
+    productId === 'app4' ||
+    productId === 'wing4' ||
+    productId === 'capp3' ||
+    name.includes('mozzarella sticks')
+  );
+};
+
+const isAranciniItem = (item: CartItem): boolean => {
+  const productId = (item.productId || item.id || '').toLowerCase();
+  const name = (item.name || '').toLowerCase();
+  return (
+    productId === 'app8' ||
+    productId === 'capp4' ||
+    name.includes('arancini rice ball')
   );
 };
 
@@ -83,6 +117,8 @@ const getItemSize = (item: CartItem): string | null => {
              const group = (s.groupTitle || '').toLowerCase();
              // Whitelist typical size words
              return /medium|large|jumbo|small|personal|giant|sheet|slice|10"|12"|14"|16"|18"/.test(label) ||
+                    /\b\d+\s*(pcs?|pieces?)\b/.test(label) ||
+                    /\bserves?\b/.test(label) ||
                     /size|tamaño/.test(group);
           }
           return false;
@@ -185,7 +221,7 @@ export const buildCartDisplayTitle = (item: CartItem): string => {
   }
 
   // 5. Chicken Tenders Logic (Explicit Quantity)
-  if (item.name && item.name.toLowerCase().includes('chicken tenders')) {
+  if (isChickenTendersItem(item)) {
       // Find Quantity selection (e.g. "4 Chicken Tenders")
       const qtySel = item.selections?.find(s => s.groupTitle === 'Quantity');
       if (qtySel) {
@@ -233,8 +269,14 @@ export const buildCartDisplayTitle = (item: CartItem): string => {
   // ------------------------------------
 
   if (size) {
-      // Clean up size for title: "Large (16")" -> "Large"
-      size = size.replace(/\s*\([^)]*\)/g, '').replace(/\s+\d+["']?.*$/, '').trim();
+      const isCatering = catLower.startsWith('catering-');
+      if (isCatering) {
+          // Preserve catering size semantics like "10 PCS" / "20 PCS".
+          size = size.replace(/\s*\([^)]*\)/g, '').trim();
+      } else {
+          // Clean up size for title: "Large (16")" -> "Large"
+          size = size.replace(/\s*\([^)]*\)/g, '').replace(/\s+\d+["']?.*$/, '').trim();
+      }
       
       // Prevent duplication if name already has size
       if (name.toLowerCase().includes(size.toLowerCase())) {
@@ -433,7 +475,8 @@ const buildWingsDisplayLines = (item: CartItem, rawLines: { text: string; origin
 
     // --- 5. ITERATION ---
 
-    rawLines.forEach(line => {
+    const ingestWingLine = (inputText: string, selInput?: CartSelection) => {
+        const line = { text: inputText, originalSel: selInput } as { text: string; originalSel?: CartSelection };
         let text = line.text.trim();
         const sel = line.originalSel;
 
@@ -486,6 +529,12 @@ const buildWingsDisplayLines = (item: CartItem, rawLines: { text: string; origin
              // Fallback
              addToBucket(specialInstructions as any, text);
         }
+    };
+
+    rawLines.forEach(line => ingestWingLine(line.text, line.originalSel));
+    (item.customizations || []).forEach((c: any) => {
+      const items = Array.isArray(c?.items) ? c.items : [];
+      items.forEach((raw: any) => ingestWingLine(String(raw || '')));
     });
 
     const getTexts = (b: any[]) => b.map(x => x.text);
@@ -1583,35 +1632,14 @@ const buildChickenTendersDisplayLines = (item: CartItem, rawLines: { text: strin
 
     const isArtifact = (text: string): boolean => {
       const t = String(text || '').trim().toLowerCase();
-      return (
-        !t ||
-        /^(american|full loaf|half loaf)(\s*x\s*\d+)?$/i.test(t) ||
-        isQtyEcho(t)
-      );
+      return !t || /^(american|full loaf|half loaf)(\s*x\s*\d+)?$/i.test(t) || isQtyEcho(t);
     };
 
-    const normalizeLine = (input: string): string => {
-      let text = String(input || '').trim();
-      if (!text) return text;
-
-      // Normalize naming
-      text = text.replace(/blue cheese/gi, 'Bleu Cheese');
-
-      // Included Honey Mustard should not be labeled as Extra.
-      if (/^extra\s+honey mustard sauce(?:\s*\(2oz\))?$/i.test(text)) {
-        text = text.replace(/^extra\s+/i, '');
-      }
-
-      // Ranch/Bleu in tenders detail should be reported as extra when present.
-      const lower = text.toLowerCase();
-      const isNoInstruction = lower.startsWith('no ');
-      const hasRanchOrBleu = lower.includes('ranch') || lower.includes('bleu cheese');
-      if (hasRanchOrBleu && !isNoInstruction && !/^extra\s+/i.test(text)) {
-        text = `Extra ${text}`;
-      }
-
-      return text.replace(/\s+/g, ' ').trim();
-    };
+    const normalize = (value: string): string =>
+      String(value || '')
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+        .trim();
 
     const parseTrailingQty = (value: string): { base: string; qty: number } => {
       const v = String(value || '').trim();
@@ -1620,22 +1648,29 @@ const buildChickenTendersDisplayLines = (item: CartItem, rawLines: { text: strin
       return { base: String(m[1] || '').trim(), qty: parseInt(m[2], 10) || 1 };
     };
 
+    const normalizeLine = (input: string): string => {
+      let text = String(input || '').trim();
+      if (!text) return text;
+      text = text.replace(/blue cheese/gi, 'Bleu Cheese').replace(/\s+/g, ' ').trim();
+      if (/^extra\s+honey mustard sauce(?:\s*\(\d+oz\))?$/i.test(text)) {
+        text = text.replace(/^extra\s+/i, '');
+      }
+      return text;
+    };
+
     const getChickenTendersCount = (): number => {
       const fromName = String(item.name || '').match(/\b(\d+)\s+chicken\s+tenders\b/i);
       if (fromName) return parseInt(fromName[1], 10) || 4;
-
       const fromRaw = rawLines
         .map((x) => String(x?.text || '').trim())
         .map((t) => t.match(/\b(\d+)\s+chicken\s+tenders\b/i))
         .find(Boolean);
       if (fromRaw && fromRaw[1]) return parseInt(fromRaw[1], 10) || 4;
-
       const fromQtySelection = (item.selections || [])
         .map((s) => String(s?.label || '').trim())
         .map((t) => t.match(/\b(\d+)\s*(?:pcs|pieces?)\b/i) || t.match(/\b(\d+)\s+chicken\s+tenders\b/i))
         .find(Boolean);
       if (fromQtySelection && fromQtySelection[1]) return parseInt(fromQtySelection[1], 10) || 4;
-
       return 4;
     };
 
@@ -1647,12 +1682,8 @@ const buildChickenTendersDisplayLines = (item: CartItem, rawLines: { text: strin
       return '2oz';
     };
 
-    const linesMap = new Map<string, { text: string; qty: number }>();
-    const order: string[] = [];
-    let substituteSauceChoice: string | null = null;
-
     const isBaseSauceChoice = (value: string): boolean => {
-      const v = String(value || '').toLowerCase().trim();
+      const v = normalize(value);
       return [
         'bbq sauce',
         'buffalo sauce',
@@ -1667,99 +1698,372 @@ const buildChickenTendersDisplayLines = (item: CartItem, rawLines: { text: strin
       ].includes(v);
     };
 
-    rawLines.forEach((l) => {
-      const raw = String(l?.text || '').trim();
-      if (isArtifact(raw)) return;
-      const text = normalizeLine(raw);
+    const bucketText = () => ({ order: [] as string[], map: new Map<string, string>() });
+    const bucketCount = () => ({ order: [] as string[], map: new Map<string, { base: string; qty: number }>() });
+    const included = bucketText();
+    const specialInstructions = bucketText();
+    const extraSauces = bucketCount();
+    const extraRanchBleu = bucketCount();
+    const desserts = bucketCount();
+    const beverages = bucketCount();
+
+    const pushText = (bucket: { order: string[]; map: Map<string, string> }, value: string) => {
+      const text = String(value || '').trim();
       if (!text) return;
-
-      const sel = l?.originalSel as any;
-      const gid = String(sel?.groupId || '').toLowerCase();
-      const gt = String(sel?.groupTitle || '').toLowerCase();
-      const typ = String(sel?.type || '').toLowerCase();
-      const isFromSubstituteModule =
-        gid.includes('wings_sauce') ||
-        gt.includes('substitute your sauce') ||
-        (typ === 'sauce' && isBaseSauceChoice(text));
-      if (!substituteSauceChoice && isFromSubstituteModule && isBaseSauceChoice(text)) {
-        substituteSauceChoice = text;
-      }
-
-      const parsed = parseTrailingQty(text);
-      const key = parsed.base.toLowerCase().replace(/\s+/g, ' ').trim();
+      const key = normalize(parseTrailingQty(text).base);
       if (!key) return;
-      if (!linesMap.has(key)) {
-        linesMap.set(key, { text: parsed.base, qty: parsed.qty });
-        order.push(key);
-        return;
-      }
-      const prev = linesMap.get(key)!;
-      if (parsed.qty > prev.qty) linesMap.set(key, { text: parsed.base, qty: parsed.qty });
-    });
-
-    const removeByPattern = (re: RegExp) => {
-      for (let i = order.length - 1; i >= 0; i--) {
-        const key = order[i];
-        const entry = linesMap.get(key);
-        if (!entry) continue;
-        if (re.test(entry.text)) {
-          linesMap.delete(key);
-          order.splice(i, 1);
-        }
+      if (!bucket.map.has(key)) {
+        bucket.map.set(key, text);
+        bucket.order.push(key);
       }
     };
 
-    // Detect substitute sauce robustly from collected lines when metadata is inconsistent.
-    if (!substituteSauceChoice) {
-      const fromLines = order
-        .map((k) => linesMap.get(k))
-        .filter(Boolean)
-        .map((x) => String(x!.text || '').trim())
-        .find((text) => isBaseSauceChoice(text));
-      if (fromLines) substituteSauceChoice = fromLines;
-    }
+    const pushCount = (bucket: { order: string[]; map: Map<string, { base: string; qty: number }> }, value: string) => {
+      const parsed = parseTrailingQty(value);
+      const key = normalize(parsed.base);
+      if (!key) return;
+      if (!bucket.map.has(key)) {
+        bucket.map.set(key, { base: parsed.base, qty: parsed.qty });
+        bucket.order.push(key);
+        return;
+      }
+      const prev = bucket.map.get(key)!;
+      bucket.map.set(key, {
+        base: prev.base.length >= parsed.base.length ? prev.base : parsed.base,
+        qty: Math.max(prev.qty, parsed.qty),
+      });
+    };
 
-    // Ensure included sauce is reported:
-    // - If user selected "Substitute Your Sauce", use that as included (replace Honey Mustard).
-    // - Otherwise default to Honey Mustard unless customer removed it.
-    const hasNoHoneyMustard = order.some((k) => k.includes('no honey mustard'));
-    if (substituteSauceChoice && !/^no sauce$/i.test(substituteSauceChoice)) {
-      // Replace default included Honey Mustard with chosen substitute.
-      removeByPattern(/honey mustard sauce(\s*\(\d+oz\))?/i);
+    let substituteSauceChoice: string | null = null;
+    let noSauceSelected = false;
+    let noHoneyMustardSelected = false;
 
+    const classify = (text: string, sel?: any, category?: string):
+      'substitute' | 'special' | 'extra_sauce' | 'extra_ranch_bleu' | 'dessert' | 'beverage' | 'ignore' => {
+      const t = normalize(sel?.type || '');
+      const gt = normalize(sel?.groupTitle || '');
+      const gid = normalize(sel?.groupId || '');
+      const cat = normalize(category || '');
+      const line = normalize(text);
+
+      if (!line) return 'ignore';
+      if (t === 'dessert' || gt.includes('dessert') || gid.includes('dessert') || cat.includes('dessert')) return 'dessert';
+      if (t === 'beverage' || gt.includes('beverage') || gid.includes('beverage') || cat.includes('beverage')) return 'beverage';
+
+      if (line.startsWith('no honey mustard')) return 'special';
+      if (line === 'no sauce') return 'substitute';
+
+      if (
+        gid.includes('wings_sauce') ||
+        gt.includes('substitute your sauce') ||
+        (t === 'sauce' && isBaseSauceChoice(line))
+      ) return 'substitute';
+
+      if (
+        t === 'special_instruction' ||
+        gid.includes('special_instruction') ||
+        gt.includes('special instruction') ||
+        line.includes('mixed in') ||
+        line.includes('on the side') ||
+        line.startsWith('no ')
+      ) return 'special';
+
+      const hasRanchOrBleu = line.includes('ranch') || line.includes('bleu cheese') || line.includes('blue cheese');
+      if (
+        gid.includes('cheese_ranch') ||
+        gt.includes('extra cheese/ranch') ||
+        (hasRanchOrBleu && (line.startsWith('extra ') || line.includes('oz')))
+      ) return 'extra_ranch_bleu';
+
+      if (
+        gid.includes('extra_sauce') ||
+        gt.includes('extra sauce') ||
+        line.startsWith('extra ') ||
+        (line.includes('oz') && line.includes('sauce'))
+      ) return 'extra_sauce';
+
+      return 'ignore';
+    };
+
+    const ingest = (rawInput: string, selInput?: any, category?: string) => {
+      const raw = String(rawInput || '').trim();
+      if (isArtifact(raw)) return;
+      let text = normalizeLine(raw);
+      if (!text) return;
+
+      const cls = classify(text, selInput, category);
+      const lineNorm = normalize(text);
+
+      if (cls === 'substitute') {
+        if (lineNorm === 'no sauce') {
+          noSauceSelected = true;
+          return;
+        }
+        if (isBaseSauceChoice(lineNorm) && !substituteSauceChoice) {
+          substituteSauceChoice = text;
+        }
+        return;
+      }
+
+      if (cls === 'special') {
+        if (lineNorm.startsWith('no honey mustard')) noHoneyMustardSelected = true;
+        pushText(specialInstructions, text);
+        return;
+      }
+
+      if (cls === 'extra_ranch_bleu') {
+        if (!/^extra\s+/i.test(text) && !/^no\b/i.test(lineNorm)) text = `Extra ${text}`;
+        pushCount(extraRanchBleu, text);
+        return;
+      }
+
+      if (cls === 'extra_sauce') {
+        if (!/^extra\s+/i.test(text) && !/^no\b/i.test(lineNorm)) text = `Extra ${text}`;
+        pushCount(extraSauces, text);
+        return;
+      }
+
+      if (cls === 'dessert') {
+        pushCount(desserts, text);
+        return;
+      }
+
+      if (cls === 'beverage') {
+        pushCount(beverages, text);
+      }
+    };
+
+    rawLines.forEach((l) => ingest(String(l?.text || ''), l?.originalSel));
+    (item.customizations || []).forEach((c: any) => {
+      const items = Array.isArray(c?.items) ? c.items : [];
+      items.forEach((raw: any) => ingest(String(raw || ''), undefined, String(c?.category || '')));
+    });
+
+    // Included / Substitute line (single source of truth)
+    if (!noSauceSelected) {
       const count = getChickenTendersCount();
       const oz = getIncludedHoneyMustardOz(count);
-      const substituteBase = substituteSauceChoice.replace(/\s*\(\d+oz\)\s*/i, '').trim();
-      // Remove existing plain/oz variants of the same substitute sauce before inserting the final one.
-      removeByPattern(new RegExp(`^${substituteBase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s*\\(\\d+oz\\))?$`, 'i'));
-
-      const substitutedLine = /\(\d+oz\)/i.test(substituteSauceChoice)
-        ? substituteSauceChoice
-        : `${substituteSauceChoice} (${oz})`;
-      const key = substitutedLine.toLowerCase().replace(/\s+/g, ' ').trim();
-      if (!linesMap.has(key)) {
-        linesMap.set(key, { text: substitutedLine, qty: 1 });
-        order.unshift(key);
-      }
-    } else if (substituteSauceChoice && /^no sauce$/i.test(substituteSauceChoice)) {
-      // No Sauce means no included Honey Mustard line.
-      removeByPattern(/honey mustard sauce(\s*\(\d+oz\))?/i);
-    } else if (!substituteSauceChoice && !hasNoHoneyMustard) {
-      const hasAnyHoneyMustard = order.some((k) => k.includes('honey mustard'));
-      if (!hasAnyHoneyMustard) {
-        const count = getChickenTendersCount();
-        const includedLine = `Honey Mustard Sauce (${getIncludedHoneyMustardOz(count)})`;
-        const key = includedLine.toLowerCase();
-        linesMap.set(key, { text: includedLine, qty: 1 });
-        order.unshift(key);
+      const base = substituteSauceChoice && !/^no sauce$/i.test(substituteSauceChoice)
+        ? substituteSauceChoice.replace(/\s*\(\d+oz\)\s*/i, '').trim()
+        : 'Honey Mustard Sauce';
+      if (!(normalize(base) === 'honey mustard sauce' && noHoneyMustardSelected)) {
+        pushText(included, `${base} (${oz})`);
       }
     }
 
-    return order.map((k) => {
-      const entry = linesMap.get(k)!;
-      return entry.qty > 1 ? `${entry.text} x${entry.qty}` : entry.text;
-    });
+    const toTextLines = (bucket: { order: string[]; map: Map<string, string> }): string[] =>
+      bucket.order.map((k) => bucket.map.get(k)!).filter(Boolean);
+    const toCountLines = (bucket: { order: string[]; map: Map<string, { base: string; qty: number }> }): string[] =>
+      bucket.order.map((k) => {
+        const entry = bucket.map.get(k)!;
+        return entry.qty > 1 ? `${entry.base} x${entry.qty}` : entry.base;
+      });
+
+    return [
+      ...toTextLines(included),
+      ...toTextLines(specialInstructions),
+      ...toCountLines(extraSauces),
+      ...toCountLines(extraRanchBleu),
+      ...toCountLines(desserts),
+      ...toCountLines(beverages),
+    ];
 }
+
+const buildSauceBasedAppetizerLines = (
+  item: CartItem,
+  rawLines: { text: string; originalSel?: CartSelection }[],
+  mode: 'mozzarella' | 'arancini'
+): string[] => {
+  const normalized = (value: string): string =>
+    String(value || '')
+      .toLowerCase()
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  const parseTrailingQty = (value: string): { base: string; qty: number } => {
+    const text = String(value || '').trim();
+    const m = text.match(/^(.*?)\s*x\s*(\d+)$/i);
+    if (!m) return { base: text, qty: 1 };
+    return { base: String(m[1] || '').trim(), qty: parseInt(m[2], 10) || 1 };
+  };
+
+  const bucketText = () => ({ order: [] as string[], map: new Map<string, string>() });
+  const bucketCount = () => ({ order: [] as string[], map: new Map<string, { base: string; qty: number }>() });
+
+  const included = bucketText();
+  const extras = bucketCount();
+  const special = bucketText();
+  const desserts = bucketCount();
+  const beverages = bucketCount();
+
+  const pushText = (bucket: { order: string[]; map: Map<string, string> }, value: string) => {
+    const text = String(value || '').trim();
+    if (!text) return;
+    const key = normalized(parseTrailingQty(text).base);
+    if (!key) return;
+    if (!bucket.map.has(key)) {
+      bucket.map.set(key, text);
+      bucket.order.push(key);
+    }
+  };
+
+  const pushCount = (bucket: { order: string[]; map: Map<string, { base: string; qty: number }> }, value: string) => {
+    const parsed = parseTrailingQty(value);
+    const key = normalized(parsed.base);
+    if (!key) return;
+    if (!bucket.map.has(key)) {
+      bucket.map.set(key, { base: parsed.base, qty: parsed.qty });
+      bucket.order.push(key);
+      return;
+    }
+    const prev = bucket.map.get(key)!;
+    bucket.map.set(key, {
+      base: prev.base.length >= parsed.base.length ? prev.base : parsed.base,
+      qty: Math.max(prev.qty, parsed.qty),
+    });
+  };
+
+  const isQtyEcho = (label: string): boolean => {
+    const l = normalized(label);
+    if (mode === 'mozzarella') return /\b\d+\s+mozzarella sticks\b/.test(l) || /\b\d+\s*pcs?\b/.test(l);
+    return /\b\d+\s+arancini(\s+rice\s+ball)?\b/.test(l) || /\b\d+\s*pcs?\b/.test(l) || l === '1pc';
+  };
+
+  const isArtifact = (label: string): boolean => {
+    const l = normalized(label);
+    return !l || isQtyEcho(l) || /^(american|full loaf|half loaf)(\s*x\s*\d+)?$/.test(l);
+  };
+
+  const classify = (text: string, meta?: { type?: string; groupId?: string; groupTitle?: string; category?: string }):
+    'included' | 'extra' | 'special' | 'dessert' | 'beverage' | 'ignore' => {
+    const line = normalized(text);
+    const type = normalized(meta?.type || '');
+    const gid = normalized(meta?.groupId || '');
+    const gt = normalized(meta?.groupTitle || '');
+    const cat = normalized(meta?.category || '');
+
+    if (isArtifact(line)) return 'ignore';
+    if (type === 'dessert' || gt.includes('dessert') || gid.includes('dessert') || cat.includes('dessert')) return 'dessert';
+    if (type === 'beverage' || gt.includes('beverage') || gid.includes('beverage') || cat.includes('beverage')) return 'beverage';
+    if (gid.includes('included_sauce') || gt === 'included') return 'included';
+
+    if (
+      gid.includes('mozzarella_sticks_instructions') ||
+      gid.includes('mozzarella_sticks_special_instructions') ||
+      gid.includes('arancini_special_instructions') ||
+      gt.includes('special instructions') ||
+      line.startsWith('no ')
+    ) return 'special';
+
+    if (
+      gid.includes('extra_sauce') ||
+      gt.includes('extra sauce') ||
+      line.startsWith('side of') ||
+      line.startsWith('extra ')
+    ) return 'extra';
+
+    // Remaining sauce-like lines that are not qty echoes are treated as included.
+    if (line.includes('sauce')) return 'included';
+    return 'ignore';
+  };
+
+  const ingest = (rawText: string, meta?: { type?: string; groupId?: string; groupTitle?: string; category?: string }) => {
+    let text = String(rawText || '').trim();
+    if (!text || isArtifact(text)) return;
+    text = text.replace(/blue cheese/gi, 'Bleu Cheese').replace(/\s+/g, ' ').trim();
+    const cls = classify(text, meta);
+    if (cls === 'ignore') return;
+    if (cls === 'included') return pushText(included, text);
+    if (cls === 'special') return pushText(special, text);
+    if (cls === 'extra') {
+      if (!/^extra\s+/i.test(text) && !/^side of/i.test(text) && !/^no\b/i.test(text)) {
+        text = `Extra ${text}`;
+      }
+      return pushCount(extras, text);
+    }
+    if (cls === 'dessert') return pushCount(desserts, text);
+    if (cls === 'beverage') return pushCount(beverages, text);
+  };
+
+  rawLines.forEach((line) => {
+    ingest(String(line?.text || ''), {
+      type: line?.originalSel?.type,
+      groupId: line?.originalSel?.groupId,
+      groupTitle: line?.originalSel?.groupTitle,
+    });
+  });
+
+  (item.customizations || []).forEach((c: any) => {
+    const items = Array.isArray(c?.items) ? c.items : [];
+    items.forEach((raw: any) => ingest(String(raw || ''), { category: String(c?.category || ''), groupTitle: String(c?.category || ''), groupId: String(c?.groupId || '') }));
+  });
+
+  const hasNoSauce = special.order.some((k) => k.startsWith('no sauce') || k.startsWith('no pomodoro sauce'));
+  if (hasNoSauce) {
+    included.order = [];
+    included.map.clear();
+  }
+
+  const getCountFromItem = (): number => {
+    const countFromName = String(item.name || '').match(/\b(\d+)\b/);
+    if (countFromName) return parseInt(countFromName[1], 10) || 0;
+    const countFromSelection = (item.selections || [])
+      .map((s) => String(s?.label || ''))
+      .map((l) => l.match(/\b(\d+)\s*(?:pcs?|pieces?|arancini|mozzarella)\b/i))
+      .find(Boolean);
+    if (countFromSelection && countFromSelection[1]) return parseInt(countFromSelection[1], 10) || 0;
+    return 0;
+  };
+
+  const getAranciniIncludedOz = (count: number): string => {
+    const pid = String(item.productId || item.id || '').toLowerCase();
+    if (pid === 'capp4') {
+      if (count >= 50) return '32oz';
+      if (count >= 30) return '16oz';
+      if (count >= 20) return '8oz';
+      return '4oz';
+    }
+    // app8 regular
+    if (count >= 16) return '32oz';
+    if (count >= 8) return '16oz';
+    if (count >= 4) return '8oz';
+    return '4oz';
+  };
+
+  const getMozzarellaIncludedOz = (count: number): string => {
+    if (count >= 48) return '32oz';
+    if (count >= 24) return '16oz';
+    if (count >= 12) return '8oz';
+    return '4oz';
+  };
+
+  // Included sauce must always be a single dynamic line (no xN duplication)
+  // and never derived from repeated raw/customization entries.
+  if (!hasNoSauce && (mode === 'arancini' || mode === 'mozzarella')) {
+    const count = getCountFromItem();
+    const oz = mode === 'arancini' ? getAranciniIncludedOz(count) : getMozzarellaIncludedOz(count);
+    included.order = [];
+    included.map.clear();
+    pushText(included, `(${oz}) Pomodoro Sauce`);
+  }
+
+  const toTextLines = (bucket: { order: string[]; map: Map<string, string> }): string[] =>
+    bucket.order.map((k) => bucket.map.get(k)!).filter(Boolean);
+
+  const toCountLines = (bucket: { order: string[]; map: Map<string, { base: string; qty: number }> }): string[] =>
+    bucket.order.map((k) => {
+      const entry = bucket.map.get(k)!;
+      return entry.qty > 1 ? `${entry.base} x${entry.qty}` : entry.base;
+    });
+
+  return [
+    ...toTextLines(included),
+    ...toCountLines(extras),
+    ...toTextLines(special),
+    ...toCountLines(desserts),
+    ...toCountLines(beverages),
+  ];
+};
 
 const buildSeafoodAppetizersDisplayLines = (item: CartItem, rawLines: { text: string; originalSel?: CartSelection }[], itemQty: number): string[] => {
     // Placeholder
@@ -3741,6 +4045,8 @@ const toLookupKey = (value: string): string =>
 const normalizeSectionName = (raw: string): string | null => {
   const s = String(raw || '').toLowerCase().trim();
   if (!s) return null;
+  if (s.includes('whole cakes')) return 'Whole Cakes';
+  if (s.includes('party cakes') || s.includes('party trays')) return 'Party Trays';
   if (s.includes('specialty toppings 1st') || s.includes('1st half')) return 'Specialty Toppings 1ST HALF';
   if (s.includes('specialty toppings 2nd') || s.includes('2nd half')) return 'Specialty Toppings 2ND HALF';
   if (s.includes('toast option')) return 'Toast Option';
@@ -3836,22 +4142,23 @@ const getDesiredOrder = (item: CartItem): { mode: 'full' | 'tail'; sections: str
   }
   if (category === 'desserts' || category === 'pizzelle' || category === 'gelati') return { mode: 'full', sections: ['Dessert', 'Beverages'] };
   if (category === 'beverages') return { mode: 'full', sections: ['Dessert'] };
-  if (category === 'catering-entrees') return { mode: 'full', sections: ['Special Instructions', 'Dessert', 'Beverages'] };
-  if (category === 'catering-pasta') return { mode: 'full', sections: ['Choose a Pasta', 'Extra Toppings', 'Dessert', 'Beverages'] };
-  if (category === 'catering-seafood-pasta') return { mode: 'full', sections: ['Pasta Type', 'Choose your Sauce', 'Dessert', 'Beverages'] };
-  if (category === 'catering-sides') return { mode: 'full', sections: ['Dessert', 'Beverages'] };
-  if (category === 'catering-salad-soups') return { mode: 'full', sections: ['Choose Your Base', 'Dressing Choice', 'Special Instructions', 'Dessert', 'Beverages'] };
+  if (category === 'catering-entrees') return { mode: 'full', sections: ['Add Sides', 'Side Soups, Salads, & Extra Bread', 'Special Instructions', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
+  if (category === 'catering-pasta') return { mode: 'full', sections: ['Choose a Pasta', 'Extra Toppings', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
+  if (category === 'catering-seafood-pasta') return { mode: 'full', sections: ['Pasta Type', 'Choose your Sauce', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
+  if (category === 'catering-sides') return { mode: 'full', sections: ['Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
+  if (category === 'catering-salad-soups') return { mode: 'full', sections: ['Choose Your Base', 'Dressing Choice', 'Special Instructions', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
   if (category === 'catering-hoagies-wraps') {
-    if (name.includes('hoagie platter')) return { mode: 'full', sections: ['Build Your Platter', 'Cut Options', 'Side Toppings', 'Dessert', 'Beverages'] };
-    if (name.includes('wrap platter')) return { mode: 'full', sections: ['Build Your Platter', 'Wrap type', 'Side Toppings', 'Dessert', 'Beverages'] };
-    if (name.includes('hot sandwich platter')) return { mode: 'full', sections: ['Build Your Platter', 'Cut Options', 'Side Toppings', 'Dessert', 'Beverages'] };
-    return { mode: 'full', sections: ['Build Your Platter', 'Side Toppings', 'Dessert', 'Beverages'] };
+    if (name.includes('hoagie platter')) return { mode: 'full', sections: ['Build Your Platter', 'Cut Options', 'Side Toppings', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
+    if (name.includes('wrap platter')) return { mode: 'full', sections: ['Build Your Platter', 'Wrap type', 'Side Toppings', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
+    if (name.includes('hot sandwich platter')) return { mode: 'full', sections: ['Build Your Platter', 'Cut Options', 'Side Toppings', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
+    return { mode: 'full', sections: ['Build Your Platter', 'Side Toppings', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
   }
-  if (category === 'catering-whole-cakes') return { mode: 'full', sections: ['Beverages'] };
-  if (category === 'catering-party-trays') return { mode: 'full', sections: ['Special Instructions', 'Beverages'] };
-  if (category === 'catering-desserts') return { mode: 'full', sections: ['Beverages'] };
+  if (category === 'catering-whole-cakes') return { mode: 'full', sections: ['Whole Cakes', 'Beverages'] };
+  if (category === 'catering-party-trays') return { mode: 'full', sections: ['Special Instructions', 'Party Trays', 'Beverages'] };
+  if (category === 'catering-desserts') return { mode: 'full', sections: ['Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
   if (category === 'catering-beverages') return { mode: 'full', sections: ['Dessert'] };
-  if (category === 'appetizers' || category === 'catering-appetizers') return { mode: 'tail', sections: ['Dessert', 'Beverages'] };
+  if (category === 'appetizers') return { mode: 'tail', sections: ['Dessert', 'Beverages'] };
+  if (category === 'catering-appetizers') return { mode: 'tail', sections: ['Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
   return null;
 };
 
@@ -3926,12 +4233,22 @@ const remapSectionForItem = (item: CartItem, section: string | null, text?: stri
     if (section === 'Sauce') return 'Choose your Sauce';
   }
 
+  if (category === 'catering-seafood-pasta') {
+    if (section === 'Choose a Sauce') return 'Choose your Sauce';
+    if (section === 'Sauce') return 'Choose your Sauce';
+  }
+
   if (category === 'kids' || category === 'kids-menu') {
     if (section === 'Pasta Type') return 'Choose a Pasta';
     if (section === 'Choose your Sauce') return 'Choose a Sauce';
   }
 
   if (category === 'traditional-dinners') {
+    if (section === 'Sides') return 'Add Sides';
+    if (section === 'Soups & Salads') return 'Side Soups, Salads, & Extra Bread';
+  }
+  
+  if (category === 'catering-entrees') {
     if (section === 'Sides') return 'Add Sides';
     if (section === 'Soups & Salads') return 'Side Soups, Salads, & Extra Bread';
   }
@@ -3956,6 +4273,17 @@ const remapSectionForItem = (item: CartItem, section: string | null, text?: stri
 const applyCategoryOrdering = (item: CartItem, lines: string[]): string[] => {
   const desired = getDesiredOrder(item);
   if (!desired) return lines;
+  const category = String(item.category || '').toLowerCase();
+
+  const resolveCateringDessertSection = (sel: any, current: string | null): string | null => {
+    if (!category.startsWith('catering-')) return current;
+    const section = String(current || '');
+    if (section !== 'Dessert') return current;
+    const sid = String(sel?.id || '').toLowerCase();
+    if (sid.startsWith('ccake')) return 'Whole Cakes';
+    if (sid.startsWith('cptray')) return 'Party Trays';
+    return current;
+  };
 
   const sectionByKey = new Map<string, string>();
   const bind = (label: string, section: string | null) => {
@@ -3970,7 +4298,10 @@ const applyCategoryOrdering = (item: CartItem, lines: string[]): string[] => {
       normalizeSectionName(String(sel?.groupTitle || '')) ||
       normalizeSectionName(String(sel?.groupId || '')) ||
       normalizeSectionName(String(sel?.type || ''));
-    const section = remapSectionForItem(item, rawSection, String(sel?.label || ''));
+    const section = resolveCateringDessertSection(
+      sel,
+      remapSectionForItem(item, rawSection, String(sel?.label || ''))
+    );
     bind(String(sel?.label || ''), section);
   });
 
@@ -4013,6 +4344,11 @@ const applyCategoryOrdering = (item: CartItem, lines: string[]): string[] => {
       else section = normalizeSectionName(text);
     }
     section = remapSectionForItem(item, section, text);
+    if (category.startsWith('catering-') && section === 'Dessert') {
+      const lk = text.toLowerCase();
+      if (lk.includes('tray')) section = 'Party Trays';
+      else if (lk.includes('cake') || lk.includes('pie')) section = 'Whole Cakes';
+    }
     if (!section) {
       pushUnique(other, text);
       return;
@@ -4033,7 +4369,6 @@ const applyCategoryOrdering = (item: CartItem, lines: string[]): string[] => {
   }
 
   const ordered = desired.sections.flatMap((sec) => getBucket(sec));
-  const category = String(item.category || '').toLowerCase();
   if (category === 'brioche') {
     return ordered;
   }
@@ -4347,8 +4682,18 @@ export const buildCartDisplayLines = (item: CartItem): string[] => {
   // A) Chicken Tenders (Specific Priority)
   // Check this BEFORE isWings because Chicken Tenders might be misclassified as Wings
   // if they share sauce group IDs or similar structure.
-  if (item.name && item.name.includes('Chicken Tenders')) {
+  if (isChickenTendersItem(item)) {
       return finalizeLines(withCustomizationFallback(item, buildChickenTendersDisplayLines(item, rawLines, itemQty)));
+  }
+
+  // A.1) Mozzarella Sticks (strict deterministic order)
+  if (isMozzarellaSticksItem(item)) {
+      return finalizeLines(buildSauceBasedAppetizerLines(item, rawLines, 'mozzarella'));
+  }
+
+  // A.2) Arancini Rice Ball (strict deterministic order)
+  if (isAranciniItem(item)) {
+      return finalizeLines(buildSauceBasedAppetizerLines(item, rawLines, 'arancini'));
   }
 
   // B) Cheesesteaks (must run before wings to avoid "Add Wings (10)" side contamination)

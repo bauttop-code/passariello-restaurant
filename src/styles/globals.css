@@ -331,3 +331,90 @@ html {
   background: #ffffff !important;
   background-image: none !important;
 }
+
+/* Collapsible product description (mobile + desktop) */
+.product-detail-page .desktop-summary-laptop-description-wrap {
+  position: relative;
+}
+
+.product-detail-page .desktop-summary-laptop .desktop-summary-laptop-description,
+.product-detail-page .desktop-summary-laptop-description {
+  margin-bottom: 0;
+}
+
+/* 2-line clamp; "Ver más" appears at end of second line */
+.product-detail-page .desktop-summary-laptop-description--collapsed {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-height: 2.8em;
+  padding-right: 68px;
+}
+
+.product-detail-page .desktop-summary-laptop-description--expanded {
+  display: block;
+  overflow: visible;
+  max-height: none;
+  padding-right: 0;
+}
+
+.product-detail-page .desktop-summary-laptop-toggle {
+  display: none;
+  background: #F5F3EB;
+  color: #A72020;
+  border: 0;
+  font-weight: 600;
+  font-size: 0.875rem;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+}
+
+.product-detail-page .desktop-summary-laptop-description-wrap--collapsed .desktop-summary-laptop-toggle {
+  display: inline-flex;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding-left: 8px;
+}
+
+.product-detail-page .desktop-summary-laptop-description-wrap--expanded .desktop-summary-laptop-toggle {
+  display: inline-flex;
+  position: static;
+  margin-top: 6px;
+}
+
+.product-detail-page .desktop-summary-laptop-toggle:focus-visible {
+  outline: 2px solid #A72020;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Product summary compact mode for laptop widths only */
+@media (min-width: 1024px) and (max-width: 1439px) {
+  .product-detail-page .desktop-summary-laptop {
+    padding: 12px;
+  }
+
+  .product-detail-page .desktop-summary-laptop > h1 {
+    font-size: clamp(2.1rem, 2.4vw, 2.5rem);
+    line-height: 1.12;
+    margin-bottom: 0.3rem;
+  }
+
+  .product-detail-page .desktop-summary-laptop > p {
+    margin-bottom: 0.3rem;
+  }
+
+  .product-detail-page .desktop-summary-laptop .desktop-summary-laptop-description {
+    font-size: 13px;
+    line-height: 1.4;
+    margin-bottom: 0.45rem;
+  }
+
+  .product-detail-page .desktop-summary-laptop button:not(.desktop-summary-laptop-toggle) {
+    padding: 0.38rem 0.85rem;
+    font-size: 0.95rem;
+  }
+}

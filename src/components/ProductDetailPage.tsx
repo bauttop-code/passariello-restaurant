@@ -4713,6 +4713,12 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
   const [isNoToppingsOpen, setIsNoToppingsOpen] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [itemName, setItemName] = useState('');
+  const [isDesktopDescriptionExpanded, setIsDesktopDescriptionExpanded] = useState(false);
+
+  useEffect(() => {
+    setIsDesktopDescriptionExpanded(false);
+  }, [product.id]);
+
   const [selectedSize, setSelectedSize] = useState<'medium' | 'large' | 'jumbo' | '10' | '20' | '30' | '40' | '50' | null>(
     ((product.category === 'wings' || product.category === 'catering-appetizers' || product.id === 'app18') && product.id !== 'app6')
       ? '10' 
@@ -4720,10 +4726,14 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
         ? 'large'
         : product.category === 'soups'
           ? 'medium'
+        : (product.category === 'sides' || product.category === 'entrees' || product.category === 'catering-sides')
+          ? 'medium'
         : (product.id === 'cp2' || product.id === 'cp5' || product.id === 'cp6' || product.id === 'cp11' || product.id === 'cp12')
           ? 'large'
-          : product.category === 'catering-pasta'
-            ? 'medium'
+        : product.category === 'catering-entrees'
+          ? 'medium'
+            : product.category === 'catering-pasta'
+              ? 'medium'
             : (product.id === 'cs3' || product.id === 'cs6' || product.id === 'cs7')
               ? 'large'
               : product.category === 'catering-seafood-pasta'
@@ -5270,10 +5280,16 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     setActiveBeverageItem(null);
   }, [product.id, isEditMode]);
 
-  // Soups should default to 16oz when opening product in non-edit mode.
+  // Categories that must start with Medium when opening product in non-edit mode.
   useEffect(() => {
     if (isEditMode) return;
-    if (product.category === 'soups') {
+    if (
+      product.category === 'soups' ||
+      product.category === 'sides' ||
+      product.category === 'entrees' ||
+      product.category === 'catering-sides' ||
+      product.category === 'catering-entrees'
+    ) {
       setSelectedSize('medium');
     }
   }, [product.id, product.category, isEditMode]);
@@ -7501,7 +7517,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     
     // ARANCINI specific (app8, capp4)
     if (currentProduct.id === 'app8') {
-      const aranciniKeys = ['selectedAranciniRegularQuantity', 'selectedAranciniRegularInstructions', 'selectedMozzarellaSticksSpecialInstructions'];
+      const aranciniKeys = ['selectedAranciniRegularQuantity', 'selectedAranciniRegularInstructions'];
       aranciniKeys.forEach(key => {
         if (allSources[key]) filtered[key] = allSources[key];
       });
@@ -7686,7 +7702,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
         'selectedPastaType', 'selectedSeafoodPastaType', 'selectedHoagiePlatterOptions',
         'selectedHoagiePlatterCut', 'selectedHoagiePlatterSideToppings', 'selectedWrapPlatterOptions',
         'selectedWrapPlatterWrapType', 'selectedWrapPlatterSideToppings', 'selectedHotSandwichPlatterOptions',
-        'selectedHotSandwichPlatterCut', 'selectedHotSandwichPlatterSideToppings'
+        'selectedHotSandwichPlatterCut', 'selectedHotSandwichPlatterSideToppings',
+        'selectedTraditionalDinnersSides', 'selectedTraditionalDinnersSoupsSalads'
       ];
       cateringKeys.forEach(key => {
         if (allSources[key]) filtered[key] = allSources[key];
@@ -7966,20 +7983,55 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
               </p>
 
               {/* Description */}
-              <p 
-                className="text-gray-600 mb-4 xl:mb-5"
-                dangerouslySetInnerHTML={{
-                  __html: (product.id === 'app4' || product.id === 'wing4' || product.id === 'capp3')
-                    ? getMozzarellaSticksDescription() 
-                    : (product.id === 'wing3' || product.id === 'app6' || product.id === 'capp2')
-                      ? getChickenTendersDescription()
-                      : (product.id === 'app8' || product.id === 'capp4')
-                        ? getAranciniRiceBallDescription()
-                        : (product.id === 'app18' || (product.category === 'wings' && product.id !== 'wing3' && product.id !== 'wing4') || (product.category === 'catering-appetizers' && product.id !== 'capp2' && product.id !== 'capp3' && product.id !== 'capp4'))
-                          ? getWingsDescription()
-                          : product.description
-                }}
-              />
+              <div
+                className={`desktop-summary-laptop-description-wrap mb-4 xl:mb-5 ${isDesktopDescriptionExpanded ? 'desktop-summary-laptop-description-wrap--expanded' : 'desktop-summary-laptop-description-wrap--collapsed'}`}
+                style={{ position: 'relative' }}
+              >
+                <p 
+                  className={`text-gray-600 desktop-summary-laptop-description ${isDesktopDescriptionExpanded ? 'desktop-summary-laptop-description--expanded' : 'desktop-summary-laptop-description--collapsed'}`}
+                  style={
+                    isDesktopDescriptionExpanded
+                      ? { paddingRight: 0 }
+                      : {
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                          maxHeight: '2.8em',
+                          paddingRight: '68px',
+                        }
+                  }
+                  dangerouslySetInnerHTML={{
+                    __html: (product.id === 'app4' || product.id === 'wing4' || product.id === 'capp3')
+                      ? getMozzarellaSticksDescription() 
+                      : (product.id === 'wing3' || product.id === 'app6' || product.id === 'capp2')
+                        ? getChickenTendersDescription()
+                        : (product.id === 'app8' || product.id === 'capp4')
+                          ? getAranciniRiceBallDescription()
+                          : (product.id === 'app18' || (product.category === 'wings' && product.id !== 'wing3' && product.id !== 'wing4') || (product.category === 'catering-appetizers' && product.id !== 'capp2' && product.id !== 'capp3' && product.id !== 'capp4'))
+                            ? getWingsDescription()
+                            : product.description
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsDesktopDescriptionExpanded(prev => !prev)}
+                  className="desktop-summary-laptop-toggle text-[#A72020] font-semibold text-sm"
+                  style={
+                    isDesktopDescriptionExpanded
+                      ? { position: 'relative', marginTop: '6px', display: 'inline-flex' }
+                      : {
+                          position: 'absolute',
+                          right: 0,
+                          bottom: 0,
+                          paddingLeft: '8px',
+                          display: 'inline-flex',
+                        }
+                  }
+                >
+                  {isDesktopDescriptionExpanded ? 'Ver menos' : 'Ver más'}
+                </button>
+              </div>
 
               {/* Garlic Bread Size Selection - Mobile - Only for app1 */}
               {product.id === 'app1' && (
@@ -15878,14 +15930,35 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   <div className="relative z-10">
                     <div className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {mozzarellaSticksSpecialInstructionsOptions
+                      {(product.id === 'app8' || product.id === 'capp4' ? aranciniSpecialInstructionsOptions : mozzarellaSticksSpecialInstructionsOptions)
                           .filter(instruction => instruction.name !== 'Well Done' && instruction.name !== 'No Pomodoro Sauce')
                           .map((instruction) => {
-                          const isSelected = selectedMozzarellaSticksSpecialInstructions.includes(instruction.id);
+                          const isSelected = (product.id === 'app8'
+                            ? selectedAranciniRegularInstructions
+                            : product.id === 'capp4'
+                              ? selectedAranciniInstructions
+                              : selectedMozzarellaSticksSpecialInstructions
+                          ).includes(instruction.id);
                           return (
                             <div
                               key={instruction.id}
                               onClick={() => {
+                                if (product.id === 'app8') {
+                                  if (isSelected) {
+                                    setSelectedAranciniRegularInstructions(selectedAranciniRegularInstructions.filter(id => id !== instruction.id));
+                                  } else {
+                                    setSelectedAranciniRegularInstructions([...selectedAranciniRegularInstructions, instruction.id]);
+                                  }
+                                  return;
+                                }
+                                if (product.id === 'capp4') {
+                                  if (isSelected) {
+                                    setSelectedAranciniInstructions(selectedAranciniInstructions.filter(id => id !== instruction.id));
+                                  } else {
+                                    setSelectedAranciniInstructions([...selectedAranciniInstructions, instruction.id]);
+                                  }
+                                  return;
+                                }
                                 if (isSelected) {
                                   setSelectedMozzarellaSticksSpecialInstructions(selectedMozzarellaSticksSpecialInstructions.filter(id => id !== instruction.id));
                                 } else {
@@ -15923,14 +15996,35 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           <span className="font-semibold" style={{fontSize: 'calc(1em + 3px)'}}>No toppings</span>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          {mozzarellaSticksSpecialInstructionsOptions
+                          {(product.id === 'app8' || product.id === 'capp4' ? aranciniSpecialInstructionsOptions : mozzarellaSticksSpecialInstructionsOptions)
                             .filter(instruction => instruction.name === 'No Pomodoro Sauce')
                             .map((instruction) => {
-                            const isSelected = selectedMozzarellaSticksSpecialInstructions.includes(instruction.id);
+                            const isSelected = (product.id === 'app8'
+                              ? selectedAranciniRegularInstructions
+                              : product.id === 'capp4'
+                                ? selectedAranciniInstructions
+                                : selectedMozzarellaSticksSpecialInstructions
+                            ).includes(instruction.id);
                             return (
                               <div
                                 key={instruction.id}
                                 onClick={() => {
+                                  if (product.id === 'app8') {
+                                    if (isSelected) {
+                                      setSelectedAranciniRegularInstructions(selectedAranciniRegularInstructions.filter(id => id !== instruction.id));
+                                    } else {
+                                      setSelectedAranciniRegularInstructions([...selectedAranciniRegularInstructions, instruction.id]);
+                                    }
+                                    return;
+                                  }
+                                  if (product.id === 'capp4') {
+                                    if (isSelected) {
+                                      setSelectedAranciniInstructions(selectedAranciniInstructions.filter(id => id !== instruction.id));
+                                    } else {
+                                      setSelectedAranciniInstructions([...selectedAranciniInstructions, instruction.id]);
+                                    }
+                                    return;
+                                  }
                                   if (isSelected) {
                                     setSelectedMozzarellaSticksSpecialInstructions(selectedMozzarellaSticksSpecialInstructions.filter(id => id !== instruction.id));
                                   } else {
@@ -24395,7 +24489,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
           </div>
           
           {/* Product Info - 40% of panel height - scrollable */}
-          <div className="basis-[40%] min-h-0 p-4 bg-[#F5F3EB] border-t overflow-y-auto box-border custom-scrollbar">
+          <div className="desktop-summary-laptop basis-[40%] min-h-0 p-4 bg-[#F5F3EB] border-t overflow-y-auto box-border custom-scrollbar">
             <h1 className="text-3xl font-bold text-gray-900 mb-1">
               {product.name.toLowerCase().includes('chicken tenders') ? 'Chicken Tenders W/FF' : product.name}
             </h1>
@@ -24409,7 +24503,74 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
               {product.id === 'stromboli-8' ? '$8.49' : displayPrice}
             </p>
             
-            <div className="text-gray-600 leading-relaxed mb-1" dangerouslySetInnerHTML={{ __html: product.name === 'Antipasto Salad' ? 'Romaine lettuce, ham, provolone cheese, salami, capicola, black and green olives, tomatoes, onions and marinated vegetables. Served with a side of our fresh baked homemade bread.' : (product.name === 'Boom Boom Chicken Pan Pizza' ? 'Chicken Steak mixed in our homemade buffalo sauce and mozzarella cheese. Served with your choice of bleu cheese or ranch dipping.' : (((product.name.toLowerCase().includes('italian') && product.name.toLowerCase().includes('stromboli')) || product.name === 'Stromboli' || product.id === 'stromboli-1') ? 'Ham, capicola, pepperoni, american cheese and mozzarella. Served with a cup of Pomodoro sauce on the side.' : ((product.id === 'app4' || product.id === 'wing4' || product.id === 'capp3') ? getMozzarellaSticksDescription() : ((product.id === 'app8' || product.id === 'capp4') ? getAranciniRiceBallDescription() : ((product.id === 'app18' || (product.category === 'wings' && product.id !== 'wing3' && product.id !== 'wing4')) ? ('Breaded with seasoned flour. Served with celery and <span class="bg-[#A72020] text-white px-2 py-0.5 rounded font-semibold">(' + (selectedSize === '50' ? '16oz' : selectedSize === '30' ? '8oz' : selectedSize === '20' ? '4oz' : '2oz') + ')</span> bleu cheese.') : ((product.id === 'app6' || product.id === 'wing3' || product.id === 'capp2') ? ('Crispy breaded tenders served with french fries and <span class="bg-[#A72020] text-white px-2 py-0.5 rounded font-semibold">(' + (selectedChickenTendersQuantity === '64pcs' ? '32oz' : selectedChickenTendersQuantity === '32pcs' ? '16oz' : selectedChickenTendersQuantity === '16pcs' ? '8oz' : selectedChickenTendersQuantity === '8pcs' ? '4oz' : '2oz') + ')</span> Honey Mustard.') : product.description)))))) }} />
+            {(() => {
+              const descriptionHtml = product.name === 'Antipasto Salad'
+                ? 'Romaine lettuce, ham, provolone cheese, salami, capicola, black and green olives, tomatoes, onions and marinated vegetables. Served with a side of our fresh baked homemade bread.'
+                : (product.name === 'Boom Boom Chicken Pan Pizza'
+                  ? 'Chicken Steak mixed in our homemade buffalo sauce and mozzarella cheese. Served with your choice of bleu cheese or ranch dipping.'
+                  : (((product.name.toLowerCase().includes('italian') && product.name.toLowerCase().includes('stromboli')) || product.name === 'Stromboli' || product.id === 'stromboli-1')
+                    ? 'Ham, capicola, pepperoni, american cheese and mozzarella. Served with a cup of Pomodoro sauce on the side.'
+                    : ((product.id === 'app4' || product.id === 'wing4' || product.id === 'capp3')
+                      ? getMozzarellaSticksDescription()
+                      : ((product.id === 'app8' || product.id === 'capp4')
+                        ? getAranciniRiceBallDescription()
+                        : ((product.id === 'app18' || (product.category === 'wings' && product.id !== 'wing3' && product.id !== 'wing4'))
+                          ? ('Breaded with seasoned flour. Served with celery and <span class="bg-[#A72020] text-white px-2 py-0.5 rounded font-semibold">(' + (selectedSize === '50' ? '16oz' : selectedSize === '30' ? '8oz' : selectedSize === '20' ? '4oz' : '2oz') + ')</span> bleu cheese.')
+                          : ((product.id === 'app6' || product.id === 'wing3' || product.id === 'capp2')
+                            ? ('Crispy breaded tenders served with french fries and <span class="bg-[#A72020] text-white px-2 py-0.5 rounded font-semibold">(' + (selectedChickenTendersQuantity === '64pcs' ? '32oz' : selectedChickenTendersQuantity === '32pcs' ? '16oz' : selectedChickenTendersQuantity === '16pcs' ? '8oz' : selectedChickenTendersQuantity === '8pcs' ? '4oz' : '2oz') + ')</span> Honey Mustard.')
+                            : product.description))))));
+
+              const plainText = descriptionHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+              const needsToggle = plainText.length > 90;
+              return (
+                <div
+                  className={`desktop-summary-laptop-description-wrap ${isDesktopDescriptionExpanded ? 'desktop-summary-laptop-description-wrap--expanded' : 'desktop-summary-laptop-description-wrap--collapsed'}`}
+                  style={{ position: 'relative' }}
+                >
+                  <div
+                    className={`text-gray-600 leading-relaxed mb-1 desktop-summary-laptop-description ${isDesktopDescriptionExpanded ? 'desktop-summary-laptop-description--expanded' : 'desktop-summary-laptop-description--collapsed'}`}
+                    style={
+                      isDesktopDescriptionExpanded
+                        ? { paddingRight: 0 }
+                        : {
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                            maxHeight: '2.8em',
+                            paddingRight: '74px',
+                            lineHeight: 1.4,
+                          }
+                    }
+                    dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+                  />
+                  {needsToggle && (
+                    <button
+                      type="button"
+                      onClick={() => setIsDesktopDescriptionExpanded(prev => !prev)}
+                      className="desktop-summary-laptop-toggle text-[#A72020] bg-transparent border-0 p-0 inline align-baseline"
+                      style={{
+                        fontSize: 'inherit',
+                        fontFamily: 'inherit',
+                        lineHeight: 'inherit',
+                        fontWeight: 'inherit',
+                        ...(isDesktopDescriptionExpanded
+                          ? { position: 'relative', marginTop: '2px', display: 'inline-flex' }
+                          : {
+                              position: 'absolute',
+                              right: 0,
+                              bottom: 0,
+                              paddingLeft: '8px',
+                              display: 'inline-flex',
+                            }),
+                      }}
+                    >
+                      {isDesktopDescriptionExpanded ? '[leer menos]' : '[leer más]'}
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
             
             {/* Garlic Bread Size Selection - Desktop - Only for app1 */}
             {product.id === 'app1' && (
@@ -26129,11 +26290,30 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     return `${baseName} (No ${removedNames.join(', No ')})`;
                 };
                 
-                // Add Size (pizzas + soups)
-                if ((product.category === 'pizzas' || product.category === 'soups') && selectedSize) {
+                // Add Size (pizzas + soups + catering with size selectors)
+                const shouldCaptureSize =
+                  product.category === 'pizzas' ||
+                  product.category === 'soups' ||
+                  product.category === 'catering-entrees' ||
+                  product.category === 'catering-pasta' ||
+                  product.category === 'catering-seafood-pasta' ||
+                  product.category === 'catering-salad-soups' ||
+                  product.category === 'catering-party-trays';
+                if (shouldCaptureSize && selectedSize) {
                   const sizeNames: Record<string, string> = product.category === 'soups'
                     ? { 'medium': '16Oz', 'large': '32Oz' }
-                    : { 'medium': 'Medium (14")', 'large': 'Large (16")', 'jumbo': 'Jumbo (18")' };
+                    : product.category === 'pizzas'
+                      ? { 'medium': 'Medium (14")', 'large': 'Large (16")', 'jumbo': 'Jumbo (18")' }
+                      : {
+                          'medium': 'Medium',
+                          'large': 'Large',
+                          'jumbo': 'Jumbo',
+                          '10': '10 PCS',
+                          '20': '20 PCS',
+                          '30': '30 PCS',
+                          '40': '40 PCS',
+                          '50': '50 PCS'
+                        };
                   if (sizeNames[selectedSize]) {
                     // LEGACY
                     customizations.push({
@@ -29129,11 +29309,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 }
                 // Arancini Catering
                 else if (product.id === 'capp4') {
-                     if (selectedAranciniQuantity === '10pcs') includedSauceLabel = '(16oz) Pomodoro Sauce';
-                     else if (selectedAranciniQuantity === '20pcs') includedSauceLabel = '(32oz) Pomodoro Sauce';
-                     else if (selectedAranciniQuantity === '30pcs') includedSauceLabel = '(48oz) Pomodoro Sauce';
-                     else if (selectedAranciniQuantity === '50pcs') includedSauceLabel = '(80oz) Pomodoro Sauce';
-                     else includedSauceLabel = '(16oz) Pomodoro Sauce';
+                     if (selectedAranciniQuantity === '10pcs') includedSauceLabel = '(4oz) Pomodoro Sauce';
+                     else if (selectedAranciniQuantity === '20pcs') includedSauceLabel = '(8oz) Pomodoro Sauce';
+                     else if (selectedAranciniQuantity === '30pcs') includedSauceLabel = '(16oz) Pomodoro Sauce';
+                     else if (selectedAranciniQuantity === '50pcs') includedSauceLabel = '(32oz) Pomodoro Sauce';
+                     else includedSauceLabel = '(4oz) Pomodoro Sauce';
                 }
                 // Mac & Cheese Bites (app13) handled in custom block above
                 else if (product.id === 'app13') {
@@ -30737,10 +30917,29 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   }
 
                   // Add Size (pizzas + soups)
-                  if ((product.category === 'pizzas' || product.category === 'soups') && selectedSize) {
+                  const shouldCaptureSizeDesktop =
+                    product.category === 'pizzas' ||
+                    product.category === 'soups' ||
+                    product.category === 'catering-entrees' ||
+                    product.category === 'catering-pasta' ||
+                    product.category === 'catering-seafood-pasta' ||
+                    product.category === 'catering-salad-soups' ||
+                    product.category === 'catering-party-trays';
+                  if (shouldCaptureSizeDesktop && selectedSize) {
                     const sizeNames: Record<string, string> = product.category === 'soups'
                       ? { 'medium': '16Oz', 'large': '32Oz' }
-                      : { 'medium': 'Medium (14")', 'large': 'Large (16")', 'jumbo': 'Jumbo (18")' };
+                      : product.category === 'pizzas'
+                        ? { 'medium': 'Medium (14")', 'large': 'Large (16")', 'jumbo': 'Jumbo (18")' }
+                        : {
+                            'medium': 'Medium',
+                            'large': 'Large',
+                            'jumbo': 'Jumbo',
+                            '10': '10 PCS',
+                            '20': '20 PCS',
+                            '30': '30 PCS',
+                            '40': '40 PCS',
+                            '50': '50 PCS'
+                          };
                     if (sizeNames[selectedSize]) {
                       customizations.push({
                         category: 'Size',
@@ -32163,11 +32362,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   }
                   // Arancini Catering
                   else if (product.id === 'capp4') {
-                       if (selectedAranciniQuantity === '10pcs') includedSauceLabel = '(16oz) Pomodoro Sauce';
-                       else if (selectedAranciniQuantity === '20pcs') includedSauceLabel = '(32oz) Pomodoro Sauce';
-                       else if (selectedAranciniQuantity === '30pcs') includedSauceLabel = '(48oz) Pomodoro Sauce';
-                       else if (selectedAranciniQuantity === '50pcs') includedSauceLabel = '(80oz) Pomodoro Sauce';
-                       else includedSauceLabel = '(16oz) Pomodoro Sauce';
+                       if (selectedAranciniQuantity === '10pcs') includedSauceLabel = '(4oz) Pomodoro Sauce';
+                       else if (selectedAranciniQuantity === '20pcs') includedSauceLabel = '(8oz) Pomodoro Sauce';
+                       else if (selectedAranciniQuantity === '30pcs') includedSauceLabel = '(16oz) Pomodoro Sauce';
+                       else if (selectedAranciniQuantity === '50pcs') includedSauceLabel = '(32oz) Pomodoro Sauce';
+                       else includedSauceLabel = '(4oz) Pomodoro Sauce';
                   }
                   // Wings & Catering Appetizers (Wings)
                   else if (product.id === 'app18' || (product.category === 'wings' && product.id !== 'wing3' && product.id !== 'wing4') || (product.category === 'catering-appetizers' && product.id !== 'capp2' && product.id !== 'capp3' && product.id !== 'capp4')) {
