@@ -10028,7 +10028,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   >
                     <div className="flex flex-col items-start gap-1">
                       <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>Dressing Choice (Required)</span>
-                      <span className="text-sm text-white/90">Choose at least 1, up to 3</span>
+                      <span className="text-sm text-[#1F2937]/90">Choose at least 1, up to 3</span>
                     </div>
                     {isSpecialInstructionsOpen ? (
                       <ChevronUp className="w-6 h-6" />
@@ -10759,7 +10759,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   >
                     <div className="flex flex-col items-start gap-1">
                       <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>Dressing Choice (Required)</span>
-                      <span className="text-sm text-white/90">Choose at least 1, up to 3</span>
+                      <span className="text-sm text-[#1F2937]/90">Choose at least 1, up to 3</span>
                     </div>
                     {isSpecialInstructionsOpen ? (
                       <ChevronUp className="w-6 h-6" />

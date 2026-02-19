@@ -4295,6 +4295,10 @@ const applyCategoryOrdering = (item: CartItem, lines: string[]): string[] => {
     if (category === 'catering-salad-soups') {
       return 'Dessert';
     }
+    // Catering Sides must keep all sweets under Dessert (no internal split).
+    if (category === 'catering-sides') {
+      return 'Dessert';
+    }
     if (category === 'catering-hoagies-wraps' && String(item.name || '').toLowerCase().includes('hoagie platter')) {
       return 'Dessert';
     }
@@ -4377,7 +4381,8 @@ const applyCategoryOrdering = (item: CartItem, lines: string[]): string[] => {
         category === 'catering-hoagies-wraps' &&
         String(item.name || '').toLowerCase().includes('hoagie platter');
       const isCateringSaladSoups = category === 'catering-salad-soups';
-      if (!isHoagiePlatterCatering && !isCateringSaladSoups) {
+      const isCateringSides = category === 'catering-sides';
+      if (!isHoagiePlatterCatering && !isCateringSaladSoups && !isCateringSides) {
         const lk = text.toLowerCase();
         if (lk.includes('tray')) section = 'Party Trays';
         else if (lk.includes('cake') || lk.includes('pie')) section = 'Whole Cakes';
