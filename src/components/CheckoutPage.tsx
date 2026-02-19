@@ -250,6 +250,9 @@ export function CheckoutPage({
   const taxes = subtotal * taxRate;
   const gratuity = customGratuity ? parseFloat(customGratuity) : (addGratuity ? (subtotal * gratuityPercent) / 100 : 0);
   const total = subtotal + taxes + gratuity;
+  const gratuityStops = [0, 5, 10, 15, 20, 25] as const;
+  const sliderMax = 30;
+  const sliderValue = customGratuity ? sliderMax : gratuityPercent;
 
   // Pre-fill contact details from delivery address
   useEffect(() => {
@@ -399,7 +402,7 @@ export function CheckoutPage({
           text: 'Apple Pay',
           handler: handleRedirectPayment,
           logo: (
-            <ImageWithFallback               src="https://drive.google.com/thumbnail?id=1xNT9TgoWItLkBMAzIgSsDNYe_BZw77kh&sz=w400" 
+            <ImageWithFallback               src="https://drive.google.com/thumbnail?id=14q2IkPdp9dE87_8w8hO9GfEwiB5NnRub&sz=w400" 
               alt="Apple Pay" 
               className="h-6 object-contain"
             />
@@ -1259,9 +1262,9 @@ export function CheckoutPage({
 
                     {/* Gratuity slider section */}
                     <div className="space-y-2.5">
-                      {/* Percentage labels row - aligned with slider track */}
-                      <div className="flex justify-between items-center text-sm">
-                        {[0, 5, 10, 15, 20, 25].map((percent) => (
+                      {/* Percentage labels row - fixed columns to match slider steps exactly */}
+                      <div className="grid grid-cols-7 items-center text-sm">
+                        {gratuityStops.map((percent) => (
                           <button
                             key={percent}
                             type="button"
@@ -1269,7 +1272,7 @@ export function CheckoutPage({
                               setCustomGratuity('');
                               setGratuityPercent(percent);
                             }}
-                            className={`transition-all select-none cursor-pointer min-w-[32px] text-center ${
+                            className={`transition-all select-none cursor-pointer w-full text-center ${
                               !customGratuity && gratuityPercent === percent
                                 ? 'font-bold text-[#A72020] scale-110'
                                 : 'text-gray-500 hover:text-gray-700'
@@ -1281,7 +1284,7 @@ export function CheckoutPage({
                         <button
                           type="button"
                           onClick={() => setCustomGratuity('40')}
-                          className={`transition-all select-none cursor-pointer min-w-[48px] text-center ${
+                          className={`transition-all select-none cursor-pointer w-full text-center ${
                             customGratuity
                               ? 'font-bold text-[#A72020] scale-110'
                               : 'text-gray-500 hover:text-gray-700'
@@ -1295,12 +1298,12 @@ export function CheckoutPage({
                       <input
                         type="range"
                         min="0"
-                        max="30"
+                        max={sliderMax}
                         step="5"
-                        value={customGratuity ? 30 : gratuityPercent}
+                        value={sliderValue}
                         onChange={(e) => {
                           const val = parseInt(e.target.value);
-                          if (val === 30) {
+                          if (val === sliderMax) {
                             setCustomGratuity('40');
                           } else {
                             setCustomGratuity('');
@@ -1309,7 +1312,7 @@ export function CheckoutPage({
                         }}
                         className="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer slider"
                         style={{
-                          background: `linear-gradient(to right, #A72020 0%, #A72020 ${((customGratuity ? 30 : gratuityPercent) / 30) * 100}%, #d1d5db ${((customGratuity ? 30 : gratuityPercent) / 30) * 100}%, #d1d5db 100%)`
+                          background: `linear-gradient(to right, #A72020 0%, #A72020 ${(sliderValue / sliderMax) * 100}%, #d1d5db ${(sliderValue / sliderMax) * 100}%, #d1d5db 100%)`
                         }}
                       />
                       

@@ -7872,7 +7872,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
   return (
     <div 
       data-testid="product-detail-root"
-      className="product-detail-root product-detail-page bg-white flex flex-col min-h-0 box-border overflow-x-hidden lg:fixed lg:left-0 lg:right-0 lg:bottom-0 lg:min-h-0 lg:w-screen lg:overflow-hidden"
+      className="product-detail-root product-detail-page bg-white flex flex-col min-h-0 box-border overflow-x-hidden overflow-y-auto lg:fixed lg:left-0 lg:right-0 lg:bottom-0 lg:min-h-0 lg:w-screen lg:overflow-hidden"
       style={{
         top: 'var(--appHeaderH, 0px)',
         height: 'calc(100dvh - var(--appHeaderH, 0px))',
@@ -9195,7 +9195,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       </div>
 
       {/* Desktop: 2-Column Layout Wrapper (hidden in mobile, grid in desktop) */}
-      <div className="flex-1 min-h-0 overflow-y-auto lg:h-full lg:max-h-full lg:overflow-hidden lg:grid lg:grid-cols-[60%_40%] lg:grid-rows-[1fr_auto] lg:min-h-0">
+      <div className="flex-1 min-h-0 overflow-visible lg:h-full lg:max-h-full lg:overflow-hidden lg:grid lg:grid-cols-[60%_40%] lg:grid-rows-[1fr_auto] lg:min-h-0">
         
         {/* LEFT COLUMN WRAPPER */}
         <div className="bg-white lg:col-start-1 lg:row-start-1 lg:flex lg:flex-col lg:min-h-0 lg:overflow-hidden">
