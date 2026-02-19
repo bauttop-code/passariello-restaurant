@@ -4076,6 +4076,7 @@ const normalizeSectionName = (raw: string): string | null => {
   if (s.includes('side toppings')) return 'Side Toppings';
   if (s.includes('add sides')) return 'Add Sides';
   if (s.includes('build your platter') || s.includes('select your wraps') || s.includes('select your hoagies') || s.includes('select your hot sandwiches')) return 'Build Your Platter';
+  if (s.includes('platter options')) return 'Build Your Platter';
   if (s.includes('cut options') || s.includes('cut options') || s.includes('cut option') || s.includes('cut in')) return 'Cut Options';
   if (s.includes('choose a pasta') || s.includes('your choice of pasta')) return 'Choose a Pasta';
   if (s.includes('pasta type')) return 'Pasta Type';
@@ -4145,10 +4146,10 @@ const getDesiredOrder = (item: CartItem): { mode: 'full' | 'tail'; sections: str
   if (category === 'catering-entrees') return { mode: 'full', sections: ['Add Sides', 'Side Soups, Salads, & Extra Bread', 'Special Instructions', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
   if (category === 'catering-pasta') return { mode: 'full', sections: ['Choose a Pasta', 'Extra Toppings', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
   if (category === 'catering-seafood-pasta') return { mode: 'full', sections: ['Pasta Type', 'Choose your Sauce', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
-  if (category === 'catering-sides') return { mode: 'full', sections: ['Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
-  if (category === 'catering-salad-soups') return { mode: 'full', sections: ['Choose Your Base', 'Dressing Choice', 'Special Instructions', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
+  if (category === 'catering-sides') return { mode: 'full', sections: ['Dessert', 'Beverages'] };
+  if (category === 'catering-salad-soups') return { mode: 'full', sections: ['Choose Your Base', 'Dressing Choice', 'Special Instructions', 'Dessert', 'Beverage'] };
   if (category === 'catering-hoagies-wraps') {
-    if (name.includes('hoagie platter')) return { mode: 'full', sections: ['Build Your Platter', 'Cut Options', 'Side Toppings', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
+    if (name.includes('hoagie platter')) return { mode: 'full', sections: ['Build Your Platter', 'Cut Options', 'Side Toppings', 'Dessert', 'Beverages'] };
     if (name.includes('wrap platter')) return { mode: 'full', sections: ['Build Your Platter', 'Wrap type', 'Side Toppings', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
     if (name.includes('hot sandwich platter')) return { mode: 'full', sections: ['Build Your Platter', 'Cut Options', 'Side Toppings', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
     return { mode: 'full', sections: ['Build Your Platter', 'Side Toppings', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
@@ -4261,10 +4262,21 @@ const remapSectionForItem = (item: CartItem, section: string | null, text?: stri
   if (category === 'catering-salad-soups') {
     if (section === 'Salad Base' || section === 'Choose Your Base') return 'Choose Your Base';
     if (section === 'Dressing' || section === 'Choose Your dressing') return 'Dressing Choice';
+    if (section === 'Beverages') return 'Beverage';
   }
 
   if (category === 'catering-hoagies-wraps' && section === 'Cut in') {
     return 'Cut Options';
+  }
+  if (category === 'catering-hoagies-wraps' && section === 'Platter Options') {
+    return 'Build Your Platter';
+  }
+  if (
+    category === 'catering-hoagies-wraps' &&
+    String(item.name || '').toLowerCase().includes('hoagie platter') &&
+    (section === 'Whole Cakes' || section === 'Party Trays')
+  ) {
+    return 'Dessert';
   }
 
   return section;
@@ -4279,6 +4291,13 @@ const applyCategoryOrdering = (item: CartItem, lines: string[]): string[] => {
     if (!category.startsWith('catering-')) return current;
     const section = String(current || '');
     if (section !== 'Dessert') return current;
+    // Catering Salad/Soups must keep all sweets under Dessert (no internal split).
+    if (category === 'catering-salad-soups') {
+      return 'Dessert';
+    }
+    if (category === 'catering-hoagies-wraps' && String(item.name || '').toLowerCase().includes('hoagie platter')) {
+      return 'Dessert';
+    }
     const sid = String(sel?.id || '').toLowerCase();
     if (sid.startsWith('ccake')) return 'Whole Cakes';
     if (sid.startsWith('cptray')) return 'Party Trays';
@@ -4334,7 +4353,7 @@ const applyCategoryOrdering = (item: CartItem, lines: string[]): string[] => {
   };
 
   lines.forEach((line) => {
-    const text = String(line || '').trim();
+    let text = String(line || '').trim();
     if (!text) return;
     const key = toLookupKey(text);
     let section = sectionByKey.get(key) || null;
@@ -4344,10 +4363,25 @@ const applyCategoryOrdering = (item: CartItem, lines: string[]): string[] => {
       else section = normalizeSectionName(text);
     }
     section = remapSectionForItem(item, section, text);
+    if (
+      category === 'catering-hoagies-wraps' &&
+      String(item.name || '').toLowerCase().includes('hoagie platter') &&
+      section === 'Build Your Platter'
+    ) {
+      // Hoagie Platter must report Build Your Platter entries with dynamic xN quantity.
+      const dynamicQty = Math.max(1, Number(item.quantity) || 1);
+      if (!/\bx\d+\b/i.test(text)) text = `${text} x${dynamicQty}`;
+    }
     if (category.startsWith('catering-') && section === 'Dessert') {
-      const lk = text.toLowerCase();
-      if (lk.includes('tray')) section = 'Party Trays';
-      else if (lk.includes('cake') || lk.includes('pie')) section = 'Whole Cakes';
+      const isHoagiePlatterCatering =
+        category === 'catering-hoagies-wraps' &&
+        String(item.name || '').toLowerCase().includes('hoagie platter');
+      const isCateringSaladSoups = category === 'catering-salad-soups';
+      if (!isHoagiePlatterCatering && !isCateringSaladSoups) {
+        const lk = text.toLowerCase();
+        if (lk.includes('tray')) section = 'Party Trays';
+        else if (lk.includes('cake') || lk.includes('pie')) section = 'Whole Cakes';
+      }
     }
     if (!section) {
       pushUnique(other, text);
@@ -4369,6 +4403,10 @@ const applyCategoryOrdering = (item: CartItem, lines: string[]): string[] => {
   }
 
   const ordered = desired.sections.flatMap((sec) => getBucket(sec));
+  if (category === 'catering-hoagies-wraps' && String(item.name || '').toLowerCase().includes('hoagie platter')) {
+    // Hoagie Platter must follow strict explicit order only.
+    return ordered;
+  }
   if (category === 'brioche') {
     return ordered;
   }
@@ -4848,7 +4886,12 @@ export const buildCartDisplayLines = (item: CartItem): string[] => {
           // getItemSize returns "Large (16")" from selections usually.
           // So if content === sizeFound, suppress.
           if (content === sizeFound) return;
-          if (content.startsWith(sizeFound)) return;
+          // Do not suppress real item names that happen to start with size words
+          // (e.g. catering desserts/trays like "Large ...").
+          const isPureSizeLabel =
+            /^(small|medium|large|jumbo|personal)\b/i.test(content) &&
+            !/(cake|tray|lava|cookie|tiramisu|cheesecake|brownie|cannoli|starry|pepsi|coke|sprite|water|tea|soda)/i.test(content);
+          if (isPureSizeLabel) return;
       }
 
       const dedupeKey = line.originalSel

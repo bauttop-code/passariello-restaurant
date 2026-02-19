@@ -4726,6 +4726,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
         ? 'large'
         : product.category === 'soups'
           ? 'medium'
+        : product.category === 'catering-salad-soups'
+          ? 'medium'
         : (product.category === 'sides' || product.category === 'entrees' || product.category === 'catering-sides')
           ? 'medium'
         : (product.id === 'cp2' || product.id === 'cp5' || product.id === 'cp6' || product.id === 'cp11' || product.id === 'cp12')
@@ -4748,9 +4750,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         ? '20'
                         : (product.id === 'c3' || product.id === 'c6' || product.id === 'c7')
                           ? 'large'
-                          : (product.id === 'csalad1' || product.id === 'csalad5' || product.id === 'csalad6')
-                            ? 'large'
-                            : product.category === 'pizzas'
+                          : product.category === 'pizzas'
                               ? 'large'
                               : product.category === 'specialty-pizza'
                                 ? (isNoSizePizza ? null : 'large')
@@ -5288,7 +5288,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       product.category === 'sides' ||
       product.category === 'entrees' ||
       product.category === 'catering-sides' ||
-      product.category === 'catering-entrees'
+      product.category === 'catering-entrees' ||
+      product.category === 'catering-salad-soups'
     ) {
       setSelectedSize('medium');
     }
@@ -7696,6 +7697,25 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       });
     }
     
+    // CATERING Salad/Soups specific
+    if (currentProduct.category === 'catering-salad-soups') {
+      const cateringSaladSoupKeys = [
+        // Catering salad bowl base + dressing + special instructions
+        'selectedAntipastoBase', 'selectedAntipastoDressings', 'selectedAntipastoSpecialInstructions',
+        'selectedCaesarBase', 'selectedCaesarDressings', 'selectedCaesarSpecialInstructions',
+        'selectedChickenCaesarBase', 'selectedChickenCaesarDressings', 'selectedChickenCaesarSpecialInstructions',
+        'selectedGardenBase', 'selectedGardenDressings', 'selectedGardenSpecialInstructions',
+        'selectedRoastedRedPepperBase', 'selectedRoastedRedPepperDressings',
+        'selectedThreeCheeseBase', 'selectedThreeCheeseDressings', 'selectedThreeCheeseSpecialInstructions',
+        'selectedTraditionalChefBase', 'selectedTraditionalChefDressings', 'selectedTraditionalChefSpecialInstructions',
+        // Keep soup substitute/instruction support when present in this section
+        'selectedPastaFagioliSubstitute', 'selectedPastaFagioliSpecialInstructions', 'selectedPastaFagioliSubstituteCracker'
+      ];
+      cateringSaladSoupKeys.forEach(key => {
+        if (allSources[key]) filtered[key] = allSources[key];
+      });
+    }
+
     // CATERING specific
     if (currentProduct.category?.startsWith('catering-')) {
       const cateringKeys = [
@@ -26125,6 +26145,16 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   groupTitle: 'Desserts',
                   type: 'dessert'
                 });
+                registerOptionsToLookup(selectionLookup, wholeCakesItems, {
+                  groupId: 'whole_cakes',
+                  groupTitle: 'Whole Cakes',
+                  type: 'dessert'
+                });
+                registerOptionsToLookup(selectionLookup, partyCakesItems, {
+                  groupId: 'party_trays',
+                  groupTitle: 'Party Trays',
+                  type: 'dessert'
+                });
                 
                 // Register customizationOptions from the current product (e.g., Minucci No Toppings)
                 if (product.customizationOptions) {
@@ -27101,10 +27131,12 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       
                       const name = dessert?.name;
                       if (name) {
-                        dessertItemsList.push(`${name} x${qty}`);
+                        const qtySuffix = qty > 1 ? ` x${qty}` : '';
+                        const displayLabel = `${name}${qtySuffix}`;
+                        dessertItemsList.push(displayLabel);
                         selections.push({
-                          id: dessertId,
-                          label: name,
+                          id: `${dessertId}-qty-${qty}`,
+                          label: displayLabel,
                           type: 'dessert'
                         });
                       }
@@ -27128,10 +27160,12 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       const name = beverage?.name;
                       
                       if (name) {
-                        beverageItemsList.push(`${name} x${qty}`);
+                        const qtySuffix = qty > 1 ? ` x${qty}` : '';
+                        const displayLabel = `${name}${qtySuffix}`;
+                        beverageItemsList.push(displayLabel);
                         selections.push({
-                          id: beverageId,
-                          label: name,
+                          id: `${beverageId}-qty-${qty}`,
+                          label: displayLabel,
                           type: 'beverage',
                           beverageCategory: getBeverageCategory(beverageId)
                         });
@@ -28118,6 +28152,35 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     });
                   });
                 };
+
+                // Hoagie Platter selections (Record<id, quantity>)
+                const registerHoagiePlatterSelections = (
+                  record: { [key: string]: number },
+                  options: {
+                    groupId: string;
+                    groupTitle: string;
+                    isSide?: boolean;
+                  }
+                ) => {
+                  Object.entries(record).forEach(([itemId, qty]) => {
+                    if (!qty || qty <= 0) return;
+
+                    const selectionId = `${options.groupId}:${itemId}`;
+                    const alreadyExists = selections.some((sel) => sel.id === selectionId);
+                    if (alreadyExists) return;
+
+                    const name = getItemName(itemId) ?? "Hoagie Platter Item";
+
+                    selections.push({
+                      id: selectionId,
+                      label: `${name} x${qty}`,
+                      type: options.isSide ? "side" : "topping",
+                      groupId: options.groupId,
+                      groupTitle: options.groupTitle,
+                      productId: product.id,
+                    });
+                  });
+                };
                 
                 // Map all missing selections that were only in customizations
                 registerSelectionsFromIds(selectedGrilledChickenNoToppings, {
@@ -28218,6 +28281,35 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   });
                 }
                 
+                // Wrap Platter
+                if (selectedHoagiePlatterOptions && Object.keys(selectedHoagiePlatterOptions).length > 0) {
+                  registerHoagiePlatterSelections(selectedHoagiePlatterOptions, {
+                    groupId: "hoagie_platter_options",
+                    groupTitle: "Build Your Platter",
+                  });
+                }
+                if (selectedHoagiePlatterCut) {
+                  const cutName = getItemName(selectedHoagiePlatterCut) ?? "Cut Options";
+                  const selectionId = `hoagie_platter_cut:${selectedHoagiePlatterCut}`;
+                  if (!selections.some((s) => s.id === selectionId)) {
+                    selections.push({
+                      id: selectionId,
+                      label: cutName,
+                      type: "required_option",
+                      groupId: "hoagie_platter_cut",
+                      groupTitle: "Cut Options",
+                      productId: product.id,
+                    });
+                  }
+                }
+                if (selectedHoagiePlatterSideToppings && Object.keys(selectedHoagiePlatterSideToppings).length > 0) {
+                  registerHoagiePlatterSelections(selectedHoagiePlatterSideToppings, {
+                    groupId: "hoagie_platter_side_toppings",
+                    groupTitle: "Side Toppings",
+                    isSide: true,
+                  });
+                }
+
                 // Wrap Platter
                 if (selectedWrapPlatterOptions && Object.keys(selectedWrapPlatterOptions).length > 0) {
                   registerWrapPlatterSelections(selectedWrapPlatterOptions, {
@@ -28933,8 +29025,6 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   selectedSauces: { kind: "stringArray", value: selectedSauces },
                   selectedIncluded: { kind: "singleString", value: selectedIncluded },
                   selectedToppings: { kind: "stringArray", value: selectedToppings },
-                  selectedDesserts: { kind: "numberRecord", value: selectedDesserts },
-                  selectedBeverages: { kind: "numberRecord", value: selectedBeverages },
                   selectedSpecialInstructions: { kind: "stringArray", value: selectedSpecialInstructions },
                   selectedExtraSauce: { kind: "stringArray", value: selectedExtraSauce },
                   selectedNoToppings: { kind: "stringArray", value: selectedNoToppings },
@@ -29160,11 +29250,6 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   selectedItalianChoppedSpecialInstructions: { kind: "stringArray", value: selectedItalianChoppedSpecialInstructions },
                   selectedRoastedRedPeppersSpecialInstructions: { kind: "stringArray", value: selectedRoastedRedPeppersSpecialInstructions },
                   selectedTunaSpecialInstructions: { kind: "stringArray", value: selectedTunaSpecialInstructions },
-
-                  // Hoagie Platter states
-                  selectedHoagiePlatterOptions: { kind: "numberRecord", value: selectedHoagiePlatterOptions },
-                  selectedHoagiePlatterCut: { kind: "singleString", value: selectedHoagiePlatterCut },
-                  selectedHoagiePlatterSideToppings: { kind: "numberRecord", value: selectedHoagiePlatterSideToppings },
 
                   // Wrap Platter states
                   selectedWrapPlatterOptions: { kind: "numberRecord", value: selectedWrapPlatterOptions },
@@ -30751,6 +30836,16 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     groupTitle: 'Desserts',
                     type: 'dessert'
                   });
+                  registerOptionsToLookup(selectionLookupDesktop, wholeCakesItems, {
+                    groupId: 'whole_cakes',
+                    groupTitle: 'Whole Cakes',
+                    type: 'dessert'
+                  });
+                  registerOptionsToLookup(selectionLookupDesktop, partyCakesItems, {
+                    groupId: 'party_trays',
+                    groupTitle: 'Party Trays',
+                    type: 'dessert'
+                  });
 
                   // Register Panini Type
                   registerOptionsToLookup(selectionLookupDesktop, paniniChooseType, {
@@ -31516,30 +31611,32 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   
                   // Add selected desserts (RECORD version)
                   if (Object.keys(selectedDesserts).length > 0) {
-                    const dessertItems: string[] = [];
+                    const dessertItemsList: string[] = [];
                     Object.entries(selectedDesserts).forEach(([dessertId, qty]) => {
                       if (qty > 0) {
-                        const dessert = allProducts.find(p => p.id === dessertId) || 
-                                      dessertItems.find(d => d.id === dessertId) ||
+                        const dessert = dessertItems.find(d => d.id === dessertId) ||
+                                      allProducts?.find(p => p.id === dessertId) || 
                                       wholeCakesItems.find(c => c.id === dessertId) ||
                                       partyCakesItems.find(c => c.id === dessertId);
                         
                         const name = dessert?.name;
                         if (name) {
-                          dessertItems.push(`${name} x${qty}`);
+                          const qtySuffix = qty > 1 ? ` x${qty}` : '';
+                          const displayLabel = `${name}${qtySuffix}`;
+                          dessertItemsList.push(displayLabel);
                           selections.push({
-                            id: dessertId,
-                            label: name,
+                            id: `${dessertId}-qty-${qty}`,
+                            label: displayLabel,
                             type: 'dessert'
                           });
                         }
                       }
                     });
                     
-                    if (dessertItems.length > 0) {
+                    if (dessertItemsList.length > 0) {
                       customizations.push({
                         category: 'Desserts',
-                        items: dessertItems
+                        items: dessertItemsList
                       });
                     }
                   }
@@ -31553,10 +31650,12 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         const name = beverage?.name;
                         
                         if (name) {
-                          beverageItemsList.push(`${name} x${qty}`);
+                          const qtySuffix = qty > 1 ? ` x${qty}` : '';
+                          const displayLabel = `${name}${qtySuffix}`;
+                          beverageItemsList.push(displayLabel);
                           selections.push({
-                            id: beverageId,
-                            label: name,
+                            id: `${beverageId}-qty-${qty}`,
+                            label: displayLabel,
                             type: 'beverage',
                             beverageCategory: getBeverageCategory(beverageId)
                           });
@@ -31902,6 +32001,35 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       });
                     });
                   };
+
+                  // Hoagie Platter selections (Record<id, quantity>)
+                  const registerHoagiePlatterSelections = (
+                    record: { [key: string]: number },
+                    options: {
+                      groupId: string;
+                      groupTitle: string;
+                      isSide?: boolean;
+                    }
+                  ) => {
+                    Object.entries(record).forEach(([itemId, qty]) => {
+                      if (!qty || qty <= 0) return;
+
+                      const selectionId = `${options.groupId}:${itemId}`;
+                      const alreadyExists = selections.some((sel) => sel.id === selectionId);
+                      if (alreadyExists) return;
+
+                      const name = getItemName(itemId) ?? "Hoagie Platter Item";
+
+                      selections.push({
+                        id: selectionId,
+                        label: `${name} x${qty}`,
+                        type: options.isSide ? "side" : "topping",
+                        groupId: options.groupId,
+                        groupTitle: options.groupTitle,
+                        productId: product.id,
+                      });
+                    });
+                  };
                   
                   // Map all missing selections
                   registerSelectionsFromIds(selectedGrilledChickenNoToppings, { debugKey: "selectedGrilledChickenNoToppings", fallbackType: "no_topping" });
@@ -31954,6 +32082,33 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   if (selectedWingsExtraCheeseRanch && Object.keys(selectedWingsExtraCheeseRanch).length > 0) registerExtraSauceSelections(selectedWingsExtraCheeseRanch, { groupId: "wings_extra_cheese_ranch", groupTitle: "Wings • Extra Cheese/Ranch", baseLabel: "Extra Cheese/Ranch", debugKey: "selectedWingsExtraCheeseRanch" });
                   if (selectedChickenTendersExtraSauce && Object.keys(selectedChickenTendersExtraSauce).length > 0) registerExtraSauceSelections(selectedChickenTendersExtraSauce, { groupId: "chicken_tenders_extra_sauce", groupTitle: "Chicken Tenders • Extra Sauce", baseLabel: "Extra Sauce", debugKey: "selectedChickenTendersExtraSauce" });
                   if (selectedChickenTendersExtraCheeseRanch && Object.keys(selectedChickenTendersExtraCheeseRanch).length > 0) registerExtraSauceSelections(selectedChickenTendersExtraCheeseRanch, { groupId: "chicken_tenders_extra_cheese_ranch", groupTitle: "Chicken Tenders • Extra Cheese/Ranch", baseLabel: "Extra Cheese/Ranch", debugKey: "selectedChickenTendersExtraCheeseRanch" });
+                  if (selectedHoagiePlatterOptions && Object.keys(selectedHoagiePlatterOptions).length > 0) {
+                    registerHoagiePlatterSelections(selectedHoagiePlatterOptions, {
+                      groupId: "hoagie_platter_options",
+                      groupTitle: "Build Your Platter",
+                    });
+                  }
+                  if (selectedHoagiePlatterCut) {
+                    const cutName = getItemName(selectedHoagiePlatterCut) ?? "Cut Options";
+                    const selectionId = `hoagie_platter_cut:${selectedHoagiePlatterCut}`;
+                    if (!selections.some((s) => s.id === selectionId)) {
+                      selections.push({
+                        id: selectionId,
+                        label: cutName,
+                        type: "required_option",
+                        groupId: "hoagie_platter_cut",
+                        groupTitle: "Cut Options",
+                        productId: product.id,
+                      });
+                    }
+                  }
+                  if (selectedHoagiePlatterSideToppings && Object.keys(selectedHoagiePlatterSideToppings).length > 0) {
+                    registerHoagiePlatterSelections(selectedHoagiePlatterSideToppings, {
+                      groupId: "hoagie_platter_side_toppings",
+                      groupTitle: "Side Toppings",
+                      isSide: true,
+                    });
+                  }
                   if (selectedWrapPlatterOptions && Object.keys(selectedWrapPlatterOptions).length > 0) registerWrapPlatterSelections(selectedWrapPlatterOptions, { groupId: "wrap_platter_options", groupTitle: "Wrap Platter • Wraps", debugKey: "selectedWrapPlatterOptions" });
                   if (selectedWrapPlatterSideToppings && Object.keys(selectedWrapPlatterSideToppings).length > 0) registerWrapPlatterSelections(selectedWrapPlatterSideToppings, { groupId: "wrap_platter_side_toppings", groupTitle: "Wrap Platter • Side Toppings", debugKey: "selectedWrapPlatterSideToppings", isSide: true });
                   registerSelectionsFromIds(selectedChickenTendersSpecialInstructions, { debugKey: "selectedChickenTendersSpecialInstructions", fallbackType: "special_instruction", fallbackGroupId: "chicken_tenders_instructions", fallbackGroupTitle: "Chicken Tenders • Special Instructions" });
@@ -31996,8 +32151,6 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     selectedSauces: { kind: "stringArray", value: selectedSauces },
                     selectedIncluded: { kind: "singleString", value: selectedIncluded },
                     selectedToppings: { kind: "stringArray", value: selectedToppings },
-                    selectedDesserts: { kind: "numberRecord", value: selectedDesserts },
-                    selectedBeverages: { kind: "numberRecord", value: selectedBeverages },
                     selectedSpecialInstructions: { kind: "stringArray", value: selectedSpecialInstructions },
                     selectedExtraSauce: { kind: "stringArray", value: selectedExtraSauce },
                     selectedNoToppings: { kind: "stringArray", value: selectedNoToppings },
@@ -32224,11 +32377,6 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     selectedItalianChoppedSpecialInstructions: { kind: "stringArray", value: selectedItalianChoppedSpecialInstructions },
                     selectedRoastedRedPeppersSpecialInstructions: { kind: "stringArray", value: selectedRoastedRedPeppersSpecialInstructions },
                     selectedTunaSpecialInstructions: { kind: "stringArray", value: selectedTunaSpecialInstructions },
-
-                    // Hoagie Platter states
-                    selectedHoagiePlatterOptions: { kind: "numberRecord", value: selectedHoagiePlatterOptions },
-                    selectedHoagiePlatterCut: { kind: "singleString", value: selectedHoagiePlatterCut },
-                    selectedHoagiePlatterSideToppings: { kind: "numberRecord", value: selectedHoagiePlatterSideToppings },
 
                     // Wrap Platter states
                     selectedWrapPlatterOptions: { kind: "numberRecord", value: selectedWrapPlatterOptions },
