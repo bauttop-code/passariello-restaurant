@@ -7973,7 +7973,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
           <div className="aspect-[3/2] sm:aspect-[4/3] bg-[#F5F3EB] overflow-hidden w-full relative">
             <ImageWithFallback               src={product.image}
               alt={product.name}
-              className="absolute inset-0 w-full h-full object-contain md:object-cover object-center"
+              className="absolute inset-0 w-full h-full object-cover object-center"
               style={{ 
                 imageRendering: 'crisp-edges',
                 WebkitBackfaceVisibility: 'hidden',
@@ -9195,7 +9195,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       </div>
 
       {/* Desktop: 2-Column Layout Wrapper (hidden in mobile, grid in desktop) */}
-      <div className="flex-1 min-h-0 overflow-visible lg:h-full lg:max-h-full lg:overflow-hidden lg:grid lg:grid-cols-[60%_40%] lg:grid-rows-[1fr_auto] lg:min-h-0">
+      <div className="flex-1 min-h-0 overflow-visible pb-24 lg:pb-0 lg:h-full lg:max-h-full lg:overflow-hidden lg:grid lg:grid-cols-[60%_40%] lg:grid-rows-[1fr_auto] lg:min-h-0">
         
         {/* LEFT COLUMN WRAPPER */}
         <div className="bg-white lg:col-start-1 lg:row-start-1 lg:flex lg:flex-col lg:min-h-0 lg:overflow-hidden">
@@ -25095,13 +25095,25 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
         </div>
 
         {/* Add to Cart Bar - Mobile & Desktop: Sticky Bottom */}
-        <div data-testid="add-to-cart-bar" className="sticky bottom-0 lg:sticky lg:bottom-0 bg-white border-t shadow-lg lg:shadow-none z-[100] lg:z-auto flex-shrink-0 lg:h-auto lg:min-h-0 box-border lg:row-start-2 lg:col-start-1 lg:w-full lg:max-w-full lg:min-w-0">
+        <div data-testid="add-to-cart-bar" className="fixed bottom-0 left-0 right-0 lg:sticky lg:left-auto lg:right-auto lg:bottom-0 bg-white border-t shadow-lg lg:shadow-none z-[100] lg:z-auto flex-shrink-0 lg:h-auto lg:min-h-0 box-border lg:row-start-2 lg:col-start-1 lg:w-full lg:max-w-full lg:min-w-0">
         <div className="px-3 sm:px-4 lg:px-8 py-3 lg:py-2 relative shadow-[0_-4px_12px_-2px_rgba(0,0,0,0.08)] lg:shadow-none h-full lg:h-auto lg:flex lg:items-center lg:justify-center box-border">
           {/* Mobile Layout */}
           <div className="lg:hidden flex items-center justify-between gap-2 sm:gap-3">
             {/* Quantity Section */}
             <div className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-white font-semibold bg-[#A72020] px-2 sm:px-3 py-1.5 sm:py-2 rounded text-sm sm:text-base whitespace-nowrap">Qty: {quantity}</span>
+              <label htmlFor="mobile-quantity" className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">Qty</label>
+              <select
+                id="mobile-quantity"
+                value={quantity}
+                onChange={(e) => setQuantity(Number(e.target.value))}
+                className="h-9 sm:h-10 min-w-[76px] rounded-md border border-[#A72020] bg-white px-2 sm:px-3 text-sm sm:text-base font-semibold text-[#A72020] focus:outline-none focus:ring-2 focus:ring-[#A72020]/30"
+              >
+                {Array.from({ length: 99 }, (_, idx) => idx + 1).map((qty) => (
+                  <option key={qty} value={qty}>
+                    {qty}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Add to Cart Button with Price */}
