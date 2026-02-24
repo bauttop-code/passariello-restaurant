@@ -5295,10 +5295,17 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     }
   }, [product.id, product.category, isEditMode]);
   
-  // Pre-select Mozzarella cheese for Pizza Steak
+  // Pre-select cheese for specific cheesesteaks
   useEffect(() => {
-    if (product.name === 'Pizza Steak' && !isEditMode) {
+    if (isEditMode) return;
+
+    if (product.name === 'Pizza Steak') {
       setSelectedCheese('cheese4'); // cheese4 is Mozzarella
+      return;
+    }
+
+    if (product.name === 'Cooper Passiesteak') {
+      setSelectedCheese('cheese3'); // cheese3 is Cooper Sharp American
     }
   }, [product.name, isEditMode]);
   

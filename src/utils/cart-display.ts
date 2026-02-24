@@ -150,7 +150,16 @@ export const buildCartDisplayTitle = (item: CartItem): string => {
   // 1. Clean up "pcs" from name GLOBALLY
   // Remove (12 pcs), (16 pcs) etc.
   name = name.replace(/\s*\(\s*\d+\s*(?:pcs|pieces?)\s*\)\s*/gi, '');
+  // Remove marketing prefixes like "*NEW*" from cart titles.
+  name = name.replace(/^\s*\*?\s*new\s*\*?\s*/i, '');
   name = name.trim();
+
+  // Custom cart naming for specific cheesesteaks
+  if (/^create your own cheesesteak$/i.test(name)) {
+    name = 'Plain Steak';
+  } else if (/^create your own chicken cheesesteak$/i.test(name)) {
+    name = 'Chic Steak';
+  }
 
   // Normalize specific pizza names to canonical cart title:
   // "Napoletana" and "White Pizza" should display as "Size Pizza".

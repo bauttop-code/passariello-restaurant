@@ -1573,7 +1573,7 @@ const products: Product[] = [
   },
   {
     id: 'sp-16',
-    name: '*NEW* Hot Honey Roni Pizza',
+    name: 'Hot Honey Roni Pizza',
     description: 'Thin crust, pizza sauce, mozzarella cheese, cup n char pepperoni, drizzled with Mike\'s hot honey.',
     price: '$27.49',
     priceRange: '$26.49 - $27.49 - $29.49',
