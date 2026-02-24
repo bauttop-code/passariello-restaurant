@@ -152,6 +152,14 @@ export const buildCartDisplayTitle = (item: CartItem): string => {
   name = name.replace(/\s*\(\s*\d+\s*(?:pcs|pieces?)\s*\)\s*/gi, '');
   name = name.trim();
 
+  // Normalize specific pizza names to canonical cart title:
+  // "Napoletana" and "White Pizza" should display as "Size Pizza".
+  const categoryLower = (item.category || '').toLowerCase();
+  const rawNameLower = (item.name || '').toLowerCase();
+  if (categoryLower === 'pizzas' && (rawNameLower.includes('napoletana') || /\bwhite\b/.test(rawNameLower))) {
+    name = 'Pizza';
+  }
+
   // 2. Wings Logic
   if (isWingsItem(item)) {
     // If name is just "Wings", try to find a quantity selection to normalize
@@ -244,15 +252,16 @@ export const buildCartDisplayTitle = (item: CartItem): string => {
 
   // --- OPT-OUT LOGIC FOR TITLE SIZE ---
   const catLower = (item.category || '').toLowerCase();
-  const nameLower = (item.name || '').toLowerCase();
+  const nameLower = (name || '').toLowerCase();
   const isMinucci = catLower === 'minucci-pizzas' || nameLower.includes('minucci');
   const isBrooklyn = catLower === 'brooklyn-pizza' || nameLower.includes('brooklyn');
+  const isPanPizza = catLower === 'pizzas' && nameLower.includes('pan pizza');
 
   const THICK_CRUST_IDS = ['sp-4', 'sp-5', 'sp-6', 'sp-9', 'cyo-sicilian-pesto', 'sp-17'];
   const isSpecialtyThickOrPan = (catLower === 'specialty-pizza' || catLower === 'specialty') && 
       (item.productId && THICK_CRUST_IDS.includes(item.productId));
 
-  const isNoSizePizza = isMinucci || isBrooklyn || isSpecialtyThickOrPan;
+  const isNoSizePizza = isMinucci || isBrooklyn || isPanPizza || isSpecialtyThickOrPan;
 
   if (isNoSizePizza) {
       if (typeof window !== 'undefined' && window.location.search.includes('debugCart=1') && size) {

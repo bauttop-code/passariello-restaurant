@@ -26334,7 +26334,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 
                 // Add Size (pizzas + soups + catering with size selectors)
                 const shouldCaptureSize =
-                  product.category === 'pizzas' ||
+                  (product.category === 'pizzas' && !product.name.toLowerCase().includes('pan pizza')) ||
                   product.category === 'soups' ||
                   product.category === 'catering-entrees' ||
                   product.category === 'catering-pasta' ||
@@ -26344,7 +26344,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 if (shouldCaptureSize && selectedSize) {
                   const sizeNames: Record<string, string> = product.category === 'soups'
                     ? { 'medium': '16Oz', 'large': '32Oz' }
-                    : product.category === 'pizzas'
+                    : (product.category === 'pizzas' && !product.name.toLowerCase().includes('pan pizza'))
                       ? { 'medium': 'Medium (14")', 'large': 'Large (16")', 'jumbo': 'Jumbo (18")' }
                       : {
                           'medium': 'Medium',
@@ -31025,7 +31025,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
 
                   // Add Size (pizzas + soups)
                   const shouldCaptureSizeDesktop =
-                    product.category === 'pizzas' ||
+                    (product.category === 'pizzas' && !product.name.toLowerCase().includes('pan pizza')) ||
                     product.category === 'soups' ||
                     product.category === 'catering-entrees' ||
                     product.category === 'catering-pasta' ||
@@ -31035,7 +31035,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   if (shouldCaptureSizeDesktop && selectedSize) {
                     const sizeNames: Record<string, string> = product.category === 'soups'
                       ? { 'medium': '16Oz', 'large': '32Oz' }
-                      : product.category === 'pizzas'
+                      : (product.category === 'pizzas' && !product.name.toLowerCase().includes('pan pizza'))
                         ? { 'medium': 'Medium (14")', 'large': 'Large (16")', 'jumbo': 'Jumbo (18")' }
                         : {
                             'medium': 'Medium',
