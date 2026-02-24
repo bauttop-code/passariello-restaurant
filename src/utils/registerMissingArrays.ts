@@ -226,7 +226,7 @@ export const registerMissingArrays = (
   if (arrays.pastaProteins) registerOptionsToLookup(selectionLookup, arrays.pastaProteins, { groupId: 'pasta_proteins', groupTitle: 'Proteins', type: 'topping' });
   if (arrays.pastaCheesesExtras) registerOptionsToLookup(selectionLookup, arrays.pastaCheesesExtras, { groupId: 'pasta_cheeses', groupTitle: 'Cheeses & Extras', type: 'extra_topping' });
   if (arrays.pastaAdditions) registerOptionsToLookup(selectionLookup, arrays.pastaAdditions, { groupId: 'pasta_additions', groupTitle: 'Additions', type: 'topping' });
-  if (arrays.buildPastaSauces) registerOptionsToLookup(selectionLookup, arrays.buildPastaSauces, { groupId: 'build_pasta_sauces', groupTitle: 'Sauces', type: 'sauce' });
+  if (arrays.buildPastaSauces) registerOptionsToLookup(selectionLookup, arrays.buildPastaSauces, { groupId: 'build_pasta_sauces', groupTitle: 'Choose a Sauce', type: 'sauce' });
   if (arrays.buildPastaToppings) registerOptionsToLookup(selectionLookup, arrays.buildPastaToppings, { groupId: 'build_pasta_toppings', groupTitle: 'Toppings', type: 'topping' });
   if (arrays.buildPastaSoups) registerOptionsToLookup(selectionLookup, arrays.buildPastaSoups, { groupId: 'build_pasta_soups', groupTitle: 'Soups', type: 'side' });
   

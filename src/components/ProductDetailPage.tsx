@@ -21830,11 +21830,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             <div className="flex-1 flex items-center justify-between px-3 lg:px-4 h-full min-w-0">
                               {item.id === 'td-extra1' ? (
                                 <>
-                                  <p className="text-gray-900 text-sm lg:text-base leading-tight min-w-0 mr-2">{item.name}</p>
+                                  <div className="flex flex-col min-w-0 mr-2">
+                                    <p className="text-gray-900 text-sm lg:text-base leading-tight">{item.name}</p>
+                                    <span className="text-xs sm:text-sm text-gray-900">${item.price?.toFixed(2)}</span>
+                                  </div>
                                   <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                                    <span className="text-xs sm:text-sm text-gray-900 mr-1">
-                                      ${item.price?.toFixed(2)}
-                                    </span>
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -22173,11 +22173,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             <div className="flex-1 flex items-center justify-between px-3 lg:px-4 h-full min-w-0">
                               {item.id === 'td-extra1' ? (
                                 <>
-                                  <p className="text-gray-900 text-sm lg:text-base leading-tight min-w-0 mr-2">{item.name}</p>
+                                  <div className="flex flex-col min-w-0 mr-2">
+                                    <p className="text-gray-900 text-sm lg:text-base leading-tight">{item.name}</p>
+                                    <span className="text-xs sm:text-sm text-gray-900">${item.price?.toFixed(2)}</span>
+                                  </div>
                                   <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                                    <span className="text-xs sm:text-sm text-gray-900 mr-1">
-                                      ${item.price?.toFixed(2)}
-                                    </span>
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -28499,10 +28499,19 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   });
                 }
                 if (selectedBuildPastaSauce) {
-                  registerSelectionsFromIds([selectedBuildPastaSauce], {
-                    debugKey: "selectedBuildPastaSauce",
-                    fallbackType: "sauce",
-                  });
+                  const sauceOption = buildPastaSauces.find((s) => s.id === selectedBuildPastaSauce);
+                  const sauceLabel = sauceOption?.name || getItemName(selectedBuildPastaSauce);
+                  const normalizedSauceId = `cp-sauce-${selectedBuildPastaSauce}`;
+                  if (sauceLabel && !selections.some((sel) => sel.id === normalizedSauceId)) {
+                    selections.push({
+                      id: normalizedSauceId,
+                      label: sauceLabel,
+                      type: "sauce",
+                      groupId: "build_pasta_sauces",
+                      groupTitle: "Choose a Sauce",
+                      productId: product.id,
+                    });
+                  }
                 }
                 if (selectedBuildPastaSoup && selectedBuildPastaSoup.length > 0) {
                   selectedBuildPastaSoup.forEach(id => {
@@ -29864,6 +29873,34 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     }
                 }
                 // --- SIZE FILTERING LOGIC (End) ---
+
+                if (product.id === 'cp-1') {
+                  filteredSelections = filteredSelections.filter((s) => {
+                    const stype = String(s?.type || '').toLowerCase();
+                    const gid = String(s?.groupId || '').toLowerCase();
+                    const gtitle = String(s?.groupTitle || '').toLowerCase();
+                    const sid = String(s?.id || '').toLowerCase();
+                    const isBuildPastaSauce =
+                      sid.startsWith('cp-sauce-') ||
+                      (stype === 'sauce' && (gid.includes('build_pasta_sauce') || gtitle.includes('choose a sauce') || gtitle === 'sauce'));
+                    return !isBuildPastaSauce;
+                  });
+
+                  if (selectedBuildPastaSauce) {
+                    const sauceOption = buildPastaSauces.find((s) => s.id === selectedBuildPastaSauce);
+                    const sauceLabel = sauceOption?.name || getItemName(selectedBuildPastaSauce);
+                    if (sauceLabel) {
+                      filteredSelections.push({
+                        id: `cp-sauce-${selectedBuildPastaSauce}`,
+                        label: sauceLabel,
+                        type: 'sauce',
+                        groupId: 'build_pasta_sauces',
+                        groupTitle: 'Choose a Sauce',
+                        productId: product.id,
+                      });
+                    }
+                  }
+                }
 
                 onAddToCart(modifiedProduct, quantity, customizations, filteredSelections);
                 onBack();
@@ -32108,7 +32145,21 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   registerSelectionsFromIds(selectedExtraToppings, { debugKey: "selectedExtraToppings", fallbackType: "extra_topping" });
                   registerSelectionsFromIds(selectedExtraDressing, { debugKey: "selectedExtraDressing", fallbackType: "side" });
                   if (selectedBuildPastaType) registerSelectionsFromIds([selectedBuildPastaType], { debugKey: "selectedBuildPastaType", fallbackType: "pasta_type" });
-                  if (selectedBuildPastaSauce) registerSelectionsFromIds([selectedBuildPastaSauce], { debugKey: "selectedBuildPastaSauce", fallbackType: "sauce" });
+                  if (selectedBuildPastaSauce) {
+                    const sauceOption = buildPastaSauces.find((s) => s.id === selectedBuildPastaSauce);
+                    const sauceLabel = sauceOption?.name || getItemName(selectedBuildPastaSauce);
+                    const normalizedSauceId = `cp-sauce-${selectedBuildPastaSauce}`;
+                    if (sauceLabel && !selections.some((sel) => sel.id === normalizedSauceId)) {
+                      selections.push({
+                        id: normalizedSauceId,
+                        label: sauceLabel,
+                        type: "sauce",
+                        groupId: "build_pasta_sauces",
+                        groupTitle: "Choose a Sauce",
+                        productId: product.id,
+                      });
+                    }
+                  }
                   if (selectedBuildPastaSoup && selectedBuildPastaSoup.length > 0) registerSelectionsFromIds(selectedBuildPastaSoup, { debugKey: "selectedBuildPastaSoup", fallbackType: "side" });
                   registerSelectionsFromIds(selectedColdHoagieSideToppingsRequired, { debugKey: "selectedColdHoagieSideToppingsRequired", fallbackType: "side", fallbackGroupId: "cold_hoagie_side_toppings_required", fallbackGroupTitle: "Side Toppings (Required)" });
                   registerSelectionsFromIds(selectedGrilledChickenSideToppingsRequired, { debugKey: "selectedGrilledChickenSideToppingsRequired", fallbackType: "side", fallbackGroupId: "grilled_chicken_side_toppings_required", fallbackGroupTitle: "Side Toppings (Required)" });
@@ -33039,6 +33090,34 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       }
                   }
                   // --- SIZE FILTERING LOGIC (End) ---
+
+                  if (product.id === 'cp-1') {
+                    filteredSelections = filteredSelections.filter((s) => {
+                      const stype = String(s?.type || '').toLowerCase();
+                      const gid = String(s?.groupId || '').toLowerCase();
+                      const gtitle = String(s?.groupTitle || '').toLowerCase();
+                      const sid = String(s?.id || '').toLowerCase();
+                      const isBuildPastaSauce =
+                        sid.startsWith('cp-sauce-') ||
+                        (stype === 'sauce' && (gid.includes('build_pasta_sauce') || gtitle.includes('choose a sauce') || gtitle === 'sauce'));
+                      return !isBuildPastaSauce;
+                    });
+
+                    if (selectedBuildPastaSauce) {
+                      const sauceOption = buildPastaSauces.find((s) => s.id === selectedBuildPastaSauce);
+                      const sauceLabel = sauceOption?.name || getItemName(selectedBuildPastaSauce);
+                      if (sauceLabel) {
+                        filteredSelections.push({
+                          id: `cp-sauce-${selectedBuildPastaSauce}`,
+                          label: sauceLabel,
+                          type: 'sauce',
+                          groupId: 'build_pasta_sauces',
+                          groupTitle: 'Choose a Sauce',
+                          productId: product.id,
+                        });
+                      }
+                    }
+                  }
 
                   onAddToCart(modifiedProduct, quantity, customizations, filteredSelections);
                   onBack();

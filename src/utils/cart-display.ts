@@ -4128,6 +4128,10 @@ const getDesiredOrder = (item: CartItem): { mode: 'full' | 'tail'; sections: str
   const category = String(item.category || '').toLowerCase();
   const name = String(item.name || '').toLowerCase();
   const pid = String(item.productId || item.id || '').toLowerCase();
+  const isCreateYourOwnPasta =
+    category === 'create-pasta' ||
+    name.includes('build your own pasta') ||
+    name.includes('create your own pasta');
 
   if (category === 'pizzas' && pid.startsWith('cyo-')) return { mode: 'full', sections: ['Sauce', 'Additional Toppings', 'Specialty Toppings 1ST HALF', 'Specialty Toppings 2ND HALF', 'Special Instructions', 'Dippings', 'Dessert', 'Beverages'] };
   if (category === 'minucci-pizzas') return { mode: 'full', sections: ['Special Instructions', 'No Toppings', 'Dippings', 'Dessert', 'Beverages'] };
@@ -4143,7 +4147,7 @@ const getDesiredOrder = (item: CartItem): { mode: 'full' | 'tail'; sections: str
   if (category === 'paninis' || category === 'panini') return { mode: 'full', sections: ['Choose Panini', 'Substitute Cheese', 'Extra Cheese', 'Lite Toppings', 'No Toppings', 'Side Toppings', 'Dessert', 'Beverages'] };
   if (category === 'wraps') return { mode: 'full', sections: ['Choose Wrap', 'Substitute Cheese', 'Extra Toppings', 'Extra Cheese', 'Lite Toppings', 'No Toppings', 'Side of Extra Chips', 'Side Toppings', 'Dessert', 'Beverages'] };
   if (category === 'traditional-dinners') return { mode: 'full', sections: ['Add Sides', 'Side Soups, Salads, & Extra Bread', 'Special Instructions', 'Dessert', 'Beverages'] };
-  if (category === 'create-pasta') return { mode: 'full', sections: ['Choose a Pasta', 'Choose a Sauce', 'Add Toppings', 'Choose Soup or Salad', 'Dessert', 'Beverage'] };
+  if (isCreateYourOwnPasta) return { mode: 'full', sections: ['Choose a Pasta', 'Choose a Sauce', 'Add Toppings', 'Choose Soup or Salad', 'Dessert', 'Beverage'] };
   if (category === 'baked-pasta' || (category === 'pasta' && name.includes('baked'))) return { mode: 'full', sections: ['Dessert', 'Beverage'] };
   if (category === 'pasta') return { mode: 'full', sections: ['Choose a Pasta', 'Add Toppings', 'Choose Soup or Salad', 'Dessert', 'Beverage'] };
   if (category === 'sides') return { mode: 'full', sections: ['Dessert', 'Beverages'] };
@@ -4192,6 +4196,10 @@ const remapSectionForItem = (item: CartItem, section: string | null, text?: stri
   if (!section) return null;
   const category = String(item.category || '').toLowerCase();
   const line = String(text || '').toLowerCase().trim();
+  const isCreateYourOwnPasta =
+    category === 'create-pasta' ||
+    String(item.name || '').toLowerCase().includes('build your own pasta') ||
+    String(item.name || '').toLowerCase().includes('create your own pasta');
 
   if (category === 'hot-hoagies') {
     if (section === 'Cheese') return 'Substitute Cheese';
@@ -4229,9 +4237,10 @@ const remapSectionForItem = (item: CartItem, section: string | null, text?: stri
     if (section === 'Add Toppings') return 'Extra Toppings';
   }
 
-  if (category === 'create-pasta') {
+  if (isCreateYourOwnPasta) {
     if (section === 'Pasta Type') return 'Choose a Pasta';
     if (section === 'Choose your Sauce') return 'Choose a Sauce';
+    if (section === 'Sauce') return 'Choose a Sauce';
     if (section === 'Toppings' || section === 'Extra Toppings') return 'Add Toppings';
   }
 
