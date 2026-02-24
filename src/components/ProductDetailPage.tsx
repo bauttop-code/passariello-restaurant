@@ -5390,9 +5390,12 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
 
   // Pizza Sauce Options
   const isSpecialtySaucePizza = product.category === 'specialty-pizza' && ['sp-10', 'sp-12', 'sp-15'].includes(product.id);
+  const isPanOrSicilianSaucePizza =
+    product.category === 'pizzas' &&
+    (product.name.toLowerCase().includes('pan pizza') || product.name.toLowerCase().includes('sicilian'));
 
   const sauceOptions = useMemo(() => {
-    if (isSpecialtySaucePizza) {
+    if (isSpecialtySaucePizza || isPanOrSicilianSaucePizza) {
       return [
         { id: 'sauce-pizza', name: 'Red Sauce', price: 0, image: 'https://images.unsplash.com/photo-1610913729746-9d5d752daf59?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaXp6YSUyMHNhdWNlfGVufDF8fHx8MTc2OTgwNzM2OHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral' },
         { id: 'sauce-white', name: 'White Sauce', price: 0, image: 'https://images.unsplash.com/photo-1593560708920-63984d8d606e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200' }
@@ -5401,7 +5404,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     return [
       { id: 'sauce-pizza', name: 'Red Sauce', price: 0, image: 'https://images.unsplash.com/photo-1610913729746-9d5d752daf59?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaXp6YSUyMHNhdWNlfGVufDF8fHx8MTc2OTgwNzM2OHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral' }
     ];
-  }, [isSpecialtySaucePizza]);
+  }, [isSpecialtySaucePizza, isPanOrSicilianSaucePizza]);
 
   const handleSauceToggle = (sauceId: string) => {
     setSauceError(false);
@@ -5418,6 +5421,21 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
             // Ideally we just set this one to whole.
             return { [sauceId]: 'whole' }; // Reset to just this one whole
         });
+        return [sauceId];
+      }
+
+      // Pan/Sicilian: optional but mutually exclusive (can't select Red + White at once)
+      if (isPanOrSicilianSaucePizza) {
+        const isSelected = prev.includes(sauceId);
+        if (isSelected) {
+          setSauceDistribution(prevDist => {
+            const newDist = { ...prevDist };
+            delete newDist[sauceId];
+            return newDist;
+          });
+          return [];
+        }
+        setSauceDistribution({ [sauceId]: 'whole' });
         return [sauceId];
       }
 
@@ -22368,7 +22386,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
               {/* 0. Sauce - Only for pizzas */}
               {((
                  (product.category === 'pizzas') && 
-                 !['cyo-gf12', 'cyo-cauliflower', 'cyo-minucci', 'cyo-sicilian-pesto'].includes(product.id)
+                 !['cyo-gf12', 'cyo-cauliflower', 'cyo-minucci'].includes(product.id)
                ) || 
                (
                  product.category === 'specialty-pizza' && 
@@ -25875,7 +25893,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
 
                 // Register Pizza Sauce Options
                 const allSauceOptions = [
-                  { id: 'sauce-pizza', name: 'Red Sauce' }
+                  { id: 'sauce-pizza', name: 'Red Sauce' },
+                  { id: 'sauce-white', name: 'White Sauce' }
                 ];
                 registerOptionsToLookup(selectionLookup, allSauceOptions, {
                   groupId: 'pizza_sauce',
@@ -30571,7 +30590,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
 
                   // Register Pizza Sauce Options
                   const allSauceOptions = [
-                    { id: 'sauce-pizza', name: 'Red Sauce' }
+                    { id: 'sauce-pizza', name: 'Red Sauce' },
+                    { id: 'sauce-white', name: 'White Sauce' }
                   ];
                   registerOptionsToLookup(selectionLookupDesktop, allSauceOptions, {
                     groupId: 'pizza_sauce',
