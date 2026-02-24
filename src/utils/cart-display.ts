@@ -158,7 +158,7 @@ export const buildCartDisplayTitle = (item: CartItem): string => {
   if (/^create your own cheesesteak$/i.test(name)) {
     name = 'Plain Steak';
   } else if (/^create your own chicken cheesesteak$/i.test(name)) {
-    name = 'Chic Steak';
+    name = 'Chicken Steak';
   }
 
   // Normalize specific pizza names to canonical cart title:
