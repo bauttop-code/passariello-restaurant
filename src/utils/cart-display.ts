@@ -256,6 +256,11 @@ export const buildCartDisplayTitle = (item: CartItem): string => {
       }
   }
 
+  // 5.1 Burgers naming rule: always append W/FF in cart title
+  if (categoryLower === 'burgers' && !name.toLowerCase().includes('w/ff')) {
+    name = `${name} W/FF`;
+  }
+
   // 6. Size Prefix (NEW)
   let size = getItemSize(item);
 
