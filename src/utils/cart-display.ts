@@ -804,7 +804,9 @@ const buildTraditionalDinnersLines = (item: CartItem, rawLines: { text: string; 
       if (section === 'soups') {
         if (/extra bread/i.test(text)) {
           const parsed = parseTrailingQty(text);
-          extraBreadUnits += Math.max(1, parsed.qty);
+          // Extra Bread can surface in selections/customizations/rawLines simultaneously.
+          // Keep the strongest quantity instead of summing duplicated sources.
+          extraBreadUnits = Math.max(extraBreadUnits, Math.max(1, parsed.qty));
           return;
         }
         const saladLabel = ensureSaladLabel(text);
@@ -862,7 +864,7 @@ const buildTraditionalDinnersLines = (item: CartItem, rawLines: { text: string; 
     });
 
     if (extraBreadUnits > 0) {
-      pushText(soupsSaladsBread, `Extra Bread x${extraBreadUnits * 6}`, 'extra bread');
+      pushText(soupsSaladsBread, `Extra Bread x${extraBreadUnits}`, 'extra bread');
     }
 
     const toCountLines = (bucket: { order: string[]; map: Map<string, { base: string; qty: number }> }): string[] =>

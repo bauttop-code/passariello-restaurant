@@ -9580,7 +9580,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   }}
                 />
                 <div className="relative z-10 space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                     {bakedPastaSides.map((topping) => {
                       const isSelected = selectedExtraSauce.includes(topping.id);
                       return (
@@ -21815,7 +21815,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         return (
                           <div
                             key={item.id}
-                            className={`flex items-center gap-0 h-14 rounded-lg overflow-hidden bg-[#F6F6F6] ${
+                            className={`flex items-center gap-0 min-h-[72px] rounded-lg overflow-hidden bg-[#F6F6F6] ${
                               isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
                             }`}
                           >
@@ -21827,12 +21827,12 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 />
                               </div>
                             )}
-                            <div className="flex-1 flex items-center justify-between px-4 h-full">
+                            <div className="flex-1 flex items-center justify-between px-3 lg:px-4 h-full min-w-0">
                               {item.id === 'td-extra1' ? (
                                 <>
-                                  <p className="text-gray-900">{item.name}</p>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-sm text-gray-900 mr-2">
+                                  <p className="text-gray-900 text-sm lg:text-base leading-tight min-w-0 mr-2">{item.name}</p>
+                                  <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                                    <span className="text-xs sm:text-sm text-gray-900 mr-1">
                                       ${item.price?.toFixed(2)}
                                     </span>
                                     <button
@@ -21840,17 +21840,17 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                         e.stopPropagation();
                                         setExtraBreadQuantity(Math.max(0, extraBreadQuantity - 1));
                                       }}
-                                      className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-300 hover:border-[#A72020] hover:bg-[#A72020] hover:text-white transition-colors"
+                                      className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg border border-gray-300 hover:border-[#A72020] hover:bg-[#A72020] hover:text-white transition-colors"
                                     >
                                       <Minus className="w-4 h-4" />
                                     </button>
-                                    <span className="w-8 text-center font-semibold">{extraBreadQuantity}</span>
+                                    <span className="w-6 sm:w-8 text-center font-semibold text-sm sm:text-base">{extraBreadQuantity}</span>
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         setExtraBreadQuantity(extraBreadQuantity + 1);
                                       }}
-                                      className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-300 hover:border-[#A72020] hover:bg-[#A72020] hover:text-white transition-colors"
+                                      className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg border border-gray-300 hover:border-[#A72020] hover:bg-[#A72020] hover:text-white transition-colors"
                                     >
                                       <Plus className="w-4 h-4" />
                                     </button>
@@ -22076,7 +22076,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 <div className="relative z-10 space-y-6">
                   {/* Sides Section */}
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                     {traditionalDinnersSides.filter(side => 
                       !['td-side1', 'td-side3', 'td-side6', 'td-side9', 'td-side11', 'td-side12', 'td-side14'].includes(side.id)
                     ).map((side) => {
@@ -22158,7 +22158,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         return (
                           <div
                             key={item.id}
-                            className={`flex items-center gap-0 h-14 rounded-lg overflow-hidden bg-[#F6F6F6] ${
+                            className={`flex items-center gap-0 min-h-[72px] rounded-lg overflow-hidden bg-[#F6F6F6] ${
                               isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
                             }`}
                           >
@@ -22170,12 +22170,12 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 />
                               </div>
                             )}
-                            <div className="flex-1 flex items-center justify-between px-4 h-full">
+                            <div className="flex-1 flex items-center justify-between px-3 lg:px-4 h-full min-w-0">
                               {item.id === 'td-extra1' ? (
                                 <>
-                                  <p className="text-gray-900">{item.name}</p>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-sm text-gray-900 mr-2">
+                                  <p className="text-gray-900 text-sm lg:text-base leading-tight min-w-0 mr-2">{item.name}</p>
+                                  <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                                    <span className="text-xs sm:text-sm text-gray-900 mr-1">
                                       ${item.price?.toFixed(2)}
                                     </span>
                                     <button
@@ -22183,17 +22183,17 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                         e.stopPropagation();
                                         setExtraBreadQuantity(Math.max(0, extraBreadQuantity - 1));
                                       }}
-                                      className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-300 hover:border-[#A72020] hover:bg-[#A72020] hover:text-white transition-colors"
+                                      className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg border border-gray-300 hover:border-[#A72020] hover:bg-[#A72020] hover:text-white transition-colors"
                                     >
                                       <Minus className="w-4 h-4" />
                                     </button>
-                                    <span className="w-8 text-center font-semibold">{extraBreadQuantity}</span>
+                                    <span className="w-6 sm:w-8 text-center font-semibold text-sm sm:text-base">{extraBreadQuantity}</span>
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         setExtraBreadQuantity(extraBreadQuantity + 1);
                                       }}
-                                      className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-300 hover:border-[#A72020] hover:bg-[#A72020] hover:text-white transition-colors"
+                                      className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg border border-gray-300 hover:border-[#A72020] hover:bg-[#A72020] hover:text-white transition-colors"
                                     >
                                       <Plus className="w-4 h-4" />
                                     </button>
