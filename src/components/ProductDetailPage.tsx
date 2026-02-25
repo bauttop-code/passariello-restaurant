@@ -6527,7 +6527,13 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       return [{ key: 'passariello_instructions', title: 'Special Instructions (Optional)', options: passarielloFriesInstructionsOptions }];
     }
     if (sideId === 'es5' || sideId === 'hh-side-mozzarella-sticks') {
-      return [{ key: 'mozzarella_instructions', title: 'Special Instructions (Optional)', options: mozzarellaSticksInstructionsOptions }];
+      return [{
+        key: 'mozzarella_instructions',
+        title: 'Special Instructions (Optional)',
+        options: mozzarellaSticksSpecialInstructionsOptions.filter((opt) =>
+          opt.id === 'mssi1' || opt.id === 'mssi2' || opt.id === 'mssi3' || opt.id === 'mssi4'
+        ),
+      }];
     }
     if (sideId === 'es6' || sideId === 'hh-side-onion-rings') {
       return [{ key: 'onion_instructions', title: 'Special Instructions (Optional)', options: onionRingsInstructionsOptions }];
@@ -6609,6 +6615,15 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       const current = prev[group.key] || [];
       if (group.single) {
         return { ...prev, [group.key]: current[0] === optionId ? [] : [optionId] };
+      }
+      if (group.key === 'wings_instructions') {
+        const isMixedIn = optionId === 'wsi2';
+        const isOnSide = optionId === 'wsi3';
+        if (isMixedIn || isOnSide) {
+          const withoutConflict = current.filter((id) => id !== 'wsi2' && id !== 'wsi3');
+          const alreadySelected = current.includes(optionId);
+          return { ...prev, [group.key]: alreadySelected ? withoutConflict : [...withoutConflict, optionId] };
+        }
       }
       return {
         ...prev,
@@ -6752,7 +6767,13 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     if (item.id === 'app4') {
       return [
         { key: 'quantity', title: 'Choose Quantity (Required)', required: true, single: true, options: mozzarellaSticksQuantityOptions },
-        { key: 'instructions', title: 'Special Instructions (Optional)', options: mozzarellaSticksSpecialInstructionsOptions },
+        {
+          key: 'instructions',
+          title: 'Special Instructions (Optional)',
+          options: mozzarellaSticksSpecialInstructionsOptions.filter((opt) =>
+            opt.id === 'mssi1' || opt.id === 'mssi2' || opt.id === 'mssi3' || opt.id === 'mssi4'
+          ),
+        },
       ];
     }
     if (item.id === 'app3') {
@@ -6788,6 +6809,15 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       const current = prev[group.key] || [];
       if (group.single) {
         return { ...prev, [group.key]: current[0] === optionId ? [] : [optionId] };
+      }
+      if (group.key === 'instructions') {
+        const isMixedIn = optionId === 'wsi2';
+        const isOnSide = optionId === 'wsi3';
+        if (isMixedIn || isOnSide) {
+          const withoutConflict = current.filter((id) => id !== 'wsi2' && id !== 'wsi3');
+          const alreadySelected = current.includes(optionId);
+          return { ...prev, [group.key]: alreadySelected ? withoutConflict : [...withoutConflict, optionId] };
+        }
       }
       return {
         ...prev,
