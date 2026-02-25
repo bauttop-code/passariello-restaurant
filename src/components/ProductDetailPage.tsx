@@ -9,6 +9,7 @@ import { ConfirmPickupDialog } from './ConfirmPickupDialog';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction } from './ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { MobileHeader } from './MobileHeader';
 import { AddonCard } from './product-detail/AddonCard';
 import backgroundTexture from 'figma:asset/af0454752368adb907cfd39c5b04b0eb86327038.png';
@@ -393,6 +394,22 @@ interface CartItem {
   customizations?: CartItemCustomization[]; // LEGACY - will be deprecated
   selections?: CartSelection[]; // NEW STRUCTURED MODEL
   category?: string;
+}
+
+interface ExtraSideCustomizerGroup {
+  key: string;
+  title: string;
+  required?: boolean;
+  single?: boolean;
+  options: Topping[];
+}
+
+interface PairingSavedConfig {
+  product: Product;
+  unitPrice: number;
+  groupSelections: Record<string, string[]>;
+  customizations: CartItemCustomization[];
+  selections: CartSelection[];
 }
 
 interface ProductDetailPageProps {
@@ -4587,10 +4604,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       
   const isNoSizePizza = isMinucci || isBrooklyn || isSpecialtyThickOrPan;
 
-  // Randomize suggested appetizers
+  // Great pairings shown in section
   const suggestedAppetizers = useMemo(() => {
-    const shuffled = [...appetizersProducts].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 3);
+    return appetizersProducts.filter((p) => ['app2', 'app4', 'app3'].includes(p.id));
   }, []);
 
   // REMOVED: Problematic MutationObserver that searched for non-existent DOM selectors
@@ -4875,6 +4891,18 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
   const [showSoupDialog, setShowSoupDialog] = useState<boolean>(false);
   const [showCallUsDialog, setShowCallUsDialog] = useState<boolean>(false);
   const [showBuildPastaSoupDialog, setShowBuildPastaSoupDialog] = useState<boolean>(false);
+  const [showExtraSideCustomizer, setShowExtraSideCustomizer] = useState<boolean>(false);
+  const [activeExtraSide, setActiveExtraSide] = useState<Topping | null>(null);
+  const [activeExtraSideSource, setActiveExtraSideSource] = useState<'cheesesteak' | 'hot-hoagie' | 'cold-hoagie' | null>(null);
+  const [extraSideSelections, setExtraSideSelections] = useState<Record<string, string[]>>({});
+  const [extraSideQuantities, setExtraSideQuantities] = useState<Record<string, number>>({});
+  const [savedExtraSideConfigs, setSavedExtraSideConfigs] = useState<Record<string, { sideName: string; items: string[] }>>({});
+  const [showPairingCustomizer, setShowPairingCustomizer] = useState<boolean>(false);
+  const [activePairingProduct, setActivePairingProduct] = useState<Product | null>(null);
+  const [activePairingItem, setActivePairingItem] = useState<string | null>(null);
+  const [pairingDraftSelections, setPairingDraftSelections] = useState<Record<string, string[]>>({});
+  const [pairingQuantities, setPairingQuantities] = useState<Record<string, number>>({});
+  const [savedPairingConfigs, setSavedPairingConfigs] = useState<Record<string, PairingSavedConfig>>({});
   const [traditionalDinnersSidesError, setTraditionalDinnersSidesError] = useState(false);
   const traditionalDinnersSidesRef = useRef<HTMLDivElement>(null);
   
@@ -6482,6 +6510,388 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     );
   };
 
+  const getExtraSideGroups = (sideId: string): ExtraSideCustomizerGroup[] => {
+    if (sideId === 'es1' || sideId === 'hh-side-wings') {
+      return [
+        { key: 'wings_sauce', title: 'Choose Sauce (Required)', required: true, single: true, options: wingsSauceOptions },
+        { key: 'wings_instructions', title: 'Special Instructions (Optional)', options: wingsSpecialInstructionsOptions },
+      ];
+    }
+    if (sideId === 'es2' || sideId === 'hh-side-fries') {
+      return [{ key: 'fries_instructions', title: 'Special Instructions (Optional)', options: friesInstructionsOptions }];
+    }
+    if (sideId === 'es3' || sideId === 'hh-side-cheese-ff') {
+      return [{ key: 'cheese_ff_instructions', title: 'Special Instructions (Optional)', options: cheddarSteakFriesInstructionsOptions }];
+    }
+    if (sideId === 'es4' || sideId === 'hh-side-passariello-fries') {
+      return [{ key: 'passariello_instructions', title: 'Special Instructions (Optional)', options: passarielloFriesInstructionsOptions }];
+    }
+    if (sideId === 'es5' || sideId === 'hh-side-mozzarella-sticks') {
+      return [{ key: 'mozzarella_instructions', title: 'Special Instructions (Optional)', options: mozzarellaSticksInstructionsOptions }];
+    }
+    if (sideId === 'es6' || sideId === 'hh-side-onion-rings') {
+      return [{ key: 'onion_instructions', title: 'Special Instructions (Optional)', options: onionRingsInstructionsOptions }];
+    }
+    if (sideId === 'es7' || sideId === 'hh-side-broccoli-bites') {
+      return [{ key: 'broccoli_instructions', title: 'Special Instructions (Optional)', options: broccoliCheddarBitesInstructionsOptions }];
+    }
+    if (sideId === 'es8' || sideId === 'hh-side-mac-cheese-bites') {
+      return [{ key: 'mac_instructions', title: 'Special Instructions (Optional)', options: macAndCheeseBitesInstructionsOptions }];
+    }
+    return [];
+  };
+
+  const makeExtraSideKey = (source: 'cheesesteak' | 'hot-hoagie' | 'cold-hoagie', sideId: string) => `${source}:${sideId}`;
+
+  const setExtraSideIdsBySource = (source: 'cheesesteak' | 'hot-hoagie' | 'cold-hoagie', sideId: string, quantity: number) => {
+    const repeated = Array.from({ length: Math.max(0, quantity) }, () => sideId);
+    if (source === 'hot-hoagie') {
+      setSelectedHotHoagieSides((prev) => [...prev.filter((id) => id !== sideId), ...repeated]);
+      return;
+    }
+    if (source === 'cold-hoagie') {
+      setSelectedColdHoagieExtraSides((prev) => [...prev.filter((id) => id !== sideId), ...repeated]);
+      return;
+    }
+    setSelectedExtraSides((prev) => [...prev.filter((id) => id !== sideId), ...repeated]);
+  };
+
+  const removeExtraSideFromSource = (source: 'cheesesteak' | 'hot-hoagie' | 'cold-hoagie', sideId: string) => {
+    setExtraSideIdsBySource(source, sideId, 0);
+    const key = makeExtraSideKey(source, sideId);
+    setExtraSideQuantities((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+    setSavedExtraSideConfigs((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
+
+  const changeExtraSideQuantity = (source: 'cheesesteak' | 'hot-hoagie' | 'cold-hoagie', sideId: string, delta: number) => {
+    const key = makeExtraSideKey(source, sideId);
+    const current = extraSideQuantities[key] || 0;
+    const nextQty = Math.max(0, current + delta);
+    if (nextQty === 0) {
+      removeExtraSideFromSource(source, sideId);
+      return;
+    }
+    setExtraSideQuantities((prev) => ({ ...prev, [key]: nextQty }));
+    setExtraSideIdsBySource(source, sideId, nextQty);
+  };
+
+  const openExtraSideCustomizer = (side: Topping, source: 'cheesesteak' | 'hot-hoagie' | 'cold-hoagie') => {
+    const groups = getExtraSideGroups(side.id);
+    const initialSelections: Record<string, string[]> = {};
+    const key = makeExtraSideKey(source, side.id);
+    const saved = savedExtraSideConfigs[key];
+    groups.forEach((group) => {
+      if (saved && saved.items.length > 0) {
+        const optionIds = group.options.filter((opt) => saved.items.includes(opt.name)).map((opt) => opt.id);
+        initialSelections[group.key] = optionIds;
+      } else if (group.required && group.single && group.options.length > 0) {
+        initialSelections[group.key] = [group.options[0].id];
+      } else {
+        initialSelections[group.key] = [];
+      }
+    });
+    setActiveExtraSideSource(source);
+    setActiveExtraSide(side);
+    setExtraSideSelections(initialSelections);
+    setShowExtraSideCustomizer(true);
+  };
+
+  const toggleExtraSideOption = (group: ExtraSideCustomizerGroup, optionId: string) => {
+    setExtraSideSelections((prev) => {
+      const current = prev[group.key] || [];
+      if (group.single) {
+        return { ...prev, [group.key]: current[0] === optionId ? [] : [optionId] };
+      }
+      return {
+        ...prev,
+        [group.key]: current.includes(optionId) ? current.filter((id) => id !== optionId) : [...current, optionId],
+      };
+    });
+  };
+
+  const saveExtraSideCustomization = () => {
+    if (!activeExtraSide || !activeExtraSideSource) return;
+    const groups = getExtraSideGroups(activeExtraSide.id);
+    const hasMissingRequired = groups.some((group) => group.required && (extraSideSelections[group.key] || []).length === 0);
+    if (hasMissingRequired) return;
+
+    const selectedNames: string[] = [];
+    groups.forEach((group) => {
+      const selectedIds = extraSideSelections[group.key] || [];
+      group.options.forEach((opt) => {
+        if (selectedIds.includes(opt.id)) selectedNames.push(opt.name);
+      });
+    });
+
+    const key = makeExtraSideKey(activeExtraSideSource, activeExtraSide.id);
+    const currentQty = extraSideQuantities[key] || 0;
+    const nextQty = currentQty > 0 ? currentQty : 1;
+    setExtraSideQuantities((prev) => ({ ...prev, [key]: nextQty }));
+    setSavedExtraSideConfigs((prev) => ({ ...prev, [key]: { sideName: activeExtraSide.name, items: selectedNames } }));
+    setExtraSideIdsBySource(activeExtraSideSource, activeExtraSide.id, nextQty);
+
+    setShowExtraSideCustomizer(false);
+    setActiveExtraSide(null);
+    setActiveExtraSideSource(null);
+    setExtraSideSelections({});
+  };
+
+  const normalizeSideLabel = (name: string) => {
+    if (name.toLowerCase().includes('wings') && !name.toLowerCase().startsWith('add ')) {
+      return `Add ${name}`;
+    }
+    return name;
+  };
+
+  const stripExtraSidesFromParent = (customizations: CartItemCustomization[], filteredSelections: CartSelection[]) => {
+    const extraSideNames = new Set([
+      ...extraSidesItems.map((x) => x.name.toLowerCase()),
+      ...hotHoagieExtraSides.map((x) => x.name.toLowerCase()),
+      ...hotHoagieExtraSides.map((x) => normalizeSideLabel(x.name).toLowerCase()),
+    ]);
+
+    for (let i = customizations.length - 1; i >= 0; i--) {
+      const c = customizations[i];
+      const category = String(c.category || '').toLowerCase();
+      if (category.includes('extra sides') || category === 'sides') {
+        c.items = (c.items || []).filter((item) => !extraSideNames.has(String(item || '').toLowerCase()));
+        if (c.items.length === 0) customizations.splice(i, 1);
+      }
+    }
+
+    filteredSelections = filteredSelections.filter((s) => {
+      const gid = String(s.groupId || '').toLowerCase();
+      const gtitle = String(s.groupTitle || '').toLowerCase();
+      const sid = String(s.id || '').toLowerCase();
+      const label = String(s.label || '').toLowerCase();
+      if (sid.startsWith('es') || sid.startsWith('hh-side-')) return false;
+      if (gid.includes('extra_sides') || gid.includes('hot_hoagie_sides') || gid.includes('cold_hoagie_extra_sides')) return false;
+      if (gtitle.includes('would you like to add extra sides') || gtitle === 'sides' || gtitle === 'extra sides') return false;
+      if (extraSideNames.has(label)) return false;
+      return true;
+    });
+
+    return filteredSelections;
+  };
+
+  const addSavedExtraSidesAsCartItems = () => {
+    Object.entries(savedExtraSideConfigs).forEach(([key, config]) => {
+      const qty = extraSideQuantities[key] || 0;
+      if (qty <= 0) return;
+      const [, sideIdRaw] = key.split(':');
+      const sideId = sideIdRaw || '';
+      const side = extraSidesItems.find((x) => x.id === sideId) || hotHoagieExtraSides.find((x) => x.id === sideId);
+      if (!side) return;
+
+      const groups = getExtraSideGroups(side.id);
+      const customizations: CartItemCustomization[] = [];
+      const selections: CartSelection[] = [];
+
+      groups.forEach((group) => {
+        const selectedNames = (config.items || []).filter((itemName) => group.options.some((opt) => opt.name === itemName));
+        if (selectedNames.length === 0) return;
+        customizations.push({ category: group.title.replace(' (Required)', '').replace(' (Optional)', ''), items: selectedNames });
+        selectedNames.forEach((itemName, idx) => {
+          selections.push({
+            id: `extra-side-custom-${key}-${group.key}-${idx}`,
+            label: itemName,
+            type: itemName.toLowerCase().includes('sauce') ? 'sauce' : 'special_instruction',
+            groupId: `extra_side_custom_${key.replace(':', '_')}_${group.key}`,
+            groupTitle: group.title.replace(' (Required)', '').replace(' (Optional)', ''),
+            productId: side.id,
+          });
+        });
+      });
+
+      const selectedOptionsTotal = groups.reduce((sum, group) => {
+        const selectedNames = (config.items || []).filter((itemName) => group.options.some((opt) => opt.name === itemName));
+        return (
+          sum +
+          group.options
+            .filter((opt) => selectedNames.includes(opt.name))
+            .reduce((acc, opt) => acc + (typeof opt.price === 'number' ? opt.price : 0), 0)
+        );
+      }, 0);
+      const linePrice = ((side.price || 0) + selectedOptionsTotal) * qty;
+
+      const sideProduct: Product = {
+        id: `extra-side-${key.replace(':', '-')}`,
+        name: `${qty} ${normalizeSideLabel(side.name)}`,
+        description: 'Customized extra side',
+        price: `$${linePrice.toFixed(2)}`,
+        image: side.image || '',
+        category: 'appetizers',
+      };
+
+      onAddToCart(sideProduct, 1, customizations, selections);
+    });
+  };
+
+  const parseProductPrice = (value: string | number | undefined) => {
+    if (typeof value === 'number') return value;
+    if (!value) return 0;
+    const numeric = Number(String(value).replace(/[^0-9.]/g, ''));
+    return Number.isFinite(numeric) ? numeric : 0;
+  };
+
+  const getPairingGroups = (item: Product): ExtraSideCustomizerGroup[] => {
+    if (item.id === 'app2') {
+      return [
+        { key: 'size', title: 'Choose Size (Required)', required: true, single: true, options: garlicBreadMozzarellaSizeOptions },
+        { key: 'instructions', title: 'Special Instructions (Optional)', options: garlicBreadMozzarellaInstructionsOptions },
+      ];
+    }
+    if (item.id === 'app4') {
+      return [
+        { key: 'quantity', title: 'Choose Quantity (Required)', required: true, single: true, options: mozzarellaSticksQuantityOptions },
+        { key: 'instructions', title: 'Special Instructions (Optional)', options: mozzarellaSticksSpecialInstructionsOptions },
+      ];
+    }
+    if (item.id === 'app3') {
+      return [
+        { key: 'instructions', title: 'Special Instructions (Optional)', options: garlicStickInstructionsOptions },
+      ];
+    }
+    return [];
+  };
+
+  const openPairingCustomizer = (item: Product) => {
+    const groups = getPairingGroups(item);
+    const saved = savedPairingConfigs[item.id];
+    const initial: Record<string, string[]> = {};
+
+    groups.forEach((group) => {
+      if (saved?.groupSelections?.[group.key]?.length) {
+        initial[group.key] = [...saved.groupSelections[group.key]];
+      } else if (group.required && group.single && group.options.length > 0) {
+        initial[group.key] = [group.options[0].id];
+      } else {
+        initial[group.key] = [];
+      }
+    });
+
+    setActivePairingProduct(item);
+    setPairingDraftSelections(initial);
+    setShowPairingCustomizer(true);
+  };
+
+  const togglePairingOption = (group: ExtraSideCustomizerGroup, optionId: string) => {
+    setPairingDraftSelections((prev) => {
+      const current = prev[group.key] || [];
+      if (group.single) {
+        return { ...prev, [group.key]: current[0] === optionId ? [] : [optionId] };
+      }
+      return {
+        ...prev,
+        [group.key]: current.includes(optionId) ? current.filter((id) => id !== optionId) : [...current, optionId],
+      };
+    });
+  };
+
+  const savePairingCustomization = () => {
+    if (!activePairingProduct) return;
+    const groups = getPairingGroups(activePairingProduct);
+    const missingRequired = groups.some((group) => group.required && (pairingDraftSelections[group.key] || []).length === 0);
+    if (missingRequired) return;
+
+    const customizations: CartItemCustomization[] = [];
+    const selections: CartSelection[] = [];
+    let unitPrice = parseProductPrice(activePairingProduct.price);
+
+    groups.forEach((group) => {
+      const selectedIds = pairingDraftSelections[group.key] || [];
+      if (selectedIds.length === 0) return;
+      const selectedOptions = group.options.filter((opt) => selectedIds.includes(opt.id));
+      if (selectedOptions.length === 0) return;
+
+      if (group.key === 'size' || group.key === 'quantity') {
+        unitPrice = parseProductPrice(selectedOptions[0].price);
+      } else {
+        unitPrice += selectedOptions.reduce((sum, opt) => sum + (opt.price || 0), 0);
+      }
+
+      const categoryName = group.title.replace(' (Required)', '').replace(' (Optional)', '');
+      customizations.push({ category: categoryName, items: selectedOptions.map((opt) => opt.name) });
+
+      selectedOptions.forEach((opt) => {
+        selections.push({
+          id: `pairing-${activePairingProduct.id}-${group.key}-${opt.id}`,
+          label: opt.name,
+          type: group.key.includes('size') || group.key.includes('quantity') ? 'size' : (opt.name.toLowerCase().includes('sauce') ? 'sauce' : 'special_instruction'),
+          groupId: `pairing_${activePairingProduct.id}_${group.key}`,
+          groupTitle: categoryName,
+          productId: activePairingProduct.id,
+        });
+      });
+    });
+
+    setSavedPairingConfigs((prev) => ({
+      ...prev,
+      [activePairingProduct.id]: {
+        product: activePairingProduct,
+        unitPrice,
+        groupSelections: pairingDraftSelections,
+        customizations,
+        selections,
+      },
+    }));
+    setPairingQuantities((prev) => ({
+      ...prev,
+      [activePairingProduct.id]: prev[activePairingProduct.id] && prev[activePairingProduct.id] > 0 ? prev[activePairingProduct.id] : 1,
+    }));
+    setActivePairingItem(activePairingProduct.id);
+    setShowPairingCustomizer(false);
+    setActivePairingProduct(null);
+    setPairingDraftSelections({});
+  };
+
+  const removePairingSelection = (itemId: string) => {
+    setPairingQuantities((prev) => {
+      const next = { ...prev };
+      delete next[itemId];
+      return next;
+    });
+    setSavedPairingConfigs((prev) => {
+      const next = { ...prev };
+      delete next[itemId];
+      return next;
+    });
+    if (activePairingItem === itemId) setActivePairingItem(null);
+  };
+
+  const changePairingQuantity = (itemId: string, delta: number) => {
+    const current = pairingQuantities[itemId] || 0;
+    const next = Math.max(0, current + delta);
+    if (next === 0) {
+      removePairingSelection(itemId);
+      return;
+    }
+    setPairingQuantities((prev) => ({ ...prev, [itemId]: next }));
+  };
+
+  const addSavedPairingsAsCartItems = () => {
+    Object.entries(savedPairingConfigs).forEach(([itemId, cfg]) => {
+      const qty = pairingQuantities[itemId] || 0;
+      if (qty <= 0) return;
+
+      const pairingProduct: Product = {
+        ...cfg.product,
+        id: `pairing-${cfg.product.id}`,
+        price: `$${cfg.unitPrice.toFixed(2)}`,
+      };
+
+      onAddToCart(pairingProduct, qty, cfg.customizations, cfg.selections);
+    });
+  };
+
   const handleAddToppingToggle = (toppingId: string) => {
     setSelectedAddToppings(prev =>
       prev.includes(toppingId)
@@ -7459,7 +7869,12 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
   };
 
   const calculateTotal = () => {
-    return (parseFloat(calculateUnitPrice()) * quantity).toFixed(2);
+    const mainItemTotal = parseFloat(calculateUnitPrice()) * quantity;
+    const pairingsTotal = Object.entries(savedPairingConfigs).reduce((sum, [itemId, cfg]) => {
+      const qty = pairingQuantities[itemId] || 0;
+      return sum + (cfg.unitPrice || 0) * qty;
+    }, 0);
+    return (mainItemTotal + pairingsTotal).toFixed(2);
   };
 
   // ============================================================
@@ -19355,17 +19770,13 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8 gap-4">
                     {hotHoagieExtraSides.map((side) => {
-                      const isSelected = selectedHotHoagieSides.includes(side.id);
+                      const key = makeExtraSideKey('hot-hoagie', side.id);
+                      const isSelected = (extraSideQuantities[key] || 0) > 0;
+                      const quantity = extraSideQuantities[key] || 0;
                       return (
                         <div
                           key={side.id}
-                          onClick={() => {
-                            if (isSelected) {
-                              setSelectedHotHoagieSides(selectedHotHoagieSides.filter(id => id !== side.id));
-                            } else {
-                              setSelectedHotHoagieSides([...selectedHotHoagieSides, side.id]);
-                            }
-                          }}
+                          onClick={() => (isSelected ? removeExtraSideFromSource('hot-hoagie', side.id) : openExtraSideCustomizer(side, 'hot-hoagie'))}
                           className={`flex flex-col h-full min-h-[184px] bg-[#F6F6F6] rounded-lg overflow-hidden cursor-pointer shadow-sm transition-all hover:shadow-md ${
                             isSelected ? 'ring-2 ring-[#A72020]' : 'border border-gray-200'
                           }`}
@@ -19389,6 +19800,26 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           <div className="p-2 flex flex-col items-center justify-center flex-grow text-center gap-1">
                             <span className="text-gray-900 font-medium text-sm leading-tight line-clamp-2">{side.name}</span>
                             <span className="text-gray-900 font-bold text-sm">${side.price?.toFixed(2)}</span>
+                            {isSelected && (
+                              <div
+                                className="mt-1 flex items-center gap-2"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <button
+                                  className="w-6 h-6 rounded border border-gray-300 flex items-center justify-center"
+                                  onClick={() => changeExtraSideQuantity('hot-hoagie', side.id, -1)}
+                                >
+                                  <Minus className="w-3 h-3" />
+                                </button>
+                                <span className="text-xs font-semibold w-5 text-center">{quantity}</span>
+                                <button
+                                  className="w-6 h-6 rounded border border-gray-300 flex items-center justify-center"
+                                  onClick={() => changeExtraSideQuantity('hot-hoagie', side.id, 1)}
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       );
@@ -20516,17 +20947,13 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8 gap-4">
                     {hotHoagieExtraSides.map((side) => {
-                      const isSelected = selectedColdHoagieExtraSides.includes(side.id);
+                      const key = makeExtraSideKey('cold-hoagie', side.id);
+                      const isSelected = (extraSideQuantities[key] || 0) > 0;
+                      const quantity = extraSideQuantities[key] || 0;
                       return (
                         <div
                           key={side.id}
-                          onClick={() => {
-                            if (isSelected) {
-                              setSelectedColdHoagieExtraSides(selectedColdHoagieExtraSides.filter(id => id !== side.id));
-                            } else {
-                              setSelectedColdHoagieExtraSides([...selectedColdHoagieExtraSides, side.id]);
-                            }
-                          }}
+                          onClick={() => (isSelected ? removeExtraSideFromSource('cold-hoagie', side.id) : openExtraSideCustomizer(side, 'cold-hoagie'))}
                           className={`flex flex-col h-full min-h-[184px] bg-[#F6F6F6] rounded-lg overflow-hidden cursor-pointer shadow-sm transition-all hover:shadow-md ${
                             isSelected ? 'ring-2 ring-[#A72020]' : 'border border-gray-200'
                           }`}
@@ -20550,6 +20977,26 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           <div className="p-2 flex flex-col items-center justify-center flex-grow text-center gap-1">
                             <span className="text-gray-900 font-medium text-sm leading-tight line-clamp-2">{side.name}</span>
                             <span className="text-gray-900 font-bold text-sm">${side.price?.toFixed(2)}</span>
+                            {isSelected && (
+                              <div
+                                className="mt-1 flex items-center gap-2"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <button
+                                  className="w-6 h-6 rounded border border-gray-300 flex items-center justify-center"
+                                  onClick={() => changeExtraSideQuantity('cold-hoagie', side.id, -1)}
+                                >
+                                  <Minus className="w-3 h-3" />
+                                </button>
+                                <span className="text-xs font-semibold w-5 text-center">{quantity}</span>
+                                <button
+                                  className="w-6 h-6 rounded border border-gray-300 flex items-center justify-center"
+                                  onClick={() => changeExtraSideQuantity('cold-hoagie', side.id, 1)}
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       );
@@ -23355,11 +23802,13 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   
                   <div className="grid grid-cols-1 md:grid-cols-8 gap-5 relative z-10">
                     {extraSidesItems.map((item) => {
-                      const isSelected = selectedExtraSides.includes(item.id);
+                      const key = makeExtraSideKey('cheesesteak', item.id);
+                      const isSelected = (extraSideQuantities[key] || 0) > 0;
+                      const quantity = extraSideQuantities[key] || 0;
                       return (
                         <div
                           key={item.id}
-                          onClick={() => handleExtraSideToggle(item.id)}
+                          onClick={() => (isSelected ? removeExtraSideFromSource('cheesesteak', item.id) : openExtraSideCustomizer(item, 'cheesesteak'))}
                           className={`flex flex-col rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
                             isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
                           }`}
@@ -23381,6 +23830,26 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           <div className="flex flex-col items-center justify-center px-4 py-3 gap-1">
                             <p className="text-gray-900 text-center">{item.name}</p>
                             <p className="text-gray-900 font-semibold">${item.price.toFixed(2)}</p>
+                            {isSelected && (
+                              <div
+                                className="mt-1 flex items-center gap-2"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <button
+                                  className="w-6 h-6 rounded border border-gray-300 flex items-center justify-center"
+                                  onClick={() => changeExtraSideQuantity('cheesesteak', item.id, -1)}
+                                >
+                                  <Minus className="w-3 h-3" />
+                                </button>
+                                <span className="text-xs font-semibold w-5 text-center">{quantity}</span>
+                                <button
+                                  className="w-6 h-6 rounded border border-gray-300 flex items-center justify-center"
+                                  onClick={() => changeExtraSideQuantity('cheesesteak', item.id, 1)}
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       );
@@ -24548,14 +25017,29 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
             <div className="flex overflow-x-auto gap-4 pb-4 lg:grid lg:grid-cols-3 lg:gap-6 lg:pb-0 scrollbar-hide snap-x snap-mandatory">
               {suggestedAppetizers.map((item) => (
                 <div key={item.id} className="flex-shrink-0 w-[168px] lg:w-[280px] snap-start">
-                  <ProductCard
-                    product={item}
-                    onCustomize={(selectedItem) => {
-                      if (onProductChange) {
-                        onProductChange(selectedItem);
-                        window.scrollTo({ top: 0, behavior: 'instant' });
+                  <AddonCard
+                    item={item}
+                    quantity={pairingQuantities[item.id] || 0}
+                    isActive={activePairingItem === item.id}
+                    onSelect={() => {
+                      const qty = pairingQuantities[item.id] || 0;
+                      if (qty === 0) {
+                        openPairingCustomizer(item);
+                      } else if (activePairingItem !== item.id) {
+                        setActivePairingItem(item.id);
+                      } else {
+                        removePairingSelection(item.id);
                       }
                     }}
+                    onIncrement={() => {
+                      const qty = pairingQuantities[item.id] || 0;
+                      if (qty === 0) {
+                        openPairingCustomizer(item);
+                        return;
+                      }
+                      changePairingQuantity(item.id, 1);
+                    }}
+                    onDecrement={() => changePairingQuantity(item.id, -1)}
                   />
                 </div>
               ))}
@@ -29998,7 +30482,10 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   }
                 }
 
+                filteredSelections = stripExtraSidesFromParent(customizations, filteredSelections);
                 onAddToCart(modifiedProduct, quantity, customizations, filteredSelections);
+                addSavedExtraSidesAsCartItems();
+                addSavedPairingsAsCartItems();
                 onBack();
               }}
               className="flex-1 min-w-0 bg-[#A72020] hover:bg-[#8B1A1A] text-white h-[2.73rem] flex items-center justify-center gap-2 sm:gap-2.5 font-semibold rounded-md transition-colors px-2 sm:px-4"
@@ -33258,7 +33745,10 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     }
                   }
 
+                  filteredSelections = stripExtraSidesFromParent(customizations, filteredSelections);
                   onAddToCart(modifiedProduct, quantity, customizations, filteredSelections);
+                  addSavedExtraSidesAsCartItems();
+                  addSavedPairingsAsCartItems();
                   onBack();
                 }}
                 className="bg-[rgb(167,32,32)] hover:bg-[#8B1A1A] text-white h-[2.73rem] flex items-center justify-center gap-3 xl:gap-4 font-semibold px-6 xl:px-10 rounded-md transition-colors flex-shrink-0"
@@ -33271,6 +33761,149 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
         </div>
       </div>
       </div>
+
+      <Dialog open={showPairingCustomizer} onOpenChange={setShowPairingCustomizer}>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{activePairingProduct?.name || 'Customize Pairing'}</DialogTitle>
+            <DialogDescription>
+              Customize this pairing item and save it to your current product.
+            </DialogDescription>
+          </DialogHeader>
+          {activePairingProduct && (
+            <div className="space-y-5">
+              <div className="rounded-lg overflow-hidden border border-gray-200 bg-[#F6F6F6]">
+                <div className="w-full h-48 bg-gray-100">
+                  <ImageWithFallback
+                    src={activePairingProduct.image}
+                    alt={activePairingProduct.name}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <div className="p-4">
+                  <p className="font-semibold text-gray-900">{activePairingProduct.name}</p>
+                  {activePairingProduct.description && (
+                    <p className="text-sm text-gray-600 mt-1">{activePairingProduct.description}</p>
+                  )}
+                </div>
+              </div>
+
+              {getPairingGroups(activePairingProduct).map((group) => (
+                <div key={group.key} className="space-y-3">
+                  <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg">
+                    <span className="font-semibold">{group.title}</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {group.options.map((option) => {
+                      const isSelected = (pairingDraftSelections[group.key] || []).includes(option.id);
+                      return (
+                        <div
+                          key={option.id}
+                          onClick={() => togglePairingOption(group, option.id)}
+                          className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          }`}
+                        >
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                            isSelected ? 'border-[#A72020] bg-white' : 'border-gray-300'
+                          }`}>
+                            {isSelected && <Check className="w-3 h-3 text-[#A72020]" strokeWidth={3} />}
+                          </div>
+                          <div className="flex-1 flex items-center justify-between gap-2">
+                            <p className="text-gray-900">{option.name}</p>
+                            <span className="text-sm text-gray-900">${(option.price || 0).toFixed(2)}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+
+              <div className="flex justify-end gap-3 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowPairingCustomizer(false);
+                    setActivePairingProduct(null);
+                    setPairingDraftSelections({});
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="bg-[rgb(167,32,32)] hover:bg-[#8B1A1A] text-white"
+                  onClick={savePairingCustomization}
+                >
+                  Save
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showExtraSideCustomizer} onOpenChange={setShowExtraSideCustomizer}>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{activeExtraSide?.name || 'Customize Extra Side'}</DialogTitle>
+            <DialogDescription>Select the options for this side and save.</DialogDescription>
+          </DialogHeader>
+          {activeExtraSide && (
+            <div className="space-y-5">
+              {getExtraSideGroups(activeExtraSide.id).map((group) => (
+                <div key={group.key} className="space-y-3">
+                  <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg">
+                    <span className="font-semibold">{group.title}</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {group.options.map((option) => {
+                      const isSelected = (extraSideSelections[group.key] || []).includes(option.id);
+                      return (
+                        <div
+                          key={option.id}
+                          onClick={() => toggleExtraSideOption(group, option.id)}
+                          className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          }`}
+                        >
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                            isSelected ? 'border-[#A72020] bg-white' : 'border-gray-300'
+                          }`}>
+                            {isSelected && <Check className="w-3 h-3 text-[#A72020]" strokeWidth={3} />}
+                          </div>
+                          <div className="flex-1 flex items-center justify-between gap-2">
+                            <p className="text-gray-900">{option.name}</p>
+                            <span className="text-sm text-gray-900">${(option.price || 0).toFixed(2)}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+              <div className="flex justify-end gap-3 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowExtraSideCustomizer(false);
+                    setActiveExtraSide(null);
+                    setExtraSideSelections({});
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="bg-[rgb(167,32,32)] hover:bg-[#8B1A1A] text-white"
+                  onClick={saveExtraSideCustomization}
+                >
+                  Save
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Soup of the Day Dialog */}
       <AlertDialog open={showSoupDialog} onOpenChange={setShowSoupDialog}>
