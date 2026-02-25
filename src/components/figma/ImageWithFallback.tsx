@@ -26,6 +26,7 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
       `https://drive.google.com/thumbnail?id=${id}&sz=w1200`,
       `https://drive.google.com/thumbnail?id=${id}&sz=w1000`,
       `https://drive.google.com/uc?export=view&id=${id}`,
+      `https://drive.usercontent.google.com/download?id=${id}&export=view&authuser=0`,
       `https://lh3.googleusercontent.com/d/${id}=w1200`,
     ]
 
@@ -44,7 +45,7 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
     setDidError(true)
   }
 
-  const { src, alt, style, className, ...rest } = props
+  const { src, alt, style, className, referrerPolicy, ...rest } = props
   const srcCandidates = useMemo(() => buildFallbackSources(typeof src === 'string' ? src : undefined), [src])
   const currentSrc = srcCandidates[srcIndex] ?? src
 
@@ -63,6 +64,14 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
       </div>
     </div>
   ) : (
-    <img src={currentSrc} alt={alt} className={className} style={style} {...rest} onError={handleError} />
+    <img
+      src={currentSrc}
+      alt={alt}
+      className={className}
+      style={style}
+      referrerPolicy={referrerPolicy ?? 'no-referrer'}
+      {...rest}
+      onError={handleError}
+    />
   )
 }

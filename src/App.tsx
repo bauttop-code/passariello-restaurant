@@ -3727,6 +3727,13 @@ export default function App() {
 
   // Update active category when mode changes
   const handleModeChange = (newMode: 'regular' | 'guest-favorites' | 'catering' | 'reorder') => {
+    // Reorder requires authenticated user
+    if (newMode === 'reorder' && !user) {
+      setMode('reorder');
+      setViewMode('login');
+      return;
+    }
+
     setMode(newMode);
     
     // Close detail view if open
@@ -5445,7 +5452,7 @@ export default function App() {
             console.log('Join waitlist clicked');
           }}
           onReorderClick={() => {
-            setMode('reorder');
+            handleModeChange('reorder');
             setMobileBottomTab('menu');
           }}
           onTogoDeliveryClick={() => {

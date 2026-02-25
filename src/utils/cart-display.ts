@@ -4180,9 +4180,9 @@ const getDesiredOrder = (item: CartItem): { mode: 'full' | 'tail'; sections: str
   if (category === 'desserts' || category === 'pizzelle' || category === 'gelati') return { mode: 'full', sections: ['Dessert', 'Beverages'] };
   if (category === 'beverages') return { mode: 'full', sections: ['Dessert'] };
   if (category === 'catering-entrees') return { mode: 'full', sections: ['Add Sides', 'Side Soups, Salads, & Extra Bread', 'Special Instructions', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
-  if (category === 'catering-pasta') return { mode: 'full', sections: ['Choose a Pasta', 'Extra Toppings', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
-  if (category === 'catering-seafood-pasta') return { mode: 'full', sections: ['Pasta Type', 'Choose your Sauce', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
-  if (category === 'catering-sides') return { mode: 'full', sections: ['Dessert', 'Beverages'] };
+  if (category === 'catering-pasta') return { mode: 'full', sections: ['Choose a Pasta', 'Extra Toppings', 'Cafing Kit', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
+  if (category === 'catering-seafood-pasta') return { mode: 'full', sections: ['Pasta Type', 'Choose your Sauce', 'Cafing Kit', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
+  if (category === 'catering-sides') return { mode: 'full', sections: ['Cafing Kit', 'Dessert', 'Beverages'] };
   if (category === 'catering-salad-soups') return { mode: 'full', sections: ['Choose Your Base', 'Dressing Choice', 'Special Instructions', 'Dessert', 'Beverage'] };
   if (category === 'catering-hoagies-wraps') {
     if (name.includes('hoagie platter')) return { mode: 'full', sections: ['Build Your Platter', 'Cut Options', 'Side Toppings', 'Dessert', 'Beverages'] };
