@@ -8358,6 +8358,119 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
   };
 
   const suggestedItems = getSuggestedItems();
+  const seafoodSoupEligibleIds = ['sf-6', 'sf-7', 'sf-8', 'sf-9', 'sf-10'];
+  const seafoodSupportsSoupOrSalad = seafoodSoupEligibleIds.includes(product.id);
+  const seafoodSoupOrSaladSection = seafoodSupportsSoupOrSalad ? (
+    <>
+      <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg">
+        <span className="font-semibold">3. Choose Soup or Salad (Optional)</span>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {buildPastaSoups.map((soup) => {
+          const isSelected = selectedBuildPastaSoup.includes(soup.id);
+          return (
+            <div
+              key={soup.id}
+              onClick={() => {
+                if (isSelected) {
+                  setSelectedBuildPastaSoup(selectedBuildPastaSoup.filter(id => id !== soup.id));
+                } else {
+                  setSelectedBuildPastaSoup([...selectedBuildPastaSoup, soup.id]);
+                }
+              }}
+              className={`flex items-center gap-0 bg-[#F6F6F6] rounded-lg overflow-hidden cursor-pointer shadow-sm transition-all hover:shadow-md ${
+                isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+              }`}
+            >
+              <div className="w-14 h-14 flex-shrink-0 relative bg-gray-50 border-r border-gray-100">
+                <ImageWithFallback
+                  src={BUILD_PASTA_SOUP_IMAGES[soup.id] || soup.image || ''}
+                  alt={soup.name}
+                  className="w-full h-full object-cover"
+                />
+                {isSelected && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">
+                    <div className="bg-white rounded-full p-0.5">
+                      <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 px-4 py-3 flex items-center justify-between">
+                <span className="text-gray-900 font-medium text-sm leading-tight line-clamp-2 text-left">{soup.name}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-900 font-bold text-sm whitespace-nowrap">${soup.price?.toFixed(2)}</span>
+                  {soup.id === 'bps2' && (
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowBuildPastaSoupDialog(true);
+                      }}
+                      className="p-1 cursor-pointer hover:bg-gray-200 rounded-lg transition-colors"
+                    >
+                      <MoreVertical className="w-[21px] h-[21px] text-gray-900" />
+                    </div>
+                  )}
+                  {soup.removableIngredients && (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-1 cursor-pointer hover:bg-gray-200 rounded-lg transition-colors"
+                        >
+                          <MoreVertical className="w-[21px] h-[21px] text-gray-900" />
+                        </div>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[400px] p-0 rounded-lg overflow-hidden" align="end">
+                        <div className="bg-[#A72020] text-white px-4 py-3 flex items-center justify-between">
+                          <span className="font-semibold">Uncheck to Remove From Salad</span>
+                        </div>
+                        <div className="p-4 max-h-64 overflow-y-auto">
+                          <div className={`grid ${soup.id === 'bps4' ? 'grid-cols-2' : 'grid-cols-3'} gap-3`}>
+                            {soup.removableIngredients.map((ingredient) => {
+                              const isSideGarden = soup.id === 'bps3';
+                              const removedIngredients = isSideGarden ? sideGardenSaladRemovedIngredients : sideCaesarSaladRemovedIngredients;
+                              const setRemovedIngredients = isSideGarden ? setSideGardenSaladRemovedIngredients : setSideCaesarSaladRemovedIngredients;
+                              const isRemoved = removedIngredients.includes(ingredient.id);
+
+                              return (
+                                <button
+                                  key={ingredient.id}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (isRemoved) {
+                                      setRemovedIngredients(
+                                        removedIngredients.filter(id => id !== ingredient.id)
+                                      );
+                                    } else {
+                                      setRemovedIngredients([
+                                        ...removedIngredients,
+                                        ingredient.id
+                                      ]);
+                                    }
+                                  }}
+                                  className={`px-4 py-3 rounded-lg text-white font-semibold transition-all flex items-center justify-center gap-2 min-h-[56px] ${
+                                    isRemoved ? 'bg-gray-500' : 'bg-[#A72020]'
+                                  }`}
+                                >
+                                  {!isRemoved && <Check className="w-4 h-4 flex-shrink-0" />}
+                                  <span className="text-center leading-tight">{ingredient.name}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  ) : null;
 
   return (
     <div 
@@ -17786,6 +17899,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       <span className="font-semibold">Please select a sauce option before adding to cart</span>
                     </div>
                   )}
+                  {seafoodSoupOrSaladSection}
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -17910,6 +18024,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       <span className="font-semibold">Please select a sauce option before adding to cart</span>
                     </div>
                   )}
+                  {seafoodSoupOrSaladSection}
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -18028,6 +18143,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       <span className="font-semibold">Please select a sauce option before adding to cart</span>
                     </div>
                   )}
+                  {seafoodSoupOrSaladSection}
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -18146,6 +18262,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       <span className="font-semibold">Please select a sauce option before adding to cart</span>
                     </div>
                   )}
+                  {seafoodSoupOrSaladSection}
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -18265,6 +18382,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       <span className="font-semibold">Please select a sauce option before adding to cart</span>
                     </div>
                   )}
+                  {seafoodSoupOrSaladSection}
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -30348,7 +30466,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   // Clean customizations
                   for (let i = customizations.length - 1; i >= 0; i--) {
                     const cat = String(customizations[i]?.category || '').toLowerCase();
-                    if (cat === "cheese" || cat === "pasta type") {
+                    if (cat === "cheese" || cat === "pasta type" || cat === "choose soup or salad") {
                        customizations.splice(i, 1);
                     }
                   }
@@ -30404,6 +30522,69 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       groupId: "seafood_sauce",
                       groupTitle: "Sauce",
                       productId: product.id,
+                    });
+                  }
+
+                  // 4) Optional soup/salad block for seafood pasta items
+                  const seafoodSoupEligible = ['sf-6', 'sf-7', 'sf-8', 'sf-9', 'sf-10'].includes(product.id);
+                  if (seafoodSoupEligible) {
+                    const seafoodSoupIds = new Set((buildPastaSoups || []).map(s => String(s.id).toLowerCase()));
+                    const isSeafoodSoupLabel = (text: string): boolean => {
+                      const t = String(text || '').toLowerCase();
+                      return (
+                        t.startsWith('side garden salad') ||
+                        t.startsWith('side caesar salad') ||
+                        t === 'soup of the day' ||
+                        t === 'pasta e fagioli'
+                      );
+                    };
+                    // Remove stale soup/salad selections before rebuilding
+                    for (let i = filteredSelections.length - 1; i >= 0; i--) {
+                      const s = filteredSelections[i];
+                      const sid = String(s?.id || '').toLowerCase();
+                      const gid = String(s?.groupId || '').toLowerCase();
+                      const gtitle = String(s?.groupTitle || '').toLowerCase();
+                      const label = String(s?.label || '');
+                      if (
+                        gid === 'seafood_soup_or_salad' ||
+                        gid === 'build_pasta_soup' ||
+                        gtitle === 'choose soup or salad' ||
+                        sid.startsWith('sf-soup-') ||
+                        seafoodSoupIds.has(sid) ||
+                        isSeafoodSoupLabel(label)
+                      ) {
+                        filteredSelections.splice(i, 1);
+                      }
+                    }
+
+                    (selectedBuildPastaSoup || []).forEach((id) => {
+                      const soup = buildPastaSoups.find(s => s.id === id);
+                      const baseName = soup?.name || getItemName(id);
+                      if (!baseName) return;
+
+                      let removedNames: string[] = [];
+                      if (id === 'bps3') {
+                        removedNames = soup?.removableIngredients
+                          ?.filter(ing => sideGardenSaladRemovedIngredients.includes(ing.id))
+                          .map(ing => ing.name) || [];
+                      } else if (id === 'bps4') {
+                        removedNames = soup?.removableIngredients
+                          ?.filter(ing => sideCaesarSaladRemovedIngredients.includes(ing.id))
+                          .map(ing => ing.name) || [];
+                      }
+
+                      const suffix = removedNames.length > 0 ? ` (No ${removedNames.join(', No ')})` : '';
+                      const finalLabel = `${baseName}${suffix}`;
+
+                      filteredSelections.push({
+                        id: `sf-soup-${id}`,
+                        label: finalLabel,
+                        type: 'side',
+                        groupId: 'seafood_soup_or_salad',
+                        groupTitle: 'Choose Soup or Salad',
+                        productId: product.id,
+                        removedIngredients: removedNames.length > 0 ? removedNames : undefined
+                      });
                     });
                   }
                 }
@@ -33538,7 +33719,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   // Clean customizations
                   for (let i = customizations.length - 1; i >= 0; i--) {
                     const cat = String(customizations[i]?.category || '').toLowerCase();
-                    if (cat === "cheese" || cat === "pasta type") {
+                    if (cat === "cheese" || cat === "pasta type" || cat === "choose soup or salad") {
                        customizations.splice(i, 1);
                     }
                   }
@@ -33594,6 +33775,69 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         groupId: "seafood_sauce",
                         groupTitle: "Sauce",
                         productId: product.id,
+                      });
+                    }
+
+                    // 4) Optional soup/salad block for seafood pasta items
+                    const seafoodSoupEligible = ['sf-6', 'sf-7', 'sf-8', 'sf-9', 'sf-10'].includes(product.id);
+                    if (seafoodSoupEligible) {
+                      const seafoodSoupIds = new Set((buildPastaSoups || []).map(s => String(s.id).toLowerCase()));
+                      const isSeafoodSoupLabel = (text: string): boolean => {
+                        const t = String(text || '').toLowerCase();
+                        return (
+                          t.startsWith('side garden salad') ||
+                          t.startsWith('side caesar salad') ||
+                          t === 'soup of the day' ||
+                          t === 'pasta e fagioli'
+                        );
+                      };
+                      // Remove stale soup/salad selections before rebuilding
+                      for (let i = filteredSelections.length - 1; i >= 0; i--) {
+                        const s = filteredSelections[i];
+                        const sid = String(s?.id || '').toLowerCase();
+                        const gid = String(s?.groupId || '').toLowerCase();
+                        const gtitle = String(s?.groupTitle || '').toLowerCase();
+                        const label = String(s?.label || '');
+                        if (
+                          gid === 'seafood_soup_or_salad' ||
+                          gid === 'build_pasta_soup' ||
+                          gtitle === 'choose soup or salad' ||
+                          sid.startsWith('sf-soup-') ||
+                          seafoodSoupIds.has(sid) ||
+                          isSeafoodSoupLabel(label)
+                        ) {
+                          filteredSelections.splice(i, 1);
+                        }
+                      }
+
+                      (selectedBuildPastaSoup || []).forEach((id) => {
+                        const soup = buildPastaSoups.find(s => s.id === id);
+                        const baseName = soup?.name || getItemName(id);
+                        if (!baseName) return;
+
+                        let removedNames: string[] = [];
+                        if (id === 'bps3') {
+                          removedNames = soup?.removableIngredients
+                            ?.filter(ing => sideGardenSaladRemovedIngredients.includes(ing.id))
+                            .map(ing => ing.name) || [];
+                        } else if (id === 'bps4') {
+                          removedNames = soup?.removableIngredients
+                            ?.filter(ing => sideCaesarSaladRemovedIngredients.includes(ing.id))
+                            .map(ing => ing.name) || [];
+                        }
+
+                        const suffix = removedNames.length > 0 ? ` (No ${removedNames.join(', No ')})` : '';
+                        const finalLabel = `${baseName}${suffix}`;
+
+                        filteredSelections.push({
+                          id: `sf-soup-${id}`,
+                          label: finalLabel,
+                          type: 'side',
+                          groupId: 'seafood_soup_or_salad',
+                          groupTitle: 'Choose Soup or Salad',
+                          productId: product.id,
+                          removedIngredients: removedNames.length > 0 ? removedNames : undefined
+                        });
                       });
                     }
                   }

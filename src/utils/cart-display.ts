@@ -4162,12 +4162,12 @@ const getDesiredOrder = (item: CartItem): { mode: 'full' | 'tail'; sections: str
   if (category === 'salads') return { mode: 'full', sections: ['Choose Your Base', 'Choose Your dressing', 'Extra Toppings', 'Dressing preference', 'Extra Dressing', 'No Toppings', 'Dessert', 'Beverage'] };
   if (category === 'seafood') {
     if (['sf-2', 'sf-3', 'sf-4', 'sf-5'].includes(pid)) {
-      return { mode: 'full', sections: ['Choose a Pasta', 'Choose your Sauce', 'Dessert', 'Beverage'] };
+      return { mode: 'full', sections: ['Your Choice of Pasta', 'Choose your Sauce', 'Choose Soup or Salad', 'Dessert', 'Beverages'] };
     }
     if (pid === 'sf-11' || pid === 'sf-12' || name.includes('fish')) {
       return { mode: 'full', sections: ['Add Sides', 'Side Soups, Salads, & Extra Bread', 'Special Instructions', 'Dessert', 'Beverages'] };
     }
-    return { mode: 'full', sections: ['Choose a Pasta', 'Choose your Sauce', 'Dessert', 'Beverages'] };
+    return { mode: 'full', sections: ['Your Choice of Pasta', 'Choose your Sauce', 'Choose Soup or Salad', 'Dessert', 'Beverages'] };
   }
   if (category === 'soups') return { mode: 'full', sections: ['Substitute', 'Special Instructions', 'Dessert', 'Beverage'] };
   if (category === 'kids' || category === 'kids-menu') {
@@ -4276,7 +4276,7 @@ const remapSectionForItem = (item: CartItem, section: string | null, text?: stri
   }
 
   if (category === 'seafood') {
-    if (section === 'Pasta Type') return 'Choose a Pasta';
+    if (section === 'Pasta Type') return 'Your Choice of Pasta';
     if (section === 'Choose a Sauce') return 'Choose your Sauce';
     if (section === 'Sauce') return 'Choose your Sauce';
   }
