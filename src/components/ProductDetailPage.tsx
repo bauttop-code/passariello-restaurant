@@ -885,16 +885,44 @@ const pastaCheesesExtras: Topping[] = [
   },
 ];
 
-// Baked Pasta toppings - Side Soups, Salads, & Extra Bread
-const bakedPastaSides: Topping[] = [
+// Baked Pasta - Add Toppings
+const bakedPastaAddToppings: Topping[] = [
   {
-    id: 'bps1',
-    name: 'Extra Bread',
-    price: 0.55,
-    image: 'https://drive.google.com/thumbnail?id=1IvFgnN1WG37YCyBNpDof1Exz5hcPJpeh&sz=w400',
+    id: 'bpa1',
+    name: 'Two Meatballs',
+    price: 9.49,
+    image: 'https://drive.google.com/thumbnail?id=1Ynag62AV-JgSopOQ3h3ouWwarYBhlufz&sz=w400',
   },
   {
-    id: 'bps2',
+    id: 'bpa2',
+    name: 'Two Italian Sausage',
+    price: 9.49,
+    image: 'https://drive.google.com/thumbnail?id=1VbYyk-he0f5GQ3La2jQKTjtnYQ6Ygzqo&sz=w400',
+  },
+  {
+    id: 'bpa3',
+    name: 'Broccoli',
+    price: 1.49,
+    image: 'https://drive.google.com/thumbnail?id=1K4Gzs-HYBa2bFz2MH75DyyxB5xm6Jf_A&sz=w400',
+  },
+];
+
+// Baked Pasta - Choose Soup or Salad
+const bakedPastaSoupOrSalad: Topping[] = [
+  {
+    id: 'bpso1',
+    name: 'Pasta e Fagioli',
+    price: 8.49,
+    image: 'https://drive.google.com/thumbnail?id=15wBRDs037tG4neSd-IX-mdetvcIJ4w4M&sz=w400',
+  },
+  {
+    id: 'bpso2',
+    name: 'Soup of the day',
+    price: 8.49,
+    image: 'https://drive.google.com/thumbnail?id=1sG9VxC4eVV6sBHkEdzw1XhHvQou26X9J&sz=w400',
+  },
+  {
+    id: 'bpso3',
     name: 'Side Garden Salad',
     price: 7.99,
     image: 'https://drive.google.com/thumbnail?id=1-yLCsD6LDbyOhsYDMNDYfXW37hriuCMW&sz=w400',
@@ -908,7 +936,7 @@ const bakedPastaSides: Topping[] = [
     ]
   },
   {
-    id: 'bps3',
+    id: 'bpso4',
     name: 'Side Caesar Salad',
     price: 7.99,
     image: 'https://drive.google.com/thumbnail?id=1J942Yn7FpSnBXzruFOr06uuk7m1Gyk0a&sz=w1000',
@@ -916,18 +944,6 @@ const bakedPastaSides: Topping[] = [
       { id: 'scs-parmesan', name: 'Shredded Parmesan Cheese' },
       { id: 'scs-croutons', name: 'Croutons' },
     ]
-  },
-  {
-    id: 'bps4',
-    name: '16oz Pasta Fagoli',
-    price: 8.49,
-    image: 'https://drive.google.com/thumbnail?id=15wBRDs037tG4neSd-IX-mdetvcIJ4w4M&sz=w400',
-  },
-  {
-    id: 'bps5',
-    name: '16oz Soup of the Day',
-    price: 8.49,
-    image: 'https://drive.google.com/thumbnail?id=1sG9VxC4eVV6sBHkEdzw1XhHvQou26X9J&sz=w400',
   },
 ];
 
@@ -6973,9 +6989,13 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       const cheeseExtra = pastaCheesesExtras.find(c => c.id === sauceId);
       if (cheeseExtra) return total + (cheeseExtra?.price || 0);
       
-      // Check in baked pasta sides
-      const bakedSide = bakedPastaSides.find(b => b.id === sauceId);
-      if (bakedSide) return total + (bakedSide?.price || 0);
+      // Check in baked pasta add toppings
+      const bakedAdd = bakedPastaAddToppings.find(b => b.id === sauceId);
+      if (bakedAdd) return total + (bakedAdd?.price || 0);
+
+      // Check in baked pasta soup/salad
+      const bakedSoupOrSalad = bakedPastaSoupOrSalad.find(b => b.id === sauceId);
+      if (bakedSoupOrSalad) return total + (bakedSoupOrSalad?.price || 0);
       
       // Check in baked pasta special instructions
       const bakedInstruction = bakedPastaSpecialInstructions.find(i => i.id === sauceId);
@@ -9234,81 +9254,83 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
           {product.category === 'pasta' && !product.name.toLowerCase().includes('baked') && (
             <>
               {/* Pasta Type Selection */}
-              <div ref={buildPastaTypeRef}>
-                <Collapsible open={isIncludedOpen} onOpenChange={setIsIncludedOpen}>
-                  <CollapsibleTrigger asChild>
-                    <button className="toppings-section-header w-full p-5 rounded-lg flex items-center justify-between">
-                      <div className="flex flex-col items-start gap-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>1. Choose a Pasta</span>
-                          <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>(Required)</span>
-                        </div>
-                      </div>
-                      {isIncludedOpen ? (
-                        <ChevronUp className="w-6 h-6" />
-                      ) : (
-                        <ChevronDown className="w-6 h-6" />
-                      )}
-                    </button>
-                  </CollapsibleTrigger>
-                <CollapsibleContent className="relative border border-t-0 rounded-b-lg p-5">
-                  <div 
-                    className="absolute inset-0 pointer-events-none opacity-30 rounded-b-lg"
-                    style={{ 
-                      backgroundImage: `url(${backgroundTexture})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center'
-                    }}
-                  />
-                  <div className="relative z-10 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {kidsPastaTypes.map((pastaType) => {
-                        const isSelected = selectedBuildPastaType === pastaType.id;
-                        return (
-                          <div
-                            key={pastaType.id}
-                            onClick={() => setSelectedBuildPastaType(pastaType.id)}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
-                            }`}
-                          >
-                            <div className="w-14 h-14 flex-shrink-0 relative">
-                              <ImageWithFallback
-                                src={KIDS_PASTA_TYPE_IMAGES[pastaType.id]}
-                                alt={pastaType.name}
-                                className="w-full h-full object-cover"
-                              />
-                              {isSelected && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                                  <div className="bg-white rounded-full p-0.5">
-                                    <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex-1 px-4 py-3 flex items-center justify-between">
-                              <span className="text-gray-900">{pastaType.name}</span>
-                              <span className="text-sm text-gray-900">{pastaType.price > 0 ? '+' : ''}${pastaType.price.toFixed(2)}</span>
-                            </div>
+              {product.id !== 'pasta-4' && !product.name.toLowerCase().includes('gnocchi alla sorrentina') && (
+                <div ref={buildPastaTypeRef}>
+                  <Collapsible open={isIncludedOpen} onOpenChange={setIsIncludedOpen}>
+                    <CollapsibleTrigger asChild>
+                      <button className="toppings-section-header w-full p-5 rounded-lg flex items-center justify-between">
+                        <div className="flex flex-col items-start gap-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>1. Choose a Pasta</span>
+                            <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>(Required)</span>
                           </div>
-                        );
-                      })}
-                    </div>
-                    {buildPastaTypeError && (
-                      <div 
-                        className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-lg p-4 text-red-800 mt-4"
-                        role="alert"
-                      >
-                        <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                        </svg>
-                        <p className="font-semibold">Please select a pasta type before adding to cart</p>
+                        </div>
+                        {isIncludedOpen ? (
+                          <ChevronUp className="w-6 h-6" />
+                        ) : (
+                          <ChevronDown className="w-6 h-6" />
+                        )}
+                      </button>
+                    </CollapsibleTrigger>
+                  <CollapsibleContent className="relative border border-t-0 rounded-b-lg p-5">
+                    <div 
+                      className="absolute inset-0 pointer-events-none opacity-30 rounded-b-lg"
+                      style={{ 
+                        backgroundImage: `url(${backgroundTexture})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                      }}
+                    />
+                    <div className="relative z-10 space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {kidsPastaTypes.map((pastaType) => {
+                          const isSelected = selectedBuildPastaType === pastaType.id;
+                          return (
+                            <div
+                              key={pastaType.id}
+                              onClick={() => setSelectedBuildPastaType(pastaType.id)}
+                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
+                                isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              }`}
+                            >
+                              <div className="w-14 h-14 flex-shrink-0 relative">
+                                <ImageWithFallback
+                                  src={KIDS_PASTA_TYPE_IMAGES[pastaType.id]}
+                                  alt={pastaType.name}
+                                  className="w-full h-full object-cover"
+                                />
+                                {isSelected && (
+                                  <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                    <div className="bg-white rounded-full p-0.5">
+                                      <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-1 px-4 py-3 flex items-center justify-between">
+                                <span className="text-gray-900">{pastaType.name}</span>
+                                <span className="text-sm text-gray-900">{pastaType.price > 0 ? '+' : ''}${pastaType.price.toFixed(2)}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                    )}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-              </div>
+                      {buildPastaTypeError && (
+                        <div 
+                          className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-lg p-4 text-red-800 mt-4"
+                          role="alert"
+                        >
+                          <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          </svg>
+                          <p className="font-semibold">Please select a pasta type before adding to cart</p>
+                        </div>
+                      )}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+                </div>
+              )}
 
               {/* Add Toppings */}
               <Collapsible open={isAdditionalOpen} onOpenChange={setIsAdditionalOpen}>
@@ -9553,14 +9575,15 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
             </>
           )}
 
-          {/* Add Toppings for Baked Pasta dishes */}
-          {product.category === 'pasta' && product.name.toLowerCase().includes('baked') && (
+          {/* Baked Pasta: Add Toppings + Choose Soup or Salad */}
+          {(product.category === 'baked-pasta' || (product.category === 'pasta' && product.name.toLowerCase().includes('baked'))) && (
+            <>
             <Collapsible open={isAdditionalOpen} onOpenChange={setIsAdditionalOpen}>
               <CollapsibleTrigger asChild>
                 <button className="toppings-section-header w-full p-5 rounded-lg flex items-center justify-between">
                   <div className="flex flex-col items-start gap-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>1. Side Soups, Salads, & Extra Bread</span>
+                      <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>2. Add Toppings (Optional)</span>
                     </div>
                   </div>
                   {isAdditionalOpen ? (
@@ -9580,8 +9603,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   }}
                 />
                 <div className="relative z-10 space-y-4">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {bakedPastaSides.map((topping) => {
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {bakedPastaAddToppings.map((topping) => {
                       const isSelected = selectedExtraSauce.includes(topping.id);
                       return (
                         <div
@@ -9593,39 +9616,107 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedExtraSauce([...selectedExtraSauce, topping.id]);
                             }
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
+                          className={`flex items-center gap-0 bg-[#F6F6F6] rounded-lg overflow-hidden cursor-pointer shadow-sm transition-all hover:shadow-md ${
                             isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
                           }`}
                         >
-                          {topping.image && (
-                            <div className="w-14 h-14 flex-shrink-0 relative">
-                              <ImageWithFallback 
-                                src={topping.image} 
-                                alt={topping.name}
-                                className="w-full h-full object-cover"
-                              />
-                              {isSelected && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                                  <div className="bg-white rounded-full p-0.5">
-                                    <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
-                                  </div>
+                          <div className="w-14 h-14 flex-shrink-0 relative bg-gray-50 border-r border-gray-100">
+                            <ImageWithFallback
+                              src={topping.image || ''}
+                              alt={topping.name}
+                              className="w-full h-full object-cover"
+                            />
+                            {isSelected && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">
+                                <div className="bg-white rounded-full p-0.5">
+                                  <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
                                 </div>
-                              )}
-                            </div>
-                          )}
-                          <div className="flex-1 flex items-center justify-between px-4 h-14">
-                            <p className="text-gray-900">{topping.name}</p>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 px-4 py-3 flex items-center justify-between">
+                            <span className="text-gray-900 font-medium text-sm leading-tight line-clamp-2 text-left">{topping.name}</span>
                             <div className="flex items-center gap-2">
-                              <span className="text-sm text-gray-900">${topping.price?.toFixed(2)}</span>
-                              {topping.id === 'bps2' && topping.removableIngredients && (
+                              <span className="text-gray-900 font-bold text-sm whitespace-nowrap ml-2">${topping.price?.toFixed(2)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            <Collapsible open={isSoupOpen} onOpenChange={setIsSoupOpen}>
+              <CollapsibleTrigger asChild>
+                <button className="toppings-section-header w-full p-5 rounded-lg flex items-center justify-between mt-2">
+                  <div className="flex flex-col items-start gap-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>3. Choose Soup or Salad (Optional)</span>
+                    </div>
+                  </div>
+                  {isSoupOpen ? (
+                    <ChevronUp className="w-6 h-6" />
+                  ) : (
+                    <ChevronDown className="w-6 h-6" />
+                  )}
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="relative border border-t-0 rounded-b-lg p-5">
+                <div 
+                  className="absolute inset-0 pointer-events-none opacity-30 rounded-b-lg"
+                  style={{ 
+                    backgroundImage: `url(${backgroundTexture})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }}
+                />
+                <div className="relative z-10 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {bakedPastaSoupOrSalad.map((topping) => {
+                      const isSelected = selectedExtraSauce.includes(topping.id);
+                      return (
+                        <div
+                          key={topping.id}
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedExtraSauce(selectedExtraSauce.filter(id => id !== topping.id));
+                            } else {
+                              setSelectedExtraSauce([...selectedExtraSauce, topping.id]);
+                            }
+                          }}
+                          className={`flex items-center gap-0 bg-[#F6F6F6] rounded-lg overflow-hidden cursor-pointer shadow-sm transition-all hover:shadow-md ${
+                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          }`}
+                        >
+                          <div className="w-14 h-14 flex-shrink-0 relative bg-gray-50 border-r border-gray-100">
+                            <ImageWithFallback
+                              src={BUILD_PASTA_SOUP_IMAGES[topping.id] || topping.image || ''}
+                              alt={topping.name}
+                              className="w-full h-full object-cover"
+                            />
+                            {isSelected && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">
+                                <div className="bg-white rounded-full p-0.5">
+                                  <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 px-4 py-3 flex items-center justify-between">
+                            <span className="text-gray-900 font-medium text-sm leading-tight line-clamp-2 text-left">{topping.name}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-900 font-bold text-sm whitespace-nowrap">${topping.price?.toFixed(2)}</span>
+                              {topping.id === 'bpso3' && topping.removableIngredients && (
                                 <Popover>
                                   <PopoverTrigger asChild>
-                                    <button
+                                    <div
                                       onClick={(e) => e.stopPropagation()}
-                                      className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                      className="p-1 cursor-pointer hover:bg-gray-200 rounded-lg transition-colors"
                                     >
-                                      <MoreVertical className="w-4 h-4 text-gray-600" />
-                                    </button>
+                                      <MoreVertical className="w-[21px] h-[21px] text-gray-900" />
+                                    </div>
                                   </PopoverTrigger>
                                   <PopoverContent className="w-[400px] p-0 rounded-lg overflow-hidden" align="end">
                                     <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 flex items-center justify-between">
@@ -9665,7 +9756,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   </PopoverContent>
                                 </Popover>
                               )}
-                              {topping.id === 'bps3' && topping.removableIngredients && (
+                              {topping.id === 'bpso4' && topping.removableIngredients && (
                                 <Popover>
                                   <PopoverTrigger asChild>
                                     <button
@@ -9719,48 +9810,10 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       );
                     })}
                   </div>
-
-                  {/* Special Instructions Section */}
-                  <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg mt-6 flex items-center">
-                    <span className="font-semibold" style={{fontSize: 'calc(1em + 3px)'}}>Special Instructions</span>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {bakedPastaSpecialInstructions.map((topping) => {
-                      const isSelected = selectedExtraSauce.includes(topping.id);
-                      return (
-                        <div
-                          key={topping.id}
-                          onClick={() => {
-                            if (isSelected) {
-                              setSelectedExtraSauce(selectedExtraSauce.filter(id => id !== topping.id));
-                            } else {
-                              setSelectedExtraSauce([...selectedExtraSauce, topping.id]);
-                            }
-                          }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
-                          }`}
-                        >
-                          <div className="flex-1 flex items-center justify-between px-4 py-3">
-                            <div className="flex items-center gap-3">
-                              <Circle 
-                                className={`w-5 h-5 flex-shrink-0 ${
-                                  isSelected 
-                                    ? 'fill-[#A72020] text-[#A72020]' 
-                                    : 'text-gray-300'
-                                }`}
-                              />
-                              <p className="text-gray-900">{topping.name}</p>
-                            </div>
-                            <span className="text-sm text-gray-900">${topping.price?.toFixed(2)}</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
                 </div>
               </CollapsibleContent>
             </Collapsible>
+            </>
           )}
 
           {/* Special Instructions for Catering Chicken & Meat Entree Trays (c3-c9) */}
@@ -26019,9 +26072,14 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   groupTitle: 'Lite Toppings',
                   type: 'topping'
                 });
-                registerOptionsToLookup(selectionLookup, bakedPastaSides, {
-                  groupId: 'baked_pasta_sides',
-                  groupTitle: 'Sides',
+                registerOptionsToLookup(selectionLookup, bakedPastaAddToppings, {
+                  groupId: 'baked_pasta_add_toppings',
+                  groupTitle: 'Add Toppings',
+                  type: 'topping'
+                });
+                registerOptionsToLookup(selectionLookup, bakedPastaSoupOrSalad, {
+                  groupId: 'baked_pasta_soup_or_salad',
+                  groupTitle: 'Choose Soup or Salad',
                   type: 'side'
                 });
                 registerOptionsToLookup(selectionLookup, bakedPastaSpecialInstructions, {
@@ -26959,25 +27017,63 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 
                 // Add extra sides/sauces
                 if (selectedExtraSauce.length > 0) {
-                  const names = selectedExtraSauce.map(id => getItemName(id));
-                  customizations.push({
-                    category: 'Extra Sauce',
-                    items: names
-                  });
-                  // NEW STRUCTURED - Add to selections with group info
-                  selectedExtraSauce.forEach(toppingId => {
-                    const name = getItemName(toppingId);
-                    if (name) {
+                  const isBakedPastaItem = product.category === 'baked-pasta' || (product.category === 'pasta' && product.name.toLowerCase().includes('baked'));
+                  const bakedAddIds = new Set((bakedPastaAddToppings || []).map((x) => x.id));
+                  const bakedSoupIds = new Set((bakedPastaSoupOrSalad || []).map((x) => x.id));
+
+                  if (isBakedPastaItem) {
+                    const addToppingNames: string[] = [];
+                    const soupOrSaladNames: string[] = [];
+
+                    selectedExtraSauce.forEach((toppingId) => {
+                      const name = getItemName(toppingId);
+                      if (!name) return;
+                      if (bakedAddIds.has(toppingId)) addToppingNames.push(name);
+                      if (bakedSoupIds.has(toppingId)) soupOrSaladNames.push(name);
+
                       const groupInfo = getToppingGroupInfo(toppingId);
                       selections.push({
                         id: toppingId,
                         label: name,
-                        type: 'topping',
+                        type: groupInfo.type || (bakedSoupIds.has(toppingId) ? 'side' : 'topping'),
                         groupId: groupInfo.groupId,
                         groupTitle: groupInfo.groupTitle
                       });
+                    });
+
+                    if (addToppingNames.length > 0) {
+                      customizations.push({
+                        category: 'Add Toppings',
+                        items: addToppingNames
+                      });
                     }
-                  });
+                    if (soupOrSaladNames.length > 0) {
+                      customizations.push({
+                        category: 'Choose Soup or Salad',
+                        items: soupOrSaladNames
+                      });
+                    }
+                  } else {
+                    const names = selectedExtraSauce.map(id => getItemName(id));
+                    customizations.push({
+                      category: 'Extra Sauce',
+                      items: names
+                    });
+                    // NEW STRUCTURED - Add to selections with group info
+                    selectedExtraSauce.forEach(toppingId => {
+                      const name = getItemName(toppingId);
+                      if (name) {
+                        const groupInfo = getToppingGroupInfo(toppingId);
+                        selections.push({
+                          id: toppingId,
+                          label: name,
+                          type: 'topping',
+                          groupId: groupInfo.groupId,
+                          groupTitle: groupInfo.groupTitle
+                        });
+                      }
+                    });
+                  }
                 }
                 
                 // Add side toppings
@@ -29517,7 +29613,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
 
                 let filteredSelections = filterSelectionsByProduct(selections, modifiedProduct);
                 // PASTA/CREATE-PASTA final normalization: rebuild soup/salad rows with canonical IDs + removals.
-                if (product.category === 'create-pasta' || product.category === 'pasta') {
+                if (product.category === 'create-pasta' || (product.category === 'pasta' && !product.name.toLowerCase().includes('baked'))) {
                   const soupIdSet = new Set((buildPastaSoups || []).map(s => String(s.id)));
                   const soupNameSet = new Set((buildPastaSoups || []).map(s => String(s.name || '').toLowerCase().trim()));
                   const isSoupLabel = (value: string): boolean => {
@@ -30753,9 +30849,14 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     groupTitle: 'Lite Toppings',
                     type: 'topping'
                   });
-                  registerOptionsToLookup(selectionLookupDesktop, bakedPastaSides, {
-                    groupId: 'baked_pasta_sides',
-                    groupTitle: 'Sides',
+                  registerOptionsToLookup(selectionLookupDesktop, bakedPastaAddToppings, {
+                    groupId: 'baked_pasta_add_toppings',
+                    groupTitle: 'Add Toppings',
+                    type: 'topping'
+                  });
+                  registerOptionsToLookup(selectionLookupDesktop, bakedPastaSoupOrSalad, {
+                    groupId: 'baked_pasta_soup_or_salad',
+                    groupTitle: 'Choose Soup or Salad',
                     type: 'side'
                   });
                   registerOptionsToLookup(selectionLookupDesktop, bakedPastaSpecialInstructions, {
@@ -31489,25 +31590,63 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   
                   // Add extra sides/sauces
                   if (selectedExtraSauce.length > 0) {
-                    const names = selectedExtraSauce.map(id => getItemName(id));
-                    customizations.push({
-                      category: 'Extra Sauce',
-                      items: names
-                    });
-                    // NEW STRUCTURED - Add to selections with group info
-                    selectedExtraSauce.forEach(toppingId => {
-                      const name = getItemName(toppingId);
-                      if (name) {
+                    const isBakedPastaItem = product.category === 'baked-pasta' || (product.category === 'pasta' && product.name.toLowerCase().includes('baked'));
+                    const bakedAddIds = new Set((bakedPastaAddToppings || []).map((x) => x.id));
+                    const bakedSoupIds = new Set((bakedPastaSoupOrSalad || []).map((x) => x.id));
+
+                    if (isBakedPastaItem) {
+                      const addToppingNames: string[] = [];
+                      const soupOrSaladNames: string[] = [];
+
+                      selectedExtraSauce.forEach((toppingId) => {
+                        const name = getItemName(toppingId);
+                        if (!name) return;
+                        if (bakedAddIds.has(toppingId)) addToppingNames.push(name);
+                        if (bakedSoupIds.has(toppingId)) soupOrSaladNames.push(name);
+
                         const groupInfo = getToppingGroupInfo(toppingId);
                         selections.push({
                           id: toppingId,
                           label: name,
-                          type: 'topping',
+                          type: groupInfo.type || (bakedSoupIds.has(toppingId) ? 'side' : 'topping'),
                           groupId: groupInfo.groupId,
                           groupTitle: groupInfo.groupTitle
                         });
+                      });
+
+                      if (addToppingNames.length > 0) {
+                        customizations.push({
+                          category: 'Add Toppings',
+                          items: addToppingNames
+                        });
                       }
-                    });
+                      if (soupOrSaladNames.length > 0) {
+                        customizations.push({
+                          category: 'Choose Soup or Salad',
+                          items: soupOrSaladNames
+                        });
+                      }
+                    } else {
+                      const names = selectedExtraSauce.map(id => getItemName(id));
+                      customizations.push({
+                        category: 'Extra Sauce',
+                        items: names
+                      });
+                      // NEW STRUCTURED - Add to selections with group info
+                      selectedExtraSauce.forEach(toppingId => {
+                        const name = getItemName(toppingId);
+                        if (name) {
+                          const groupInfo = getToppingGroupInfo(toppingId);
+                          selections.push({
+                            id: toppingId,
+                            label: name,
+                            type: 'topping',
+                            groupId: groupInfo.groupId,
+                            groupTitle: groupInfo.groupTitle
+                          });
+                        }
+                      });
+                    }
                   }
                   
                   // Add side toppings
@@ -32670,7 +32809,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   }
 
                   let filteredSelections = filterSelectionsByProduct(selections, modifiedProduct);
-                  if (product.category === 'create-pasta' || product.category === 'pasta') {
+                  if (product.category === 'create-pasta' || (product.category === 'pasta' && !product.name.toLowerCase().includes('baked'))) {
                     const soupIdSet = new Set((buildPastaSoups || []).map(s => String(s.id)));
                     const soupNameSet = new Set((buildPastaSoups || []).map(s => String(s.name || '').toLowerCase().trim()));
                     const isSoupLabel = (value: string): boolean => {

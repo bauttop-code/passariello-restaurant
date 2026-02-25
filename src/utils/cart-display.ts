@@ -4148,8 +4148,15 @@ const getDesiredOrder = (item: CartItem): { mode: 'full' | 'tail'; sections: str
   if (category === 'wraps') return { mode: 'full', sections: ['Choose Wrap', 'Substitute Cheese', 'Extra Toppings', 'Extra Cheese', 'Lite Toppings', 'No Toppings', 'Side of Extra Chips', 'Side Toppings', 'Dessert', 'Beverages'] };
   if (category === 'traditional-dinners') return { mode: 'full', sections: ['Add Sides', 'Side Soups, Salads, & Extra Bread', 'Special Instructions', 'Dessert', 'Beverages'] };
   if (isCreateYourOwnPasta) return { mode: 'full', sections: ['Choose a Pasta', 'Choose a Sauce', 'Add Toppings', 'Choose Soup or Salad', 'Dessert', 'Beverage'] };
-  if (category === 'baked-pasta' || (category === 'pasta' && name.includes('baked'))) return { mode: 'full', sections: ['Dessert', 'Beverage'] };
-  if (category === 'pasta') return { mode: 'full', sections: ['Choose a Pasta', 'Add Toppings', 'Choose Soup or Salad', 'Dessert', 'Beverage'] };
+  if (category === 'baked-pasta' || (category === 'pasta' && name.includes('baked'))) {
+    return { mode: 'full', sections: ['Add Toppings', 'Choose Soup or Salad', 'Dessert', 'Beverage'] };
+  }
+  if (category === 'pasta') {
+    const isGnocchiAllaSorrentina = name.includes('gnocchi alla sorrentina') || pid === 'pasta-4';
+    return isGnocchiAllaSorrentina
+      ? { mode: 'full', sections: ['Add Toppings', 'Choose Soup or Salad', 'Dessert', 'Beverage'] }
+      : { mode: 'full', sections: ['Choose a Pasta', 'Add Toppings', 'Choose Soup or Salad', 'Dessert', 'Beverage'] };
+  }
   if (category === 'sides') return { mode: 'full', sections: ['Dessert', 'Beverages'] };
   if (category === 'create-salad') return { mode: 'full', sections: ['Choose Your Base', 'Choose Your dressing', 'Choose Your Toppings', 'Dressing Instructions', 'Extra Dressing', 'Extra Toppings', 'Dessert', 'Beverage'] };
   if (category === 'salads') return { mode: 'full', sections: ['Choose Your Base', 'Choose Your dressing', 'Extra Toppings', 'Dressing preference', 'Extra Dressing', 'No Toppings', 'Dessert', 'Beverage'] };
@@ -4262,6 +4269,12 @@ const remapSectionForItem = (item: CartItem, section: string | null, text?: stri
     if (section === 'Soups & Salads' || section === 'Side Soups, Salads, & Extra Bread') return 'Choose Soup or Salad';
   }
 
+  if (category === 'baked-pasta' || (category === 'pasta' && String(item.name || '').toLowerCase().includes('baked'))) {
+    if (section === 'Pasta Type') return null;
+    if (section === 'Toppings' || section === 'Extra Toppings' || section === 'Add Toppings') return 'Add Toppings';
+    if (section === 'Sides' || section === 'Soups & Salads' || section === 'Side Soups, Salads, & Extra Bread' || section === 'Choose Soup or Salad') return 'Choose Soup or Salad';
+  }
+
   if (category === 'seafood') {
     if (section === 'Pasta Type') return 'Choose a Pasta';
     if (section === 'Choose a Sauce') return 'Choose your Sauce';
@@ -4320,6 +4333,15 @@ const applyCategoryOrdering = (item: CartItem, lines: string[]): string[] => {
   const desired = getDesiredOrder(item);
   if (!desired) return lines;
   const category = String(item.category || '').toLowerCase();
+  const lowerName = String(item.name || '').toLowerCase();
+  const lowerPid = String(item.productId || item.id || '').toLowerCase();
+  const suppressSections = new Set<string>();
+  if (
+    category === 'pasta' &&
+    (lowerName.includes('gnocchi alla sorrentina') || lowerPid === 'pasta-4')
+  ) {
+    suppressSections.add('Choose a Pasta');
+  }
 
   const resolveCateringDessertSection = (sel: any, current: string | null): string | null => {
     if (!category.startsWith('catering-')) return current;
@@ -4401,6 +4423,9 @@ const applyCategoryOrdering = (item: CartItem, lines: string[]): string[] => {
       else section = normalizeSectionName(text);
     }
     section = remapSectionForItem(item, section, text);
+    if (section && suppressSections.has(section)) {
+      return;
+    }
     if (
       category === 'catering-hoagies-wraps' &&
       String(item.name || '').toLowerCase().includes('hoagie platter') &&
@@ -4450,7 +4475,20 @@ const applyCategoryOrdering = (item: CartItem, lines: string[]): string[] => {
     return ordered;
   }
   const used = new Set(ordered.map((x) => x.toLowerCase()));
-  const leftovers = [...other, ...lines.filter((line) => !used.has(String(line || '').toLowerCase()) && !ordered.includes(String(line || '')))];
+  const leftovers = [
+    ...other,
+    ...lines.filter((line) => {
+      if (used.has(String(line || '').toLowerCase()) || ordered.includes(String(line || ''))) return false;
+      const key = toLookupKey(String(line || ''));
+      const mappedSection = remapSectionForItem(
+        item,
+        sectionByKey.get(key) || normalizeSectionName(String(line || '')),
+        String(line || '')
+      );
+      if (mappedSection && suppressSections.has(mappedSection)) return false;
+      return true;
+    }),
+  ];
   const dedupedLeftovers: string[] = [];
   leftovers.forEach((x) => pushUnique(dedupedLeftovers, x));
   return [...ordered, ...dedupedLeftovers];
