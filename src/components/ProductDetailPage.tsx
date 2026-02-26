@@ -1007,7 +1007,7 @@ const cateringEntreeSpecialInstructions: Topping[] = [
   },
 ];
 
-// Catering Entrees - Cafing Kit (before dessert)
+// Catering Entrees - Chafing Kit (before dessert)
 const cateringCafingKitItems: Topping[] = [
   {
     id: 'cfk1',
@@ -1022,6 +1022,34 @@ const cateringCafingKitItems: Topping[] = [
     price: 5.00,
     description: 'Made from aluminum, ideal for catering and food warming, returnable.',
     image: 'https://drive.google.com/uc?export=view&id=18CmHAv6GIsKO7Y4mwj58tcaF33jJ1Nnh',
+  },
+];
+
+// Catering - Included and Available Upon Request (before chafing kit)
+const cateringIncludedRequestItems: Topping[] = [
+  {
+    id: 'iaru1',
+    name: 'Serving utensils',
+    price: 0.00,
+    image: 'https://drive.google.com/uc?export=view&id=1KU8xHQbJm0fZHRfd5wuNvIm2WbQPz-vp',
+  },
+  {
+    id: 'iaru2',
+    name: 'Utensils',
+    price: 0.00,
+    image: 'https://drive.google.com/uc?export=view&id=1i19sXWPQZA8JscyGLOSCQTemimeCz8Id',
+  },
+  {
+    id: 'iaru3',
+    name: 'Napkins',
+    price: 0.00,
+    image: 'https://drive.google.com/uc?export=view&id=1CbFa2CCr5Cqsqd0bq2ZFoDb4IFBkaaws',
+  },
+  {
+    id: 'iaru4',
+    name: 'Plates',
+    price: 0.00,
+    image: 'https://drive.google.com/uc?export=view&id=1YKt_DvjdsDnDhjpaSrtlI5eL8rsRtH2c',
   },
 ];
 
@@ -4746,6 +4774,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
   const [extraSideSauces, setExtraSideSauces] = useState<Record<string, number>>({});
   const [isExtraDippingOpen, setIsExtraDippingOpen] = useState(true);
   const [isSoupOpen, setIsSoupOpen] = useState(true);
+  const [isIncludedRequestOpen, setIsIncludedRequestOpen] = useState(true);
   const [isCafingKitOpen, setIsCafingKitOpen] = useState(true);
   const [isDessertOpen, setIsDessertOpen] = useState(true);
   const [isBeverageOpen, setIsBeverageOpen] = useState(true);
@@ -4818,13 +4847,31 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
   const [selectedDesserts, setSelectedDesserts] = useState<Record<string, number>>({});
   const [activeDessertItem, setActiveDessertItem] = useState<string | null>(null);
 
-  // Catering Entrees - Cafing Kit state
+  // Catering Entrees - Chafing Kit state
   const [selectedCafingKit, setSelectedCafingKit] = useState<Record<string, number>>({});
   const [activeCafingKitItem, setActiveCafingKitItem] = useState<string | null>(null);
+  const [selectedIncludedRequest, setSelectedIncludedRequest] = useState<Record<string, number>>({});
+  const [activeIncludedRequestItem, setActiveIncludedRequestItem] = useState<string | null>(null);
 
   // Beverages state - Changed to Record<string, number> for quantity support
   const [selectedBeverages, setSelectedBeverages] = useState<Record<string, number>>({});
   const [activeBeverageItem, setActiveBeverageItem] = useState<string | null>(null);
+
+  const isChafingCategory = (category?: string) =>
+    ['catering-entrees', 'catering-pasta', 'catering-seafood-pasta', 'catering-sides'].includes(category || '');
+
+  const isIncludedRequestCategory = (category?: string) =>
+    [
+      'catering-entrees',
+      'catering-pasta',
+      'catering-seafood-pasta',
+      'catering-sides',
+      'catering-appetizers',
+      'catering-salad-soups',
+      'catering-hoagies-wraps',
+      'catering-whole-cakes',
+      'catering-party-trays'
+    ].includes(category || '');
 
   const [selectedSpecialInstructions, setSelectedSpecialInstructions] = useState<string[]>([]);
   const [selectedExtraSauce, setSelectedExtraSauce] = useState<string[]>([]);
@@ -5276,6 +5323,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
 
             case 'Cafing Kit':
             case 'Cafing kit':
+            case 'Chafing Kit':
+            case 'Chafing kit':
               const cafingIds = items.map(name => {
                 const match = name.match(/^(.*?)\s+x(\d+)$/i);
                 const cleanName = match ? match[1] : name;
@@ -5289,6 +5338,24 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 cafingRecord[id] = (cafingRecord[id] || 0) + qty;
               });
               setSelectedCafingKit(cafingRecord);
+              break;
+
+            case 'Included and Available Upon Request':
+            case 'INCLUDED AND AVAILABLE UPON REQUEST':
+              const includedIds = items.map(name => {
+                const match = name.match(/^(.*?)\s+x(\d+)$/i);
+                const cleanName = match ? match[1] : name;
+                const qty = match ? parseInt(match[2], 10) : 1;
+                const included = cateringIncludedRequestItems.find(k => k.name === cleanName);
+                return included ? { id: included.id, qty } : null;
+              }).filter(Boolean) as { id: string; qty: number }[];
+
+              const includedRecord: Record<string, number> = {};
+              includedIds.forEach(({ id, qty }) => {
+                const isNoQuantityItem = id === 'iaru1' || id === 'iaru3';
+                includedRecord[id] = isNoQuantityItem ? 1 : ((includedRecord[id] || 0) + qty);
+              });
+              setSelectedIncludedRequest(includedRecord);
               break;
             
             case 'Beverages':
@@ -5360,6 +5427,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
   // Without this, dessert/beverage quantities can leak between products (e.g. showing x3 unexpectedly).
   useEffect(() => {
     if (isEditMode) return;
+    setSelectedIncludedRequest({});
+    setActiveIncludedRequestItem(null);
     setSelectedCafingKit({});
     setActiveCafingKitItem(null);
     setSelectedDesserts({});
@@ -6508,6 +6577,37 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
         next[itemId] = 1;
       }
       return next;
+    });
+  };
+
+  const handleIncludedRequestToggle = (itemId: string, allowQuantity: boolean) => {
+    setSelectedIncludedRequest(prev => {
+      const current = prev[itemId] || 0;
+      const next = { ...prev };
+      if (current > 0) {
+        delete next[itemId];
+      } else {
+        next[itemId] = allowQuantity ? 1 : 1;
+      }
+      return next;
+    });
+  };
+
+  const handleIncludedRequestIncrement = (id: string) => {
+    setSelectedIncludedRequest(prev => ({
+      ...prev,
+      [id]: (prev[id] || 0) + 1
+    }));
+  };
+
+  const handleIncludedRequestDecrement = (id: string) => {
+    setSelectedIncludedRequest(prev => {
+      const current = prev[id] || 0;
+      if (current <= 1) {
+        const { [id]: _, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [id]: current - 1 };
     });
   };
 
@@ -8293,7 +8393,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
         'selectedHoagiePlatterCut', 'selectedHoagiePlatterSideToppings', 'selectedWrapPlatterOptions',
         'selectedWrapPlatterWrapType', 'selectedWrapPlatterSideToppings', 'selectedHotSandwichPlatterOptions',
         'selectedHotSandwichPlatterCut', 'selectedHotSandwichPlatterSideToppings',
-        'selectedTraditionalDinnersSides', 'selectedTraditionalDinnersSoupsSalads', 'selectedCafingKit'
+        'selectedTraditionalDinnersSides', 'selectedTraditionalDinnersSoupsSalads', 'selectedIncludedRequest', 'selectedCafingKit'
       ];
       cateringKeys.forEach(key => {
         if (allSources[key]) filtered[key] = allSources[key];
@@ -8551,6 +8651,17 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       </div>
     </>
   ) : null;
+
+  const showIncludedRequestSection = isIncludedRequestCategory(product.category);
+  const showChafingKitSection = isChafingCategory(product.category);
+  const dessertStepNumber = showIncludedRequestSection
+    ? (showChafingKitSection ? '4' : '3')
+    : '2';
+  const beverageStepNumber = showIncludedRequestSection
+    ? (showChafingKitSection ? '5' : '4')
+    : '3';
+  const includedStepNumber = '2';
+  const chafingStepNumber = '3';
 
   return (
     <div 
@@ -24938,13 +25049,125 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
             </div>
           )}
 
-          {/* Cafing Kit - Catering Entrees, Pasta & Baked Pasta, and Seafood Pasta */}
-          {(product.category === 'catering-entrees' || product.category === 'catering-pasta' || product.category === 'catering-seafood-pasta' || product.category === 'catering-sides') && (
+          {/* Included and Available Upon Request - Catering categories with Chafing Kit */}
+          {showIncludedRequestSection && (
+            <Collapsible open={isIncludedRequestOpen} onOpenChange={setIsIncludedRequestOpen}>
+              <CollapsibleTrigger asChild>
+                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>{includedStepNumber}. Included and Available Upon Request</span>
+                  </div>
+                  {isIncludedRequestOpen ? (
+                    <ChevronUp className="w-6 h-6" />
+                  ) : (
+                    <ChevronDown className="w-6 h-6" />
+                  )}
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="relative border border-t-0 rounded-b-lg p-5">
+                <div
+                  className="absolute inset-0 pointer-events-none opacity-30 rounded-b-lg"
+                  style={{
+                    backgroundImage: `url(${backgroundTexture})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }}
+                />
+                <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {cateringIncludedRequestItems.map((item) => {
+                    const quantity = selectedIncludedRequest[item.id] || 0;
+                    const isActive = activeIncludedRequestItem === item.id;
+                    const allowQuantity = item.id !== 'iaru1' && item.id !== 'iaru3';
+
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => {
+                          if (!allowQuantity) {
+                            if (quantity === 0) {
+                              handleIncludedRequestToggle(item.id, false);
+                              setActiveIncludedRequestItem(item.id);
+                            } else {
+                              handleIncludedRequestToggle(item.id, false);
+                              setActiveIncludedRequestItem(null);
+                            }
+                            return;
+                          }
+
+                          if (quantity === 0) {
+                            handleIncludedRequestToggle(item.id, true);
+                            setActiveIncludedRequestItem(item.id);
+                          } else if (!isActive) {
+                            setActiveIncludedRequestItem(item.id);
+                          } else {
+                            handleIncludedRequestToggle(item.id, true);
+                            setActiveIncludedRequestItem(null);
+                          }
+                        }}
+                        className={`relative rounded-lg border bg-[#F6F6F6] p-4 cursor-pointer transition-colors ${
+                          quantity > 0 ? 'border-[#A72020]' : 'border-gray-200 hover:border-[#A72020]'
+                        }`}
+                      >
+                        <div className="absolute top-2 right-2 z-10">
+                          {quantity > 0 ? (
+                            <div className="w-6 h-6 rounded-full border-2 border-[#A72020] bg-[#A72020] flex items-center justify-center">
+                              <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                            </div>
+                          ) : (
+                            <div className="w-6 h-6 rounded-full border-2 border-gray-300"></div>
+                          )}
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <div className="w-20 h-20 flex-shrink-0 rounded-md overflow-hidden bg-white">
+                            <ImageWithFallback
+                              src={item.image}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-base text-gray-900 pr-8">{item.name}</p>
+                            <p className="text-sm text-gray-600 mt-1">${(item.price || 0).toFixed(2)}</p>
+                            {allowQuantity && isActive && quantity > 0 && (
+                              <div className="flex items-center gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleIncludedRequestDecrement(item.id);
+                                  }}
+                                  className="w-6 h-6 rounded-full bg-[#A72020] text-white flex items-center justify-center font-bold text-sm"
+                                >
+                                  −
+                                </button>
+                                <span className="font-bold text-sm min-w-[1rem] text-center">{quantity}</span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleIncludedRequestIncrement(item.id);
+                                  }}
+                                  className="w-6 h-6 rounded-full bg-[#A72020] text-white flex items-center justify-center font-bold text-sm"
+                                >
+                                  +
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+
+          {/* Chafing Kit - Catering Entrees, Pasta & Baked Pasta, and Seafood Pasta */}
+          {showChafingKitSection && (
             <Collapsible open={isCafingKitOpen} onOpenChange={setIsCafingKitOpen}>
               <CollapsibleTrigger asChild>
                 <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>2. Cafing kit</span>
+                    <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>{chafingStepNumber}. Chafing kit</span>
                   </div>
                   {isCafingKitOpen ? (
                     <ChevronUp className="w-6 h-6" />
@@ -25044,7 +25267,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
             <CollapsibleTrigger asChild>
               <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>{(product.category === 'catering-entrees' || product.category === 'catering-pasta' || product.category === 'catering-seafood-pasta' || product.category === 'catering-sides') ? '3. Would You Like To Add a Dessert?' : '2. Would You Like To Add a Dessert?'}</span>
+                  <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>{`${dessertStepNumber}. Would You Like To Add a Dessert?`}</span>
                 </div>
                 {isDessertOpen ? (
                   <ChevronUp className="w-6 h-6" />
@@ -25178,7 +25401,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
             <CollapsibleTrigger asChild>
               <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>{(product.category === 'catering-entrees' || product.category === 'catering-pasta' || product.category === 'catering-seafood-pasta' || product.category === 'catering-sides') ? '4. Would You Like To Add a Beverage?' : '3. Would You Like To Add a Beverage?'}</span>
+                  <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>{`${beverageStepNumber}. Would You Like To Add a Beverage?`}</span>
                 </div>
                 {isBeverageOpen ? (
                   <ChevronUp className="w-6 h-6" />
@@ -27077,9 +27300,14 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   groupTitle: 'Desserts',
                   type: 'dessert'
                 });
+                registerOptionsToLookup(selectionLookup, cateringIncludedRequestItems, {
+                  groupId: 'included_available_upon_request',
+                  groupTitle: 'Included and Available Upon Request',
+                  type: 'other'
+                });
                 registerOptionsToLookup(selectionLookup, cateringCafingKitItems, {
                   groupId: 'cafing_kit',
-                  groupTitle: 'Cafing Kit',
+                  groupTitle: 'Chafing Kit',
                   type: 'other'
                 });
                 registerOptionsToLookup(selectionLookup, wholeCakesItems, {
@@ -28094,8 +28322,39 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   }
                 }
                 
-                // Add Catering Cafing Kit (RECORD version)
-                if ((product.category === 'catering-entrees' || product.category === 'catering-pasta' || product.category === 'catering-seafood-pasta' || product.category === 'catering-sides') && Object.keys(selectedCafingKit).length > 0) {
+                // Add Included and Available Upon Request (RECORD version)
+                if (isIncludedRequestCategory(product.category) && Object.keys(selectedIncludedRequest).length > 0) {
+                  const includedItemsList: string[] = [];
+                  Object.entries(selectedIncludedRequest).forEach(([itemId, qty]) => {
+                    if (qty > 0) {
+                      const requestItem = cateringIncludedRequestItems.find(k => k.id === itemId);
+                      if (requestItem) {
+                        const isNoQuantityItem = itemId === 'iaru1' || itemId === 'iaru3';
+                        const safeQty = isNoQuantityItem ? 1 : qty;
+                        const qtySuffix = safeQty > 1 ? ` x${safeQty}` : '';
+                        const displayLabel = `${requestItem.name}${qtySuffix}`;
+                        includedItemsList.push(displayLabel);
+                        selections.push({
+                          id: `${itemId}-qty-${safeQty}`,
+                          label: displayLabel,
+                          type: 'other',
+                          groupId: 'included_available_upon_request',
+                          groupTitle: 'Included and Available Upon Request'
+                        });
+                      }
+                    }
+                  });
+
+                  if (includedItemsList.length > 0) {
+                    customizations.push({
+                      category: 'Included and Available Upon Request',
+                      items: includedItemsList
+                    });
+                  }
+                }
+
+                // Add Catering Chafing Kit (RECORD version)
+                if (isChafingCategory(product.category) && Object.keys(selectedCafingKit).length > 0) {
                   const cafingItemsList: string[] = [];
                   Object.entries(selectedCafingKit).forEach(([itemId, qty]) => {
                     if (qty > 0) {
@@ -28109,7 +28368,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           label: displayLabel,
                           type: 'other',
                           groupId: 'cafing_kit',
-                          groupTitle: 'Cafing Kit'
+                          groupTitle: 'Chafing Kit'
                         });
                       }
                     }
@@ -28117,7 +28376,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
 
                   if (cafingItemsList.length > 0) {
                     customizations.push({
-                      category: 'Cafing Kit',
+                      category: 'Chafing Kit',
                       items: cafingItemsList
                     });
                   }
@@ -30045,6 +30304,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   selectedCheese: { kind: "singleString", value: (product.category === 'appetizers' ? '' : selectedCheese) },
                   selectedSideToppings: { kind: "stringArray", value: selectedSideToppings },
                   selectedExtraSides: { kind: "stringArray", value: selectedExtraSides },
+                  selectedIncludedRequest: { kind: "numberRecord", value: selectedIncludedRequest },
                   selectedCafingKit: { kind: "numberRecord", value: selectedCafingKit },
                   selectedSaladBase: { kind: "singleString", value: selectedSaladBase },
                   selectedSaladDressing: { kind: "singleString", value: selectedSaladDressing },
@@ -31950,9 +32210,14 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     groupTitle: 'Desserts',
                     type: 'dessert'
                   });
+                  registerOptionsToLookup(selectionLookupDesktop, cateringIncludedRequestItems, {
+                    groupId: 'included_available_upon_request',
+                    groupTitle: 'Included and Available Upon Request',
+                    type: 'other'
+                  });
                   registerOptionsToLookup(selectionLookupDesktop, cateringCafingKitItems, {
                     groupId: 'cafing_kit',
-                    groupTitle: 'Cafing Kit',
+                    groupTitle: 'Chafing Kit',
                     type: 'other'
                   });
                   registerOptionsToLookup(selectionLookupDesktop, wholeCakesItems, {
@@ -32766,8 +33031,39 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     }
                   }
                   
-                  // Add Catering Cafing Kit (RECORD version)
-                  if ((product.category === 'catering-entrees' || product.category === 'catering-pasta' || product.category === 'catering-seafood-pasta' || product.category === 'catering-sides') && Object.keys(selectedCafingKit).length > 0) {
+                  // Add Included and Available Upon Request (RECORD version)
+                  if (isIncludedRequestCategory(product.category) && Object.keys(selectedIncludedRequest).length > 0) {
+                    const includedItemsList: string[] = [];
+                    Object.entries(selectedIncludedRequest).forEach(([itemId, qty]) => {
+                      if (qty > 0) {
+                        const requestItem = cateringIncludedRequestItems.find(k => k.id === itemId);
+                        if (requestItem) {
+                          const isNoQuantityItem = itemId === 'iaru1' || itemId === 'iaru3';
+                          const safeQty = isNoQuantityItem ? 1 : qty;
+                          const qtySuffix = safeQty > 1 ? ` x${safeQty}` : '';
+                          const displayLabel = `${requestItem.name}${qtySuffix}`;
+                          includedItemsList.push(displayLabel);
+                          selections.push({
+                            id: `${itemId}-qty-${safeQty}`,
+                            label: displayLabel,
+                            type: 'other',
+                            groupId: 'included_available_upon_request',
+                            groupTitle: 'Included and Available Upon Request'
+                          });
+                        }
+                      }
+                    });
+
+                    if (includedItemsList.length > 0) {
+                      customizations.push({
+                        category: 'Included and Available Upon Request',
+                        items: includedItemsList
+                      });
+                    }
+                  }
+
+                  // Add Catering Chafing Kit (RECORD version)
+                  if (isChafingCategory(product.category) && Object.keys(selectedCafingKit).length > 0) {
                     const cafingItemsList: string[] = [];
                     Object.entries(selectedCafingKit).forEach(([itemId, qty]) => {
                       if (qty > 0) {
@@ -32781,7 +33077,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             label: displayLabel,
                             type: 'other',
                             groupId: 'cafing_kit',
-                            groupTitle: 'Cafing Kit'
+                            groupTitle: 'Chafing Kit'
                           });
                         }
                       }
@@ -32789,7 +33085,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
 
                     if (cafingItemsList.length > 0) {
                       customizations.push({
-                        category: 'Cafing Kit',
+                        category: 'Chafing Kit',
                         items: cafingItemsList
                       });
                     }
@@ -33358,6 +33654,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     selectedCheese: { kind: "singleString", value: (product.category === 'appetizers' ? '' : selectedCheese) },
                     selectedSideToppings: { kind: "stringArray", value: selectedSideToppings },
                     selectedExtraSides: { kind: "stringArray", value: selectedExtraSides },
+                    selectedIncludedRequest: { kind: "numberRecord", value: selectedIncludedRequest },
                     selectedCafingKit: { kind: "numberRecord", value: selectedCafingKit },
                     selectedSaladBase: { kind: "singleString", value: selectedSaladBase },
                     selectedSaladDressing: { kind: "singleString", value: selectedSaladDressing },

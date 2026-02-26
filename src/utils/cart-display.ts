@@ -4072,6 +4072,8 @@ const normalizeSectionName = (raw: string): string | null => {
   if (!s) return null;
   if (s.includes('whole cakes')) return 'Whole Cakes';
   if (s.includes('party cakes') || s.includes('party trays')) return 'Party Trays';
+  if (s.includes('chafing kit') || s.includes('cafing kit')) return 'Chafing Kit';
+  if (s.includes('included and available upon request')) return 'Included and Available Upon Request';
   if (s.includes('specialty toppings 1st') || s.includes('1st half')) return 'Specialty Toppings 1ST HALF';
   if (s.includes('specialty toppings 2nd') || s.includes('2nd half')) return 'Specialty Toppings 2ND HALF';
   if (s.includes('toast option')) return 'Toast Option';
@@ -4179,23 +4181,23 @@ const getDesiredOrder = (item: CartItem): { mode: 'full' | 'tail'; sections: str
   }
   if (category === 'desserts' || category === 'pizzelle' || category === 'gelati') return { mode: 'full', sections: ['Dessert', 'Beverages'] };
   if (category === 'beverages') return { mode: 'full', sections: ['Dessert'] };
-  if (category === 'catering-entrees') return { mode: 'full', sections: ['Add Sides', 'Side Soups, Salads, & Extra Bread', 'Special Instructions', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
-  if (category === 'catering-pasta') return { mode: 'full', sections: ['Choose a Pasta', 'Extra Toppings', 'Cafing Kit', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
-  if (category === 'catering-seafood-pasta') return { mode: 'full', sections: ['Pasta Type', 'Choose your Sauce', 'Cafing Kit', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
-  if (category === 'catering-sides') return { mode: 'full', sections: ['Cafing Kit', 'Dessert', 'Beverages'] };
-  if (category === 'catering-salad-soups') return { mode: 'full', sections: ['Choose Your Base', 'Dressing Choice', 'Special Instructions', 'Dessert', 'Beverage'] };
+  if (category === 'catering-entrees') return { mode: 'full', sections: ['Included and Available Upon Request', 'Chafing Kit', 'Dessert', 'Beverages'] };
+  if (category === 'catering-pasta') return { mode: 'full', sections: ['Choose a Pasta', 'Extra Toppings', 'Included and Available Upon Request', 'Chafing Kit', 'Dessert', 'Beverage'] };
+  if (category === 'catering-seafood-pasta') return { mode: 'full', sections: ['Pasta Type', 'Choose your Sauce', 'Included and Available Upon Request', 'Chafing Kit', 'Dessert', 'Beverages'] };
+  if (category === 'catering-sides') return { mode: 'full', sections: ['Included and Available Upon Request', 'Chafing Kit', 'Dessert', 'Beverages'] };
+  if (category === 'catering-salad-soups') return { mode: 'full', sections: ['Choose Your Base', 'Dressing Choice', 'Special Instructions', 'Included and Available Upon Request', 'Dessert', 'Beverage'] };
   if (category === 'catering-hoagies-wraps') {
-    if (name.includes('hoagie platter')) return { mode: 'full', sections: ['Build Your Platter', 'Cut Options', 'Side Toppings', 'Dessert', 'Beverages'] };
-    if (name.includes('wrap platter')) return { mode: 'full', sections: ['Build Your Platter', 'Wrap type', 'Side Toppings', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
-    if (name.includes('hot sandwich platter')) return { mode: 'full', sections: ['Build Your Platter', 'Cut Options', 'Side Toppings', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
-    return { mode: 'full', sections: ['Build Your Platter', 'Side Toppings', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
+    if (name.includes('hoagie platter')) return { mode: 'full', sections: ['Build Your Platter', 'Cut Options', 'Side Toppings', 'Included and Available Upon Request', 'Dessert', 'Beverages'] };
+    if (name.includes('wrap platter')) return { mode: 'full', sections: ['Build Your Platter', 'Wrap type', 'Side Toppings', 'Included and Available Upon Request', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
+    if (name.includes('hot sandwich platter')) return { mode: 'full', sections: ['Build Your Platter', 'Cut Options', 'Side Toppings', 'Included and Available Upon Request', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
+    return { mode: 'full', sections: ['Build Your Platter', 'Side Toppings', 'Included and Available Upon Request', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
   }
-  if (category === 'catering-whole-cakes') return { mode: 'full', sections: ['Whole Cakes', 'Beverages'] };
-  if (category === 'catering-party-trays') return { mode: 'full', sections: ['Special Instructions', 'Party Trays', 'Beverages'] };
+  if (category === 'catering-whole-cakes') return { mode: 'full', sections: ['Whole Cakes', 'Included and Available Upon Request', 'Beverages'] };
+  if (category === 'catering-party-trays') return { mode: 'full', sections: ['Special Instructions', 'Party Trays', 'Included and Available Upon Request', 'Beverages'] };
   if (category === 'catering-desserts') return { mode: 'full', sections: ['Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
   if (category === 'catering-beverages') return { mode: 'full', sections: ['Dessert'] };
   if (category === 'appetizers') return { mode: 'tail', sections: ['Dessert', 'Beverages'] };
-  if (category === 'catering-appetizers') return { mode: 'tail', sections: ['Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
+  if (category === 'catering-appetizers') return { mode: 'tail', sections: ['Included and Available Upon Request', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
   return null;
 };
 
