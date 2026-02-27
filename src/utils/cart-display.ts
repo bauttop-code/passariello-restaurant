@@ -161,6 +161,25 @@ export const buildCartDisplayTitle = (item: CartItem): string => {
   name = name.replace(/^\s*\*?\s*new\s*\*?\s*/i, '');
   name = name.trim();
 
+  // Catering title normalization:
+  // convert "Chicken Alla Vodka Tray Medium (20PCS)" -> "Medium Chicken Alla Vodka Tray (20PCS)"
+  if (categoryLower.startsWith('catering-')) {
+    const tailSizeWithSuffix = name.match(/^(.*)\s+(Medium|Large|Jumbo)\s*(\([^)]*\))$/i);
+    if (tailSizeWithSuffix) {
+      const base = String(tailSizeWithSuffix[1] || '').trim();
+      const sizeWord = String(tailSizeWithSuffix[2] || '').trim();
+      const suffix = String(tailSizeWithSuffix[3] || '').trim();
+      name = `${sizeWord} ${base} ${suffix}`.replace(/\s+/g, ' ').trim();
+    } else {
+      const tailSizeOnly = name.match(/^(.*)\s+(Medium|Large|Jumbo)$/i);
+      if (tailSizeOnly) {
+        const base = String(tailSizeOnly[1] || '').trim();
+        const sizeWord = String(tailSizeOnly[2] || '').trim();
+        name = `${sizeWord} ${base}`.replace(/\s+/g, ' ').trim();
+      }
+    }
+  }
+
   // Custom cart naming for specific cheesesteaks
   if (/^create your own cheesesteak$/i.test(name)) {
     name = 'Plain Steak';
