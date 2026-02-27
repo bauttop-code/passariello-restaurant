@@ -506,7 +506,14 @@ export function CartSidebar({
                       <div className="flex items-start justify-between gap-2 mb-1">
                         <div className="flex-1 min-w-0">
                           <h3 className="font-extrabold text-[#404041]" style={{ fontFamily: "'Ancizar Sans', sans-serif" }}>
-                            {buildCartDisplayTitle(item as any)}
+                            {(() => {
+                              try {
+                                return buildCartDisplayTitle(item as any);
+                              } catch (err) {
+                                console.error('[CartSidebar] Title render error:', err, item);
+                                return item.name || 'Item';
+                              }
+                            })()}
                           </h3>
                         </div>
                         <span className="font-semibold text-[#A72020] whitespace-nowrap">
@@ -526,17 +533,20 @@ export function CartSidebar({
 
                           let lines: string[] = [];
                           
-                          if (isWings) {
-                             // Force strictly buildWingsDisplayLines logic
-                             // We re-import or rely on buildCartDisplayLines to delegate, 
-                             // but to be safe and debuggable, we tap into the result.
-                             lines = buildCartDisplayLines(item as any);
-                             
-                             if (debugCartEnabled) {
-                               console.log(`[WINGS UI] Lines for ${item.name}:`, lines);
-                             }
-                          } else {
-                             lines = buildCartDisplayLines(item as any);
+                          try {
+                            if (isWings) {
+                               // Force strictly buildWingsDisplayLines logic
+                               lines = buildCartDisplayLines(item as any);
+                               
+                               if (debugCartEnabled) {
+                                 console.log(`[WINGS UI] Lines for ${item.name}:`, lines);
+                               }
+                            } else {
+                               lines = buildCartDisplayLines(item as any);
+                            }
+                          } catch (err) {
+                            console.error('[CartSidebar] Lines render error:', err, item);
+                            lines = [];
                           }
 
                           return lines.map((line, idx) => (

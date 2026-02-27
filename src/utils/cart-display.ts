@@ -149,8 +149,12 @@ export const buildCartDisplayTitle = (item: CartItem): string => {
   const categoryLower = (item.category || '').toLowerCase();
 
   // 1. Clean up "pcs" from name GLOBALLY
-  // Remove (12 pcs), (16 pcs) etc, but keep dynamic PCS suffix for catering entrees.
-  if (categoryLower !== 'catering-entrees') {
+  // Remove (12 pcs), (16 pcs) etc, but keep dynamic PCS suffix for catering entrees/pasta/seafood pasta.
+  if (
+    categoryLower !== 'catering-entrees' &&
+    categoryLower !== 'catering-pasta' &&
+    categoryLower !== 'catering-seafood-pasta'
+  ) {
     name = name.replace(/\s*\(\s*\d+\s*(?:pcs|pieces?)\s*\)\s*/gi, '');
   }
   // Remove marketing prefixes like "*NEW*" from cart titles.

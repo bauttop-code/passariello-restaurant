@@ -5874,6 +5874,80 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     const qtyLabel = size === 'medium' ? rule.medium : rule.large;
     return `${baseName} ${sizeLabel} (${qtyLabel})`;
   };
+
+  const getCateringPastaDisplayName = (baseName: string, productId: string, size: string | null) => {
+    if (!size || (size !== 'medium' && size !== 'large')) return baseName;
+
+    const servingMap: Record<string, { medium: string; large: string }> = {
+      cp1: { medium: 'Serves 10', large: 'Serves 20' },
+      cp2: { medium: '20 PCS', large: '40 PCS' },
+      cp3: { medium: 'Serves 10', large: 'Serves 20' },
+      cp4: { medium: 'Serves 10', large: 'Serves 20' },
+      cp5: { medium: 'Serves 10', large: 'Serves 20' },
+      cp6: { medium: 'Serves 10', large: 'Serves 20' },
+      cp7: { medium: 'Serves 10', large: 'Serves 20' },
+      cp8: { medium: 'Serves 10', large: 'Serves 20' },
+      cp9: { medium: 'Serves 10', large: 'Serves 20' },
+      cp10: { medium: 'Serves 10', large: 'Serves 20' },
+      cp11: { medium: 'Serves 10', large: 'Serves 20' },
+      cp12: { medium: '20 PCS', large: '40 PCS' },
+      cp13: { medium: 'Serves 10', large: 'Serves 20' },
+      cp14: { medium: 'Serves 10', large: 'Serves 20' },
+    };
+
+    const rule = servingMap[productId];
+    if (!rule) return baseName;
+
+    const sizeLabel = size === 'medium' ? 'Medium' : 'Large';
+    const qtyLabel = size === 'medium' ? rule.medium : rule.large;
+    return `${baseName} ${sizeLabel} (${qtyLabel})`;
+  };
+
+  const getCateringSeafoodPastaDisplayName = (baseName: string, productId: string, size: string | null) => {
+    if (!size || (size !== 'medium' && size !== 'large')) return baseName;
+
+    const servingMap: Record<string, { medium: string; large: string }> = {
+      cs1: { medium: 'Serves 10', large: 'Serves 20' },
+      cs2: { medium: 'Serves 10', large: 'Serves 20' },
+      cs3: { medium: '10PCS', large: '20PCS' },
+      cs4: { medium: 'Serves 10', large: 'Serves 20' },
+      cs5: { medium: 'Serves 10', large: 'Serves 20' },
+      cs6: { medium: 'Serves 10', large: 'Serves 20' },
+      cs7: { medium: '10PCS', large: '20PCS' },
+    };
+
+    const rule = servingMap[productId];
+    if (!rule) return baseName;
+
+    const sizeLabel = size === 'medium' ? 'Medium' : 'Large';
+    const qtyLabel = size === 'medium' ? rule.medium : rule.large;
+    return `${baseName} ${sizeLabel} (${qtyLabel})`;
+  };
+
+  const getCateringSidesDisplayName = (baseName: string, size: string | null) => {
+    if (!size || (size !== 'medium' && size !== 'large')) return baseName;
+    const sizeLabel = size === 'medium' ? 'Medium' : 'Large';
+    const qtyLabel = size === 'medium' ? 'Serves 10' : 'Serves 20';
+    return `${baseName} ${sizeLabel} (${qtyLabel})`;
+  };
+
+  const getCateringSaladSoupsDisplayName = (baseName: string, size: string | null) => {
+    if (!size || (size !== 'medium' && size !== 'large')) return baseName;
+    const sizeLabel = size === 'medium' ? 'Medium' : 'Large';
+    const qtyLabel = size === 'medium' ? 'Serves 10' : 'Serves 20';
+    return `${baseName} ${sizeLabel} (${qtyLabel})`;
+  };
+
+  const getCateringWholeCakesDisplayName = (baseName: string, productId: string) => {
+    const slicesMap: Record<string, string> = {
+      ccake1: '14Slices',
+      ccake2: '12Slices',
+      ccake3: '14Slices',
+      ccake4: '12Slices',
+    };
+    const slices = slicesMap[productId];
+    return slices ? `${baseName} (${slices})` : baseName;
+  };
   
   // Salad states (additional)
   const [selectedSaladToppings, setSelectedSaladToppings] = useState<string[]>([]);
@@ -8810,6 +8884,16 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 <h1 className="text-2xl font-bold text-gray-900 mb-0">
                   {product.name.toLowerCase().includes('chicken tenders')
                     ? 'Chicken Tenders W/FF'
+                    : product.category === 'catering-pasta'
+                      ? getCateringPastaDisplayName(product.name, product.id, selectedSize)
+                    : product.category === 'catering-seafood-pasta'
+                      ? getCateringSeafoodPastaDisplayName(product.name, product.id, selectedSize)
+                    : product.category === 'catering-whole-cakes'
+                      ? getCateringWholeCakesDisplayName(product.name, product.id)
+                    : product.category === 'catering-salad-soups'
+                      ? getCateringSaladSoupsDisplayName(product.name, selectedSize)
+                    : product.category === 'catering-sides'
+                      ? getCateringSidesDisplayName(product.name, selectedSize)
                     : product.category === 'catering-entrees'
                       ? getCateringEntreeDisplayName(product.name, product.id, selectedSize)
                       : product.name}
@@ -9401,24 +9485,18 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       ? 'Cauliflower Crust Pizza 10"' 
                       : product.name.toLowerCase().includes('chicken tenders')
                         ? 'Chicken Tenders W/FF'
-                        : (product.id === 'csalad1' || product.id === 'csalad2' || product.id === 'csalad3' || product.id === 'csalad4' || product.id === 'csalad5' || product.id === 'csalad6' || product.id === 'csalad7')
-                        ? `${product.name} ${selectedSize === 'medium' ? '(Serves 8-10)' : selectedSize === 'large' ? '(Serves 18-20)' : ''}`
-                        : (product.id === 'cp7' || product.id === 'cp8' || product.id === 'cp9' || product.id === 'cp10' || product.id === 'cp11')
-                          ? `${product.name} ${selectedSize === 'medium' ? '(Serves 8-10)' : selectedSize === 'large' ? '(Serves 18-20)' : ''}`
-                          : (product.id === 'cp1' || product.id === 'cp3' || product.id === 'cp4')
-                            ? `${product.name} ${selectedSize === 'medium' ? '(Serves 8-10)' : selectedSize === 'large' ? '(Serves 18-20)' : ''}`
-                        : (product.id === 'cp2' || product.id === 'cp12')
-                              ? `${product.name} ${selectedSize === 'medium' ? '(20PCS)' : selectedSize === 'large' ? '(40PCS)' : ''}`
+                        : product.category === 'catering-salad-soups'
+                        ? getCateringSaladSoupsDisplayName(product.name, selectedSize)
+                        : product.category === 'catering-pasta'
+                          ? getCateringPastaDisplayName(product.name, product.id, selectedSize)
+                            : product.category === 'catering-whole-cakes'
+                              ? getCateringWholeCakesDisplayName(product.name, product.id)
                               : product.category === 'catering-entrees'
                                 ? getCateringEntreeDisplayName(product.name, product.id, selectedSize)
                                 : (product.category === 'catering-seafood-pasta')
-                                  ? product.id === 'cp6'
-                                    ? `${product.name} ${selectedSize === 'medium' ? '(20PCS)' : selectedSize === 'large' ? '(40PCS)' : ''}`
-                                    : (product.id === 'cs7')
-                                      ? `${product.name} ${selectedSize === 'medium' ? '(10PCS)' : selectedSize === 'large' ? '(20PCS)' : ''}`
-                                      : (product.id === 'cs3')
-                                        ? `${product.name} ${selectedSize === 'medium' ? '(20PCS)' : selectedSize === 'large' ? '(40PCS)' : ''}`
-                                        : `${product.name} ${selectedSize === 'medium' ? '(Serves 8-10)' : selectedSize === 'large' ? '(Serves 18-20)' : ''}`
+                                  ? getCateringSeafoodPastaDisplayName(product.name, product.id, selectedSize)
+                                  : product.category === 'catering-sides'
+                                    ? getCateringSidesDisplayName(product.name, selectedSize)
                                 : product.name}
               </h1>
               
@@ -25672,6 +25750,16 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
               >
                 {product.name.toLowerCase().includes('chicken tenders')
                   ? 'Chicken Tenders W/FF'
+                  : product.category === 'catering-pasta'
+                    ? getCateringPastaDisplayName(product.name, product.id, selectedSize)
+                  : product.category === 'catering-seafood-pasta'
+                    ? getCateringSeafoodPastaDisplayName(product.name, product.id, selectedSize)
+                  : product.category === 'catering-whole-cakes'
+                    ? getCateringWholeCakesDisplayName(product.name, product.id)
+                  : product.category === 'catering-salad-soups'
+                    ? getCateringSaladSoupsDisplayName(product.name, selectedSize)
+                  : product.category === 'catering-sides'
+                    ? getCateringSidesDisplayName(product.name, selectedSize)
                   : product.category === 'catering-entrees'
                     ? getCateringEntreeDisplayName(product.name, product.id, selectedSize)
                     : product.name}
@@ -26759,6 +26847,31 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   modifiedProduct = {
                     ...product,
                     name: getCateringEntreeDisplayName(product.name, product.id, selectedSize)
+                  };
+                } else if (product.category === 'catering-pasta') {
+                  modifiedProduct = {
+                    ...product,
+                    name: getCateringPastaDisplayName(product.name, product.id, selectedSize)
+                  };
+                } else if (product.category === 'catering-seafood-pasta') {
+                  modifiedProduct = {
+                    ...product,
+                    name: getCateringSeafoodPastaDisplayName(product.name, product.id, selectedSize)
+                  };
+                } else if (product.category === 'catering-sides') {
+                  modifiedProduct = {
+                    ...product,
+                    name: getCateringSidesDisplayName(product.name, selectedSize)
+                  };
+                } else if (product.category === 'catering-salad-soups') {
+                  modifiedProduct = {
+                    ...product,
+                    name: getCateringSaladSoupsDisplayName(product.name, selectedSize)
+                  };
+                } else if (product.category === 'catering-whole-cakes') {
+                  modifiedProduct = {
+                    ...product,
+                    name: getCateringWholeCakesDisplayName(product.name, product.id)
                   };
                 } else if (product.id === 'app6' || product.id === 'wing3' || product.id === 'capp2') {
                   const sizeOption = chickenTendersQuantityOptions.find(opt => opt.id === selectedChickenTendersQuantity);
@@ -31773,6 +31886,16 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                        modifiedProduct.name = `${product.name} (${selectedSize} pcs)`;
                   } else if (product.category === 'catering-entrees') {
                        modifiedProduct.name = getCateringEntreeDisplayName(product.name, product.id, selectedSize);
+                  } else if (product.category === 'catering-pasta') {
+                       modifiedProduct.name = getCateringPastaDisplayName(product.name, product.id, selectedSize);
+                  } else if (product.category === 'catering-seafood-pasta') {
+                       modifiedProduct.name = getCateringSeafoodPastaDisplayName(product.name, product.id, selectedSize);
+                  } else if (product.category === 'catering-sides') {
+                       modifiedProduct.name = getCateringSidesDisplayName(product.name, selectedSize);
+                  } else if (product.category === 'catering-salad-soups') {
+                       modifiedProduct.name = getCateringSaladSoupsDisplayName(product.name, selectedSize);
+                  } else if (product.category === 'catering-whole-cakes') {
+                       modifiedProduct.name = getCateringWholeCakesDisplayName(product.name, product.id);
                   }
 
                   // Build customizations array
