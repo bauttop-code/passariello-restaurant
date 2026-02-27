@@ -4109,11 +4109,17 @@ export default function App() {
       
       // Always add as new item with unique ID (don't merge duplicates)
       const uniqueId = `${product.id}-${Date.now()}-${Math.random()}`;
+      const rawPrice = (product as any)?.price;
+      const normalizedPrice =
+        typeof rawPrice === 'number'
+          ? rawPrice
+          : Number.parseFloat(String(rawPrice ?? '').replace(/[^0-9.]/g, '')) || 0;
+
       const newItem: CartItem = {
         id: uniqueId,
         productId: product.id,
         name: product.name,
-        price: parseFloat(product.price.replace('$', '')),
+        price: normalizedPrice,
         quantity: quantity,
         image: product.image,
         customizations: customizations || [],

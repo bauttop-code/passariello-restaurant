@@ -6970,8 +6970,209 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     return filteredSelections;
   };
 
+  const ensureCateringCartCapture = (
+    currentProduct: Product,
+    customizations: CartItemCustomization[],
+    selections: CartSelection[],
+    getItemName: (id: string) => string
+  ) => {
+    const category = String(currentProduct.category || '').toLowerCase();
+    if (!category.startsWith('catering-')) return;
+
+    const hasSelection = (predicate: (s: CartSelection) => boolean) => selections.some(predicate);
+    const hasCustomizationCategory = (name: string) =>
+      customizations.some((c) => String(c.category || '').toLowerCase() === name.toLowerCase() && (c.items || []).length > 0);
+
+    const pushCustomization = (categoryName: string, items: string[]) => {
+      const cleaned = items.map((x) => String(x || '').trim()).filter(Boolean);
+      if (cleaned.length === 0) return;
+      if (!hasCustomizationCategory(categoryName)) {
+        customizations.push({ category: categoryName, items: cleaned });
+      }
+    };
+
+    const pushSelection = (sel: CartSelection) => {
+      const id = String(sel.id || '');
+      const label = String(sel.label || '').trim();
+      if (!id || !label) return;
+      const exists = selections.some((s) =>
+        String(s.id || '') === id ||
+        (String(s.label || '').trim().toLowerCase() === label.toLowerCase() &&
+          String(s.groupTitle || '').toLowerCase() === String(sel.groupTitle || '').toLowerCase())
+      );
+      if (!exists) selections.push(sel);
+    };
+
+    // Pasta Type + Sauce (catering pasta / seafood pasta)
+    if (category === 'catering-pasta' && selectedPastaType && !hasSelection((s) => String(s.groupTitle || '').toLowerCase().includes('choose a pasta'))) {
+      const label = getItemName(selectedPastaType);
+      if (label) {
+        pushCustomization('Choose a Pasta', [label]);
+        pushSelection({
+          id: selectedPastaType,
+          label,
+          type: 'required_option',
+          groupId: 'catering_pasta_type_required',
+          groupTitle: 'Choose a Pasta'
+        });
+      }
+    }
+
+    if (category === 'catering-pasta' && selectedPastaAdditions.length > 0 && !hasSelection((s) => String(s.groupTitle || '').toLowerCase().includes('extra toppings'))) {
+      const labels = selectedPastaAdditions.map((id) => getItemName(id)).filter(Boolean);
+      if (labels.length > 0) {
+        pushCustomization('Extra Toppings', labels);
+        selectedPastaAdditions.forEach((id) => {
+          const label = getItemName(id);
+          if (!label) return;
+          pushSelection({
+            id: `catering-pasta-extra-${id}`,
+            label,
+            type: 'extra_topping',
+            groupId: 'catering_pasta_extra_toppings',
+            groupTitle: 'Extra Toppings'
+          });
+        });
+      }
+    }
+
+    const seafoodPastaEntries: Array<{ id: string; section: string }> = [
+      { id: selectedBabyClamPastaType, section: 'Pasta Type' },
+      { id: selectedCalamariPastaType, section: 'Pasta Type' },
+      { id: selectedMusselsPastaType, section: 'Pasta Type' },
+      { id: selectedSeafoodComboPastaType, section: 'Pasta Type' },
+      { id: selectedShrimpMarinaraPastaType, section: 'Pasta Type' },
+    ];
+    if (category === 'catering-seafood-pasta' && seafoodPastaEntries.some((x) => !!x.id) && !hasSelection((s) => String(s.groupTitle || '').toLowerCase().includes('pasta type'))) {
+      const labels = seafoodPastaEntries.map((x) => getItemName(x.id)).filter(Boolean);
+      if (labels.length > 0) {
+        pushCustomization('Pasta Type', labels);
+        seafoodPastaEntries.forEach((x) => {
+          if (!x.id) return;
+          const label = getItemName(x.id);
+          if (!label) return;
+          pushSelection({
+            id: `catering-seafood-pasta-${x.id}`,
+            label,
+            type: 'required_option',
+            groupId: 'catering_seafood_pasta_type',
+            groupTitle: 'Pasta Type'
+          });
+        });
+      }
+    }
+
+    const seafoodSauceEntries: string[] = [
+      selectedBabyClamSauceChoice,
+      selectedCalamariSubstituteSauce,
+      selectedMusselsSauceChoice,
+      selectedSeafoodComboSauceChoice,
+      selectedShrimpMarinaraSubstituteSauce
+    ].filter(Boolean);
+    if (category === 'catering-seafood-pasta' && seafoodSauceEntries.length > 0 && !hasSelection((s) => String(s.groupTitle || '').toLowerCase().includes('choose your sauce'))) {
+      const labels = seafoodSauceEntries.map((id) => getItemName(id)).filter(Boolean);
+      if (labels.length > 0) {
+        pushCustomization('Choose your Sauce', labels);
+        seafoodSauceEntries.forEach((id) => {
+          const label = getItemName(id);
+          if (!label) return;
+          pushSelection({
+            id: `catering-seafood-sauce-${id}`,
+            label,
+            type: 'required_option',
+            groupId: 'catering_seafood_sauce_choice',
+            groupTitle: 'Choose your Sauce'
+          });
+        });
+      }
+    }
+
+    // Included and Available Upon Request
+    if (Object.keys(selectedIncludedRequest).length > 0 && !hasSelection((s) => String(s.groupTitle || '').toLowerCase().includes('included and available upon request'))) {
+      const labels: string[] = [];
+      Object.entries(selectedIncludedRequest).forEach(([id, qty]) => {
+        if (!qty || qty <= 0) return;
+        const item = cateringIncludedRequestItems.find((x) => x.id === id);
+        if (!item) return;
+        const isNoQty = id === 'iaru1' || id === 'iaru3';
+        const safeQty = isNoQty ? 1 : qty;
+        const label = safeQty > 1 ? `${item.name} x${safeQty}` : item.name;
+        labels.push(label);
+        pushSelection({
+          id: `included-request-${id}-qty-${safeQty}`,
+          label,
+          type: 'other',
+          groupId: 'included_available_upon_request',
+          groupTitle: 'Included and Available Upon Request'
+        });
+      });
+      pushCustomization('Included and Available Upon Request', labels);
+    }
+
+    // Chafing Kit
+    if (Object.keys(selectedCafingKit).length > 0 && !hasSelection((s) => String(s.groupTitle || '').toLowerCase().includes('chafing kit'))) {
+      const labels: string[] = [];
+      Object.entries(selectedCafingKit).forEach(([id, qty]) => {
+        if (!qty || qty <= 0) return;
+        const item = cateringCafingKitItems.find((x) => x.id === id);
+        if (!item) return;
+        const label = qty > 1 ? `${item.name} x${qty}` : item.name;
+        labels.push(label);
+        pushSelection({
+          id: `chafing-kit-${id}-qty-${qty}`,
+          label,
+          type: 'other',
+          groupId: 'cafing_kit',
+          groupTitle: 'Chafing Kit'
+        });
+      });
+      pushCustomization('Chafing Kit', labels);
+    }
+
+    // Desserts
+    if (Object.keys(selectedDesserts).length > 0 && !hasSelection((s) => String(s.type || '').toLowerCase() === 'dessert')) {
+      const labels: string[] = [];
+      Object.entries(selectedDesserts).forEach(([id, qty]) => {
+        if (!qty || qty <= 0) return;
+        const item = dessertItems.find((d) => d.id === id) || allProducts?.find((p) => p.id === id) || wholeCakesItems.find((w) => w.id === id) || partyCakesItems.find((p) => p.id === id);
+        if (!item?.name) return;
+        const label = qty > 1 ? `${item.name} x${qty}` : item.name;
+        labels.push(label);
+        pushSelection({
+          id: `dessert-${id}-qty-${qty}`,
+          label,
+          type: 'dessert',
+          groupId: 'dessert',
+          groupTitle: 'Dessert'
+        });
+      });
+      pushCustomization('Desserts', labels);
+    }
+
+    // Beverages
+    if (Object.keys(selectedBeverages).length > 0 && !hasSelection((s) => String(s.type || '').toLowerCase() === 'beverage')) {
+      const labels: string[] = [];
+      Object.entries(selectedBeverages).forEach(([id, qty]) => {
+        if (!qty || qty <= 0) return;
+        const item = beverageItems.find((b) => b.id === id) || allProducts?.find((p) => p.id === id);
+        if (!item?.name) return;
+        const label = qty > 1 ? `${item.name} x${qty}` : item.name;
+        labels.push(label);
+        pushSelection({
+          id: `beverage-${id}-qty-${qty}`,
+          label,
+          type: 'beverage',
+          groupId: 'beverages',
+          groupTitle: 'Beverages'
+        });
+      });
+      pushCustomization('Beverages', labels);
+    }
+  };
+
   const addSavedExtraSidesAsCartItems = () => {
     Object.entries(savedExtraSideConfigs).forEach(([key, config]) => {
+      if (!config || !Array.isArray(config.items)) return;
       const qty = extraSideQuantities[key] || 0;
       if (qty <= 0) return;
       const [, sideIdRaw] = key.split(':');
@@ -7182,13 +7383,15 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
 
   const addSavedPairingsAsCartItems = () => {
     Object.entries(savedPairingConfigs).forEach(([itemId, cfg]) => {
+      if (!cfg || !cfg.product) return;
       const qty = pairingQuantities[itemId] || 0;
       if (qty <= 0) return;
+      const safeUnitPrice = Number.isFinite(cfg.unitPrice) ? cfg.unitPrice : parseProductPrice(cfg.product.price);
 
       const pairingProduct: Product = {
         ...cfg.product,
         id: `pairing-${cfg.product.id}`,
-        price: `$${cfg.unitPrice.toFixed(2)}`,
+        price: `$${safeUnitPrice.toFixed(2)}`,
       };
 
       onAddToCart(pairingProduct, qty, cfg.customizations, cfg.selections);
@@ -8491,7 +8694,20 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
         'selectedHoagiePlatterCut', 'selectedHoagiePlatterSideToppings', 'selectedWrapPlatterOptions',
         'selectedWrapPlatterWrapType', 'selectedWrapPlatterSideToppings', 'selectedHotSandwichPlatterOptions',
         'selectedHotSandwichPlatterCut', 'selectedHotSandwichPlatterSideToppings',
-        'selectedTraditionalDinnersSides', 'selectedTraditionalDinnersSoupsSalads', 'selectedIncludedRequest', 'selectedCafingKit'
+        'selectedTraditionalDinnersSides', 'selectedTraditionalDinnersSoupsSalads', 'selectedIncludedRequest', 'selectedCafingKit',
+        'selectedAntipastoBase', 'selectedAntipastoDressings', 'selectedAntipastoSpecialInstructions',
+        'selectedCaesarBase', 'selectedCaesarDressings', 'selectedCaesarSpecialInstructions',
+        'selectedChickenCaesarBase', 'selectedChickenCaesarDressings', 'selectedChickenCaesarSpecialInstructions',
+        'selectedGardenBase', 'selectedGardenDressings', 'selectedGardenSpecialInstructions',
+        'selectedRoastedRedPepperBase', 'selectedRoastedRedPepperDressings',
+        'selectedThreeCheeseBase', 'selectedThreeCheeseDressings', 'selectedThreeCheeseSpecialInstructions',
+        'selectedTraditionalChefBase', 'selectedTraditionalChefDressings', 'selectedTraditionalChefSpecialInstructions',
+        'selectedBabyClamPastaType', 'selectedBabyClamSauceChoice',
+        'selectedCalamariPastaType', 'selectedCalamariSubstituteSauce',
+        'selectedMusselsPastaType', 'selectedMusselsSauceChoice',
+        'selectedSeafoodComboPastaType', 'selectedSeafoodComboSauceChoice',
+        'selectedShrimpMarinaraPastaType', 'selectedShrimpMarinaraSubstituteSauce',
+        'selectedPastaAdditions'
       ];
       cateringKeys.forEach(key => {
         if (allSources[key]) filtered[key] = allSources[key];
@@ -25370,7 +25586,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
           )}
 
           {/* Add Desserts */}
-          {product.category !== 'catering-whole-cakes' && product.category !== 'catering-party-trays' && (
+          {product.category !== 'catering-whole-cakes' && product.category !== 'catering-party-trays' && product.category !== 'desserts' && (
           <Collapsible open={isDessertOpen} onOpenChange={setIsDessertOpen}>
             <CollapsibleTrigger asChild>
               <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
@@ -27354,6 +27570,18 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   groupTitle: 'Special Instructions (Optional)',
                   type: 'special_instruction'
                 });
+
+                // CATERING SALAD/SOUPS – BASE + DRESSING
+                registerOptionsToLookup(selectionLookup, antipastoSaladBases, {
+                  groupId: 'catering_salad_base',
+                  groupTitle: 'Choose Your Base (Required)',
+                  type: 'required_option'
+                });
+                registerOptionsToLookup(selectionLookup, antipastoSaladDressings, {
+                  groupId: 'catering_salad_dressing',
+                  groupTitle: 'Dressing Choice (Required)',
+                  type: 'required_option'
+                });
                 
                 // SALAD BOWLS – SPECIAL INSTRUCTIONS
                 registerOptionsToLookup(selectionLookup, antipastoSaladSpecialInstructions, {
@@ -27863,6 +28091,38 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     label: sauceName,
                     type: 'required_option',
                     groupId: 'seafood_combo_sauce_required',
+                    groupTitle: 'Choose Your Sauce (Required)'
+                  });
+                }
+                if (selectedCalamariSubstituteSauce) {
+                  const sauceName = getItemName(selectedCalamariSubstituteSauce);
+                  // LEGACY
+                  customizations.push({
+                    category: 'Sauce',
+                    items: [sauceName]
+                  });
+                  // NEW STRUCTURED
+                  selections.push({
+                    id: selectedCalamariSubstituteSauce,
+                    label: sauceName,
+                    type: 'required_option',
+                    groupId: 'calamari_sauce_required',
+                    groupTitle: 'Choose Your Sauce (Required)'
+                  });
+                }
+                if (selectedShrimpMarinaraSubstituteSauce) {
+                  const sauceName = getItemName(selectedShrimpMarinaraSubstituteSauce);
+                  // LEGACY
+                  customizations.push({
+                    category: 'Sauce',
+                    items: [sauceName]
+                  });
+                  // NEW STRUCTURED
+                  selections.push({
+                    id: selectedShrimpMarinaraSubstituteSauce,
+                    label: sauceName,
+                    type: 'required_option',
+                    groupId: 'shrimp_marinara_sauce_required',
                     groupTitle: 'Choose Your Sauce (Required)'
                   });
                 }
@@ -30499,6 +30759,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   selectedExtraSides: { kind: "stringArray", value: selectedExtraSides },
                   selectedIncludedRequest: { kind: "numberRecord", value: selectedIncludedRequest },
                   selectedCafingKit: { kind: "numberRecord", value: selectedCafingKit },
+                  selectedDesserts: { kind: "numberRecord", value: selectedDesserts },
+                  selectedBeverages: { kind: "numberRecord", value: selectedBeverages },
                   selectedSaladBase: { kind: "singleString", value: selectedSaladBase },
                   selectedSaladDressing: { kind: "singleString", value: selectedSaladDressing },
                   selectedDressingInstruction: { kind: "singleString", value: selectedDressingInstruction },
@@ -31386,9 +31648,34 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 }
 
                 filteredSelections = stripExtraSidesFromParent(customizations, filteredSelections);
+                try {
+                  ensureCateringCartCapture(modifiedProduct, customizations, filteredSelections, getItemName);
+                } catch (err) {
+                  console.error('[ADD_TO_CART][MOBILE] ensureCateringCartCapture failed', {
+                    productId: modifiedProduct.id,
+                    category: modifiedProduct.category,
+                    error: err
+                  });
+                }
                 onAddToCart(modifiedProduct, quantity, customizations, filteredSelections);
-                addSavedExtraSidesAsCartItems();
-                addSavedPairingsAsCartItems();
+                try {
+                  addSavedExtraSidesAsCartItems();
+                } catch (err) {
+                  console.error('[ADD_TO_CART][MOBILE] addSavedExtraSidesAsCartItems failed', {
+                    productId: modifiedProduct.id,
+                    category: modifiedProduct.category,
+                    error: err
+                  });
+                }
+                try {
+                  addSavedPairingsAsCartItems();
+                } catch (err) {
+                  console.error('[ADD_TO_CART][MOBILE] addSavedPairingsAsCartItems failed', {
+                    productId: modifiedProduct.id,
+                    category: modifiedProduct.category,
+                    error: err
+                  });
+                }
                 onBack();
               }}
               className="flex-1 min-w-0 bg-[#A72020] hover:bg-[#8B1A1A] text-white h-[2.73rem] flex items-center justify-center gap-2 sm:gap-2.5 font-semibold rounded-md transition-colors px-2 sm:px-4"
@@ -32281,6 +32568,18 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     groupTitle: 'Special Instructions (Optional)',
                     type: 'special_instruction'
                   });
+
+                  // CATERING SALAD/SOUPS – BASE + DRESSING
+                  registerOptionsToLookup(selectionLookupDesktop, antipastoSaladBases, {
+                    groupId: 'catering_salad_base',
+                    groupTitle: 'Choose Your Base (Required)',
+                    type: 'required_option'
+                  });
+                  registerOptionsToLookup(selectionLookupDesktop, antipastoSaladDressings, {
+                    groupId: 'catering_salad_dressing',
+                    groupTitle: 'Dressing Choice (Required)',
+                    type: 'required_option'
+                  });
                   
                   // SALAD BOWLS – SPECIAL INSTRUCTIONS
                   registerOptionsToLookup(selectionLookupDesktop, antipastoSaladSpecialInstructions, {
@@ -32646,12 +32945,26 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       category: 'Pasta Type',
                       items: [pastaTypeName]
                     });
+                    selections.push({
+                      id: selectedPastaType,
+                      label: pastaTypeName,
+                      type: 'required_option',
+                      groupId: 'pasta_type_required',
+                      groupTitle: 'Pasta Type (Required)'
+                    });
                   }
                   if (selectedBabyClamPastaType) {
                     const pastaTypeName = getItemName(selectedBabyClamPastaType);
                     customizations.push({
                       category: 'Pasta Type',
                       items: [pastaTypeName]
+                    });
+                    selections.push({
+                      id: selectedBabyClamPastaType,
+                      label: pastaTypeName,
+                      type: 'required_option',
+                      groupId: 'baby_clam_pasta_type_required',
+                      groupTitle: 'Pasta Type (Required)'
                     });
                   }
                   if (selectedCalamariPastaType) {
@@ -32660,12 +32973,26 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       category: 'Pasta Type',
                       items: [pastaTypeName]
                     });
+                    selections.push({
+                      id: selectedCalamariPastaType,
+                      label: pastaTypeName,
+                      type: 'required_option',
+                      groupId: 'calamari_pasta_type_required',
+                      groupTitle: 'Pasta Type (Required)'
+                    });
                   }
                   if (selectedMusselsPastaType) {
                     const pastaTypeName = getItemName(selectedMusselsPastaType);
                     customizations.push({
                       category: 'Pasta Type',
                       items: [pastaTypeName]
+                    });
+                    selections.push({
+                      id: selectedMusselsPastaType,
+                      label: pastaTypeName,
+                      type: 'required_option',
+                      groupId: 'mussels_pasta_type_required',
+                      groupTitle: 'Pasta Type (Required)'
                     });
                   }
                   if (selectedSeafoodComboPastaType) {
@@ -32674,12 +33001,26 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       category: 'Pasta Type',
                       items: [pastaTypeName]
                     });
+                    selections.push({
+                      id: selectedSeafoodComboPastaType,
+                      label: pastaTypeName,
+                      type: 'required_option',
+                      groupId: 'seafood_combo_pasta_type_required',
+                      groupTitle: 'Pasta Type (Required)'
+                    });
                   }
                   if (selectedShrimpMarinaraPastaType) {
                     const pastaTypeName = getItemName(selectedShrimpMarinaraPastaType);
                     customizations.push({
                       category: 'Pasta Type',
                       items: [pastaTypeName]
+                    });
+                    selections.push({
+                      id: selectedShrimpMarinaraPastaType,
+                      label: pastaTypeName,
+                      type: 'required_option',
+                      groupId: 'shrimp_marinara_pasta_type_required',
+                      groupTitle: 'Pasta Type (Required)'
                     });
                   }
                   
@@ -32690,6 +33031,13 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       category: 'Sauce',
                       items: [sauceName]
                     });
+                    selections.push({
+                      id: selectedBabyClamSauceChoice,
+                      label: sauceName,
+                      type: 'required_option',
+                      groupId: 'baby_clam_sauce_required',
+                      groupTitle: 'Choose Your Sauce (Required)'
+                    });
                   }
                   if (selectedMusselsSauceChoice) {
                     const sauceName = getItemName(selectedMusselsSauceChoice);
@@ -32697,12 +33045,54 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       category: 'Sauce',
                       items: [sauceName]
                     });
+                    selections.push({
+                      id: selectedMusselsSauceChoice,
+                      label: sauceName,
+                      type: 'required_option',
+                      groupId: 'mussels_sauce_required',
+                      groupTitle: 'Choose Your Sauce (Required)'
+                    });
                   }
                   if (selectedSeafoodComboSauceChoice) {
                     const sauceName = getItemName(selectedSeafoodComboSauceChoice);
                     customizations.push({
                       category: 'Sauce',
                       items: [sauceName]
+                    });
+                    selections.push({
+                      id: selectedSeafoodComboSauceChoice,
+                      label: sauceName,
+                      type: 'required_option',
+                      groupId: 'seafood_combo_sauce_required',
+                      groupTitle: 'Choose Your Sauce (Required)'
+                    });
+                  }
+                  if (selectedCalamariSubstituteSauce) {
+                    const sauceName = getItemName(selectedCalamariSubstituteSauce);
+                    customizations.push({
+                      category: 'Sauce',
+                      items: [sauceName]
+                    });
+                    selections.push({
+                      id: selectedCalamariSubstituteSauce,
+                      label: sauceName,
+                      type: 'required_option',
+                      groupId: 'calamari_sauce_required',
+                      groupTitle: 'Choose Your Sauce (Required)'
+                    });
+                  }
+                  if (selectedShrimpMarinaraSubstituteSauce) {
+                    const sauceName = getItemName(selectedShrimpMarinaraSubstituteSauce);
+                    customizations.push({
+                      category: 'Sauce',
+                      items: [sauceName]
+                    });
+                    selections.push({
+                      id: selectedShrimpMarinaraSubstituteSauce,
+                      label: sauceName,
+                      type: 'required_option',
+                      groupId: 'shrimp_marinara_sauce_required',
+                      groupTitle: 'Choose Your Sauce (Required)'
                     });
                   }
                   
@@ -33861,6 +34251,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     selectedExtraSides: { kind: "stringArray", value: selectedExtraSides },
                     selectedIncludedRequest: { kind: "numberRecord", value: selectedIncludedRequest },
                     selectedCafingKit: { kind: "numberRecord", value: selectedCafingKit },
+                    selectedDesserts: { kind: "numberRecord", value: selectedDesserts },
+                    selectedBeverages: { kind: "numberRecord", value: selectedBeverages },
                     selectedSaladBase: { kind: "singleString", value: selectedSaladBase },
                     selectedSaladDressing: { kind: "singleString", value: selectedSaladDressing },
                     selectedDressingInstruction: { kind: "singleString", value: selectedDressingInstruction },
@@ -34796,9 +35188,34 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   }
 
                   filteredSelections = stripExtraSidesFromParent(customizations, filteredSelections);
+                  try {
+                    ensureCateringCartCapture(modifiedProduct, customizations, filteredSelections, getItemName);
+                  } catch (err) {
+                    console.error('[ADD_TO_CART][DESKTOP] ensureCateringCartCapture failed', {
+                      productId: modifiedProduct.id,
+                      category: modifiedProduct.category,
+                      error: err
+                    });
+                  }
                   onAddToCart(modifiedProduct, quantity, customizations, filteredSelections);
-                  addSavedExtraSidesAsCartItems();
-                  addSavedPairingsAsCartItems();
+                  try {
+                    addSavedExtraSidesAsCartItems();
+                  } catch (err) {
+                    console.error('[ADD_TO_CART][DESKTOP] addSavedExtraSidesAsCartItems failed', {
+                      productId: modifiedProduct.id,
+                      category: modifiedProduct.category,
+                      error: err
+                    });
+                  }
+                  try {
+                    addSavedPairingsAsCartItems();
+                  } catch (err) {
+                    console.error('[ADD_TO_CART][DESKTOP] addSavedPairingsAsCartItems failed', {
+                      productId: modifiedProduct.id,
+                      category: modifiedProduct.category,
+                      error: err
+                    });
+                  }
                   onBack();
                 }}
                 className="bg-[rgb(167,32,32)] hover:bg-[#8B1A1A] text-white h-[2.73rem] flex items-center justify-center gap-3 xl:gap-4 font-semibold px-6 xl:px-10 rounded-md transition-colors flex-shrink-0"

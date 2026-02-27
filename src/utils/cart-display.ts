@@ -314,7 +314,7 @@ export const buildCartDisplayTitle = (item: CartItem): string => {
       
       const cat = (item.category || '').toLowerCase();
       const isPizza = cat.includes('pizza') || cat.includes('stromboli');
-      if (!isPizza && !size.match(/medium|large|jumbo/i)) {
+      if (size && !isPizza && !size.match(/medium|large|jumbo/i)) {
           // If not explicit pizza size, we still use it if found, 
           // but usually getItemSize only returns Size for Pizzas/Strombolis/Salads.
       }
@@ -4938,8 +4938,10 @@ export const buildCartDisplayLines = (item: CartItem): string[] => {
       const content = String(line?.text || '').trim();
       if (!content) return;
 
-      // Skip title/size artifacts that should not appear as option lines.
-      if (content === rawTitleName || rawTitleName.includes(content)) return;
+      // Skip only exact title artifacts.
+      // Partial matches were dropping valid catering choices (e.g. sauces whose
+      // text appears inside long product titles).
+      if (content.toLowerCase() === rawTitleName.toLowerCase()) return;
       if (/^(small|medium|large|jumbo|personal)\b/i.test(content)) return;
       if (/^\d+\s*(pcs|pieces?)$/i.test(content)) return;
 
