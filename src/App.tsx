@@ -4755,7 +4755,7 @@ export default function App() {
               data-category="catering-desserts"
               className="px-2 sm:px-4 lg:px-8 py-2 max-w-[1800px] mx-auto"
             >
-              <h2 className="mb-2 sm:mb-3 font-normal text-[26px] sm:text-[32px] text-[#404041] text-left font-['Tinos']">Desserts</h2>
+              <h2 className="mb-2 sm:mb-3 font-normal text-[26px] sm:text-[32px] text-[#404041] text-left font-['Tinos']">Individual Desserts</h2>
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6 sm:gap-4 px-0.5 sm:px-0">
                 {products.filter(p => p.category === 'catering-desserts').map((product) => (
                   <ProductCard key={product.id} product={product} onCustomize={handleCustomize} onDirectOpen={handleDirectOpen} locationInfo={locationInfo} onChangeLocation={handleLocationClick} deliveryMode={deliveryMode} deliveryAddress={deliveryAddress} />
@@ -4771,7 +4771,20 @@ export default function App() {
             >
               <h2 className="mb-2 sm:mb-3 font-normal text-[26px] sm:text-[32px] text-[#404041] text-left font-['Tinos']">Beverages</h2>
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6 sm:gap-4 px-0.5 sm:px-0">
-                {products.filter(p => p.category === 'catering-beverages').map((product) => (
+                {products.filter(p => p.category === 'catering-beverages').sort((a, b) => {
+                  // Required order: 2L -> 20oz -> Water -> Kids
+                  const getOrder = (name: string) => {
+                    const n = name.toLowerCase();
+                    if (n.includes('2l')) return 1;
+                    if (n.includes('20oz')) return 2;
+                    if (n.includes('water')) return 3;
+                    if (n.includes("kid's")) return 4;
+                    return 5;
+                  };
+                  const diff = getOrder(a.name) - getOrder(b.name);
+                  if (diff !== 0) return diff;
+                  return a.name.localeCompare(b.name);
+                }).map((product) => (
                   <ProductCard key={product.id} product={product} onCustomize={handleCustomize} onDirectOpen={handleDirectOpen} locationInfo={locationInfo} onChangeLocation={handleLocationClick} deliveryMode={deliveryMode} deliveryAddress={deliveryAddress} />
                 ))}
               </div>
@@ -5159,7 +5172,7 @@ export default function App() {
               className="px-2 sm:px-4 lg:px-8 py-2 max-w-[1800px] mx-auto"
             >
               {/* Desserts Section */}
-              <h2 className="mb-2 sm:mb-3 font-normal text-[26px] sm:text-[32px] text-[#404041] text-left font-['Tinos']">Dessert</h2>
+              <h2 className="mb-2 sm:mb-3 font-normal text-[26px] sm:text-[32px] text-[#404041] text-left font-['Tinos']">Desserts</h2>
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6 sm:gap-4 px-0.5 sm:px-0 mb-8">
                 {products.filter(p => p.category === 'desserts').map((product) => (
                   <ProductCard key={product.id} product={product} onCustomize={handleCustomize} onDirectOpen={handleDirectOpen} locationInfo={locationInfo} onChangeLocation={handleLocationClick} deliveryMode={deliveryMode} deliveryAddress={deliveryAddress} />
@@ -5340,7 +5353,7 @@ export default function App() {
               data-category="catering-desserts"
               className="px-2 sm:px-4 lg:px-8 py-2 max-w-[1800px] mx-auto"
             >
-              <h2 className="mb-2 sm:mb-3 font-normal text-[26px] sm:text-[32px] text-[#404041] text-left font-['Tinos']">Catering Desserts</h2>
+              <h2 className="mb-2 sm:mb-3 font-normal text-[26px] sm:text-[32px] text-[#404041] text-left font-['Tinos']">Individual Desserts</h2>
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6 sm:gap-4 px-0.5 sm:px-0">
                 {products.filter(p => p.category === 'catering-desserts').map((product) => (
                   <ProductCard key={product.id} product={product} onCustomize={handleCustomize} onDirectOpen={handleDirectOpen} locationInfo={locationInfo} onChangeLocation={handleLocationClick} deliveryMode={deliveryMode} deliveryAddress={deliveryAddress} />
@@ -5357,15 +5370,18 @@ export default function App() {
               <h2 className="mb-2 sm:mb-3 font-normal text-[26px] sm:text-[32px] text-[#404041] text-left font-['Tinos']">Catering Beverages</h2>
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6 sm:gap-4 px-0.5 sm:px-0">
                 {products.filter(p => p.category === 'catering-beverages').sort((a, b) => {
-                  // Order: Water first, then Kids, then 20oz, then 2L
+                  // Required order: 2L -> 20oz -> Water -> Kids
                   const getOrder = (name: string) => {
-                    if (name.toLowerCase().includes('water')) return 1;
-                    if (name.toLowerCase().includes("kid's")) return 2;
-                    if (name.includes('20oz')) return 3;
-                    if (name.includes('2L')) return 4;
+                    const n = name.toLowerCase();
+                    if (n.includes('2l')) return 1;
+                    if (n.includes('20oz')) return 2;
+                    if (n.includes('water')) return 3;
+                    if (n.includes("kid's")) return 4;
                     return 5;
                   };
-                  return getOrder(a.name) - getOrder(b.name);
+                  const diff = getOrder(a.name) - getOrder(b.name);
+                  if (diff !== 0) return diff;
+                  return a.name.localeCompare(b.name);
                 }).map((product) => (
                   <ProductCard key={product.id} product={product} onCustomize={handleCustomize} onDirectOpen={handleDirectOpen} locationInfo={locationInfo} onChangeLocation={handleLocationClick} deliveryMode={deliveryMode} deliveryAddress={deliveryAddress} />
                 ))}

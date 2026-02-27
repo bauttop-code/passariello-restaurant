@@ -8835,7 +8835,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     'create-salad': 'Create Your Own Salad',
                     'salads-soups': 'Specialty Salad & Soup',
                     'kids': "Kid's Menu",
-                    'desserts': 'Dessert / Pizzelle / Gelati',
+                    'desserts': 'Desserts / Pizzelle / Gelati',
                     'beverages': 'Beverage',
                     'catering': 'Catering',
                     'catering-appetizers': 'Catering Appetizers',
@@ -8847,7 +8847,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     'catering-hoagies-wraps': 'Hoagies/Wraps Platters',
                     'catering-whole-cakes': 'Whole Cakes',
                     'catering-party-trays': 'Party Trays',
-                    'catering-desserts': 'Desserts',
+                    'catering-desserts': 'Individual Desserts',
                     'catering-beverages': 'Beverages',
                   };
                   return categoryMap[product.category] || product.category;
@@ -25370,12 +25370,12 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
           )}
 
           {/* Add Desserts */}
-          {product.category !== 'catering-whole-cakes' && product.category !== 'catering-party-trays' && product.category !== 'desserts' && (
+          {product.category !== 'catering-whole-cakes' && product.category !== 'catering-party-trays' && (
           <Collapsible open={isDessertOpen} onOpenChange={setIsDessertOpen}>
             <CollapsibleTrigger asChild>
               <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>{`${dessertStepNumber}. Would You Like To Add a Dessert?`}</span>
+                  <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>{`${dessertStepNumber}. Would You Like To Add Desserts?`}</span>
                 </div>
                 {isDessertOpen ? (
                   <ChevronUp className="w-6 h-6" />
@@ -25395,35 +25395,36 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 }}
               />
               <div className="relative z-10 space-y-6">
-                {/* Individual Desserts Section */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                  {dessertItems.map((item) => {
-                    const quantity = selectedDesserts[item.id] || 0;
-                    const isActive = activeDessertItem === item.id;
-                    
-                    return (
-                      <AddonCard
-                        key={item.id}
-                        item={item}
-                        quantity={quantity}
-                        isActive={isActive}
-                        onSelect={() => {
-                          if (quantity === 0) {
-                            handleDessertToggle(item.id);
-                            setActiveDessertItem(item.id);
-                          } else if (!isActive) {
-                            setActiveDessertItem(item.id);
-                          } else {
-                            handleDessertToggle(item.id);
-                            setActiveDessertItem(null);
-                          }
-                        }}
-                        onIncrement={() => handleDessertIncrement(item.id)}
-                        onDecrement={() => handleDessertDecrement(item.id)}
-                      />
-                    );
-                  })}
-                </div>
+                {!product.category?.startsWith('catering-') && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    {dessertItems.map((item) => {
+                      const quantity = selectedDesserts[item.id] || 0;
+                      const isActive = activeDessertItem === item.id;
+                      
+                      return (
+                        <AddonCard
+                          key={item.id}
+                          item={item}
+                          quantity={quantity}
+                          isActive={isActive}
+                          onSelect={() => {
+                            if (quantity === 0) {
+                              handleDessertToggle(item.id);
+                              setActiveDessertItem(item.id);
+                            } else if (!isActive) {
+                              setActiveDessertItem(item.id);
+                            } else {
+                              handleDessertToggle(item.id);
+                              setActiveDessertItem(null);
+                            }
+                          }}
+                          onIncrement={() => handleDessertIncrement(item.id)}
+                          onDecrement={() => handleDessertDecrement(item.id)}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
 
                 {/* Whole Cakes Section - Only for catering products */}
                 {product.category && product.category.startsWith('catering-') && (
@@ -25462,14 +25463,51 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   </>
                 )}
 
-                {/* Party Cakes Section - Only for catering products */}
+                {/* Party Trays Section - Only for catering products */}
                 {product.category && product.category.startsWith('catering-') && (
                   <>
                     <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg">
-                      <span className="font-semibold" style={{fontSize: 'calc(1em + 3px)'}}>Party Cakes</span>
+                      <span className="font-semibold" style={{fontSize: 'calc(1em + 3px)'}}>Party Trays</span>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                       {partyCakesItems.map((item) => {
+                        const quantity = selectedDesserts[item.id] || 0;
+                        const isActive = activeDessertItem === item.id;
+                        
+                        return (
+                          <AddonCard
+                            key={item.id}
+                            item={item}
+                            quantity={quantity}
+                            isActive={isActive}
+                            onSelect={() => {
+                              if (quantity === 0) {
+                                handleDessertToggle(item.id);
+                                setActiveDessertItem(item.id);
+                              } else if (!isActive) {
+                                setActiveDessertItem(item.id);
+                              } else {
+                                handleDessertToggle(item.id);
+                                setActiveDessertItem(null);
+                              }
+                            }}
+                            onIncrement={() => handleDessertIncrement(item.id)}
+                            onDecrement={() => handleDessertDecrement(item.id)}
+                          />
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+
+                {/* Individual Desserts Section - Catering order: Whole Cakes -> Party Trays -> Desserts */}
+                {product.category && product.category.startsWith('catering-') && (
+                  <>
+                    <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg">
+                      <span className="font-semibold" style={{fontSize: 'calc(1em + 3px)'}}>Desserts</span>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                      {dessertItems.map((item) => {
                         const quantity = selectedDesserts[item.id] || 0;
                         const isActive = activeDessertItem === item.id;
                         

@@ -4187,23 +4187,23 @@ const getDesiredOrder = (item: CartItem): { mode: 'full' | 'tail'; sections: str
   }
   if (category === 'desserts' || category === 'pizzelle' || category === 'gelati') return { mode: 'full', sections: ['Dessert', 'Beverages'] };
   if (category === 'beverages') return { mode: 'full', sections: ['Dessert'] };
-  if (category === 'catering-entrees') return { mode: 'full', sections: ['Included and Available Upon Request', 'Chafing Kit', 'Dessert', 'Beverages'] };
-  if (category === 'catering-pasta') return { mode: 'full', sections: ['Choose a Pasta', 'Extra Toppings', 'Included and Available Upon Request', 'Chafing Kit', 'Dessert', 'Beverage'] };
-  if (category === 'catering-seafood-pasta') return { mode: 'full', sections: ['Pasta Type', 'Choose your Sauce', 'Included and Available Upon Request', 'Chafing Kit', 'Dessert', 'Beverages'] };
-  if (category === 'catering-sides') return { mode: 'full', sections: ['Included and Available Upon Request', 'Chafing Kit', 'Dessert', 'Beverages'] };
-  if (category === 'catering-salad-soups') return { mode: 'full', sections: ['Choose Your Base', 'Dressing Choice', 'Special Instructions', 'Included and Available Upon Request', 'Dessert', 'Beverage'] };
+  if (category === 'catering-entrees') return { mode: 'full', sections: ['Included and Available Upon Request', 'Chafing Kit', 'Whole Cakes', 'Party Trays', 'Dessert', 'Beverages'] };
+  if (category === 'catering-pasta') return { mode: 'full', sections: ['Choose a Pasta', 'Extra Toppings', 'Included and Available Upon Request', 'Chafing Kit', 'Whole Cakes', 'Party Trays', 'Dessert', 'Beverage'] };
+  if (category === 'catering-seafood-pasta') return { mode: 'full', sections: ['Pasta Type', 'Choose your Sauce', 'Included and Available Upon Request', 'Chafing Kit', 'Whole Cakes', 'Party Trays', 'Dessert', 'Beverages'] };
+  if (category === 'catering-sides') return { mode: 'full', sections: ['Included and Available Upon Request', 'Chafing Kit', 'Whole Cakes', 'Party Trays', 'Dessert', 'Beverages'] };
+  if (category === 'catering-salad-soups') return { mode: 'full', sections: ['Choose Your Base', 'Dressing Choice', 'Special Instructions', 'Included and Available Upon Request', 'Whole Cakes', 'Party Trays', 'Dessert', 'Beverage'] };
   if (category === 'catering-hoagies-wraps') {
-    if (name.includes('hoagie platter')) return { mode: 'full', sections: ['Build Your Platter', 'Cut Options', 'Side Toppings', 'Included and Available Upon Request', 'Dessert', 'Beverages'] };
-    if (name.includes('wrap platter')) return { mode: 'full', sections: ['Build Your Platter', 'Wrap type', 'Side Toppings', 'Included and Available Upon Request', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
-    if (name.includes('hot sandwich platter')) return { mode: 'full', sections: ['Build Your Platter', 'Cut Options', 'Side Toppings', 'Included and Available Upon Request', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
-    return { mode: 'full', sections: ['Build Your Platter', 'Side Toppings', 'Included and Available Upon Request', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
+    if (name.includes('hoagie platter')) return { mode: 'full', sections: ['Build Your Platter', 'Cut Options', 'Side Toppings', 'Included and Available Upon Request', 'Whole Cakes', 'Party Trays', 'Dessert', 'Beverages'] };
+    if (name.includes('wrap platter')) return { mode: 'full', sections: ['Build Your Platter', 'Wrap type', 'Side Toppings', 'Included and Available Upon Request', 'Whole Cakes', 'Party Trays', 'Dessert', 'Beverages'] };
+    if (name.includes('hot sandwich platter')) return { mode: 'full', sections: ['Build Your Platter', 'Cut Options', 'Side Toppings', 'Included and Available Upon Request', 'Whole Cakes', 'Party Trays', 'Dessert', 'Beverages'] };
+    return { mode: 'full', sections: ['Build Your Platter', 'Side Toppings', 'Included and Available Upon Request', 'Whole Cakes', 'Party Trays', 'Dessert', 'Beverages'] };
   }
   if (category === 'catering-whole-cakes') return { mode: 'full', sections: ['Whole Cakes', 'Included and Available Upon Request', 'Beverages'] };
   if (category === 'catering-party-trays') return { mode: 'full', sections: ['Special Instructions', 'Party Trays', 'Included and Available Upon Request', 'Beverages'] };
-  if (category === 'catering-desserts') return { mode: 'full', sections: ['Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
+  if (category === 'catering-desserts') return { mode: 'full', sections: ['Whole Cakes', 'Party Trays', 'Dessert', 'Beverages'] };
   if (category === 'catering-beverages') return { mode: 'full', sections: ['Dessert'] };
   if (category === 'appetizers') return { mode: 'tail', sections: ['Dessert', 'Beverages'] };
-  if (category === 'catering-appetizers') return { mode: 'tail', sections: ['Included and Available Upon Request', 'Dessert', 'Whole Cakes', 'Party Trays', 'Beverages'] };
+  if (category === 'catering-appetizers') return { mode: 'tail', sections: ['Included and Available Upon Request', 'Whole Cakes', 'Party Trays', 'Dessert', 'Beverages'] };
   return null;
 };
 
@@ -4568,6 +4568,8 @@ export const buildCartDisplayLines = (item: CartItem): string[] => {
     originalSel?: CartSelection 
   }[] = [];
 
+  const isCateringCategory = String(item.category || '').toLowerCase().startsWith('catering-');
+
   if (item.selections && item.selections.length > 0) {
     item.selections.forEach(sel => {
       // Logic to determine priority and text
@@ -4761,7 +4763,11 @@ export const buildCartDisplayLines = (item: CartItem): string[] => {
 
       rawLines.push({ text, priority, originalSel: sel });
     });
-  } else if (item.customizations) {
+  }
+
+  // Merge customizations as a safety net for catering:
+  // some catering options are persisted under customizations and may be absent in selections.
+  if (item.customizations && ((item.selections?.length || 0) === 0 || isCateringCategory)) {
     // Legacy support
     item.customizations.forEach(c => {
         if (typeof c === 'string') {
@@ -4921,6 +4927,29 @@ export const buildCartDisplayLines = (item: CartItem): string[] => {
   }
   if (profile) {
       return finalizeLines(buildStructuredProfileDisplayLines(item, rawLines, itemQty, profile));
+  }
+
+  // C.6) Catering (strictly preserve captured option lines; avoid generic over-filtering)
+  if (String(item.category || '').toLowerCase().startsWith('catering-')) {
+    const seen = new Set<string>();
+    const cateringBaseLines: string[] = [];
+
+    rawLines.forEach((line) => {
+      const content = String(line?.text || '').trim();
+      if (!content) return;
+
+      // Skip title/size artifacts that should not appear as option lines.
+      if (content === rawTitleName || rawTitleName.includes(content)) return;
+      if (/^(small|medium|large|jumbo|personal)\b/i.test(content)) return;
+      if (/^\d+\s*(pcs|pieces?)$/i.test(content)) return;
+
+      const key = `${content}::${line?.originalSel?.groupId || ''}::${line?.originalSel?.groupTitle || ''}::${line?.originalSel?.type || ''}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      cateringBaseLines.push(content);
+    });
+
+    return finalizeLines(withCustomizationFallback(item, cateringBaseLines));
   }
 
   // 3. Filter and Format (Standard Items)
