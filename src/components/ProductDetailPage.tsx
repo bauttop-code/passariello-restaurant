@@ -4972,6 +4972,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
   const [activePairingProduct, setActivePairingProduct] = useState<Product | null>(null);
   const [activePairingItem, setActivePairingItem] = useState<string | null>(null);
   const [pairingDraftSelections, setPairingDraftSelections] = useState<Record<string, string[]>>({});
+  const [pairingDraftQuantity, setPairingDraftQuantity] = useState<number>(1);
   const [pairingQuantities, setPairingQuantities] = useState<Record<string, number>>({});
   const [savedPairingConfigs, setSavedPairingConfigs] = useState<Record<string, PairingSavedConfig>>({});
   const isSoupOfDayProduct = product.category === 'soups' && product.id === 'soup2';
@@ -7275,6 +7276,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
 
     setActivePairingProduct(item);
     setPairingDraftSelections(initial);
+    setPairingDraftQuantity(Math.max(1, pairingQuantities[item.id] || 1));
     setShowPairingCustomizer(true);
   };
 
@@ -7349,12 +7351,13 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     }));
     setPairingQuantities((prev) => ({
       ...prev,
-      [activePairingProduct.id]: prev[activePairingProduct.id] && prev[activePairingProduct.id] > 0 ? prev[activePairingProduct.id] : 1,
+      [activePairingProduct.id]: Math.max(1, pairingDraftQuantity),
     }));
     setActivePairingItem(activePairingProduct.id);
     setShowPairingCustomizer(false);
     setActivePairingProduct(null);
     setPairingDraftSelections({});
+    setPairingDraftQuantity(1);
   };
 
   const removePairingSelection = (itemId: string) => {
@@ -25946,6 +25949,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     item={item}
                     quantity={pairingQuantities[item.id] || 0}
                     isActive={activePairingItem === item.id}
+                    showQuantityControls={false}
                     onSelect={() => {
                       const qty = pairingQuantities[item.id] || 0;
                       if (qty === 0) {
@@ -35230,15 +35234,16 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       </div>
 
       <Dialog open={showPairingCustomizer} onOpenChange={setShowPairingCustomizer}>
-        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] p-0 overflow-hidden flex flex-col">
+          <DialogHeader className="px-6 pt-6 pb-2">
             <DialogTitle>{activePairingProduct?.name || 'Customize Pairing'}</DialogTitle>
             <DialogDescription>
               Customize this pairing item and save it to your current product.
             </DialogDescription>
           </DialogHeader>
           {activePairingProduct && (
-            <div className="space-y-5">
+            <>
+            <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-5">
               <div className="rounded-lg overflow-hidden border border-gray-200 bg-[#F6F6F6]">
                 <div className="w-full h-48 bg-gray-100">
                   <ImageWithFallback
@@ -35286,14 +35291,36 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   </div>
                 </div>
               ))}
-
-              <div className="flex justify-end gap-3 pt-2">
+              </div>
+              <div className="border-t bg-white px-6 py-2 flex items-center justify-end gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-700">Quantity</span>
+                  <button
+                    type="button"
+                    onClick={() => setPairingDraftQuantity((q) => Math.max(1, q - 1))}
+                    className="w-8 h-8 rounded-full bg-[#A72020] text-white flex items-center justify-center hover:bg-[#8B1A1A] transition-colors"
+                    aria-label="Decrease pairing quantity"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <span className="font-semibold text-gray-900 min-w-[18px] text-center">{pairingDraftQuantity}</span>
+                  <button
+                    type="button"
+                    onClick={() => setPairingDraftQuantity((q) => q + 1)}
+                    className="w-8 h-8 rounded-full bg-[#A72020] text-white flex items-center justify-center hover:bg-[#8B1A1A] transition-colors"
+                    aria-label="Increase pairing quantity"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="flex items-center gap-3">
                 <Button
                   variant="outline"
                   onClick={() => {
                     setShowPairingCustomizer(false);
                     setActivePairingProduct(null);
                     setPairingDraftSelections({});
+                    setPairingDraftQuantity(1);
                   }}
                 >
                   Cancel
@@ -35304,8 +35331,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 >
                   Save
                 </Button>
+                </div>
               </div>
-            </div>
+            </>
           )}
         </DialogContent>
       </Dialog>

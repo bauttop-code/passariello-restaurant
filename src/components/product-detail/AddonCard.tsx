@@ -8,11 +8,20 @@ interface AddonCardProps {
   quantity: number;
   isActive: boolean;
   onSelect: () => void;
-  onIncrement: () => void;
-  onDecrement: () => void;
+  onIncrement?: () => void;
+  onDecrement?: () => void;
+  showQuantityControls?: boolean;
 }
 
-export const AddonCard = ({ item, quantity, isActive, onSelect, onIncrement, onDecrement }: AddonCardProps) => {
+export const AddonCard = ({
+  item,
+  quantity,
+  isActive,
+  onSelect,
+  onIncrement,
+  onDecrement,
+  showQuantityControls = true
+}: AddonCardProps) => {
   const isSelected = quantity > 0;
   // Format price if it's a number
   const priceDisplay = typeof item.price === 'number' ? `$${item.price.toFixed(2)}` : item.price;
@@ -49,11 +58,11 @@ export const AddonCard = ({ item, quantity, isActive, onSelect, onIncrement, onD
         <p className="text-xs text-gray-600">{priceDisplay}</p>
         
         {/* Controls - Visible if Active AND Selected (qty > 0) */}
-        {isActive && quantity > 0 && (
+        {showQuantityControls && isActive && quantity > 0 && (
           <QuantityStepper 
             quantity={quantity} 
-            onIncrement={onIncrement} 
-            onDecrement={onDecrement}
+            onIncrement={onIncrement || (() => {})} 
+            onDecrement={onDecrement || (() => {})}
             min={0}
           />
         )}
