@@ -1037,7 +1037,7 @@ const cateringIncludedRequestItems: Topping[] = [
     id: 'iaru2',
     name: 'Utensils',
     price: 0.00,
-    image: 'https://drive.google.com/uc?export=view&id=1i19sXWPQZA8JscyGLOSCQTemimeCz8Id',
+    image: 'https://drive.google.com/uc?export=view&id=1ouBkZjVDl5KGuFqTqeMa3e9_C4GTk2qN',
   },
   {
     id: 'iaru3',
@@ -5850,6 +5850,30 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       </span>
     );
   };
+
+  const getCateringEntreeDisplayName = (baseName: string, productId: string, size: string | null) => {
+    if (!size || (size !== 'medium' && size !== 'large')) return baseName;
+
+    const servingMap: Record<string, { medium: string; large: string }> = {
+      c1: { medium: '20PCS', large: '40 PCS' },
+      c2: { medium: 'Serves 10', large: 'Serves 20' },
+      c3: { medium: '10PCS', large: '20PCS' },
+      c4: { medium: '20PCS', large: '40PCS' },
+      c5: { medium: '20PCS', large: '40PCS' },
+      c6: { medium: '10PCS', large: '20PCS' },
+      c7: { medium: '10PCS', large: '20PCS' },
+      c8: { medium: '20PCS', large: '40PCS' },
+      c9: { medium: '20PCS', large: '40PCS' },
+      c10: { medium: 'Serves 10', large: 'Serves 20' },
+    };
+
+    const rule = servingMap[productId];
+    if (!rule) return baseName;
+
+    const sizeLabel = size === 'medium' ? 'Medium' : 'Large';
+    const qtyLabel = size === 'medium' ? rule.medium : rule.large;
+    return `${baseName} ${sizeLabel} (${qtyLabel})`;
+  };
   
   // Salad states (additional)
   const [selectedSaladToppings, setSelectedSaladToppings] = useState<string[]>([]);
@@ -8784,7 +8808,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
               {/* Product Name */}
               <div className="flex items-center gap-2 mb-3">
                 <h1 className="text-2xl font-bold text-gray-900 mb-0">
-                  {product.name.toLowerCase().includes('chicken tenders') ? 'Chicken Tenders W/FF' : product.name}
+                  {product.name.toLowerCase().includes('chicken tenders')
+                    ? 'Chicken Tenders W/FF'
+                    : product.category === 'catering-entrees'
+                      ? getCateringEntreeDisplayName(product.name, product.id, selectedSize)
+                      : product.name}
                 </h1>
                 {isSoupOfDayProduct && (
                   <button
@@ -8855,7 +8883,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         }
                   }
                 >
-                  {isDesktopDescriptionExpanded ? 'Ver menos' : 'Ver más'}
+                  {isDesktopDescriptionExpanded ? 'Read less' : 'Read more'}
                 </button>
               </div>
 
@@ -9379,16 +9407,18 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           ? `${product.name} ${selectedSize === 'medium' ? '(Serves 8-10)' : selectedSize === 'large' ? '(Serves 18-20)' : ''}`
                           : (product.id === 'cp1' || product.id === 'cp3' || product.id === 'cp4')
                             ? `${product.name} ${selectedSize === 'medium' ? '(Serves 8-10)' : selectedSize === 'large' ? '(Serves 18-20)' : ''}`
-                            : (product.id === 'cp2' || product.id === 'cp12')
+                        : (product.id === 'cp2' || product.id === 'cp12')
                               ? `${product.name} ${selectedSize === 'medium' ? '(20PCS)' : selectedSize === 'large' ? '(40PCS)' : ''}`
-                              : (product.category === 'catering-entrees' || product.category === 'catering-seafood-pasta')
-                                ? product.id === 'cp6'
-                                  ? `${product.name} ${selectedSize === 'medium' ? '(20PCS)' : selectedSize === 'large' ? '(40PCS)' : ''}`
-                                  : (product.id === 'c6' || product.id === 'c3' || product.id === 'c7' || product.id === 'cs7')
-                                    ? `${product.name} ${selectedSize === 'medium' ? '(10PCS)' : selectedSize === 'large' ? '(20PCS)' : ''}`
-                                    : (product.id === 'c8' || product.id === 'c9' || product.id === 'cs3')
-                                      ? `${product.name} ${selectedSize === 'medium' ? '(20PCS)' : selectedSize === 'large' ? '(40PCS)' : ''}`
-                                      : `${product.name} ${selectedSize === 'medium' ? '(Serves 8-10)' : selectedSize === 'large' ? '(Serves 18-20)' : ''}`
+                              : product.category === 'catering-entrees'
+                                ? getCateringEntreeDisplayName(product.name, product.id, selectedSize)
+                                : (product.category === 'catering-seafood-pasta')
+                                  ? product.id === 'cp6'
+                                    ? `${product.name} ${selectedSize === 'medium' ? '(20PCS)' : selectedSize === 'large' ? '(40PCS)' : ''}`
+                                    : (product.id === 'cs7')
+                                      ? `${product.name} ${selectedSize === 'medium' ? '(10PCS)' : selectedSize === 'large' ? '(20PCS)' : ''}`
+                                      : (product.id === 'cs3')
+                                        ? `${product.name} ${selectedSize === 'medium' ? '(20PCS)' : selectedSize === 'large' ? '(40PCS)' : ''}`
+                                        : `${product.name} ${selectedSize === 'medium' ? '(Serves 8-10)' : selectedSize === 'large' ? '(Serves 18-20)' : ''}`
                                 : product.name}
               </h1>
               
@@ -25636,8 +25666,15 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
           {/* Product Info - 40% of panel height - scrollable */}
           <div className="desktop-summary-laptop basis-[40%] min-h-0 p-4 bg-[#F5F3EB] border-t overflow-y-auto box-border custom-scrollbar">
             <div className="flex items-center gap-2 mb-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-0">
-                {product.name.toLowerCase().includes('chicken tenders') ? 'Chicken Tenders W/FF' : product.name}
+              <h1
+                className="desktop-summary-laptop-title font-bold text-gray-900 mb-0 leading-tight"
+                style={{ fontSize: '25px', lineHeight: 1.12 }}
+              >
+                {product.name.toLowerCase().includes('chicken tenders')
+                  ? 'Chicken Tenders W/FF'
+                  : product.category === 'catering-entrees'
+                    ? getCateringEntreeDisplayName(product.name, product.id, selectedSize)
+                    : product.name}
               </h1>
               {isSoupOfDayProduct && (
                 <button
@@ -25722,7 +25759,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             }),
                       }}
                     >
-                      {isDesktopDescriptionExpanded ? '[leer menos]' : '[leer más]'}
+                      {isDesktopDescriptionExpanded ? '[read less]' : '[read more]'}
                     </button>
                   )}
                 </div>
@@ -26717,6 +26754,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   modifiedProduct = {
                     ...product,
                     name: `${product.name} (${selectedSize} pcs)`
+                  };
+                } else if (product.category === 'catering-entrees') {
+                  modifiedProduct = {
+                    ...product,
+                    name: getCateringEntreeDisplayName(product.name, product.id, selectedSize)
                   };
                 } else if (product.id === 'app6' || product.id === 'wing3' || product.id === 'capp2') {
                   const sizeOption = chickenTendersQuantityOptions.find(opt => opt.id === selectedChickenTendersQuantity);
@@ -31729,6 +31771,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                        if (sizeOption) modifiedProduct.name = `${product.name} (${sizeOption.name})`;
                   } else if (product.category === 'wings' && product.id !== 'wing3' && product.id !== 'wing4') {
                        modifiedProduct.name = `${product.name} (${selectedSize} pcs)`;
+                  } else if (product.category === 'catering-entrees') {
+                       modifiedProduct.name = getCateringEntreeDisplayName(product.name, product.id, selectedSize);
                   }
 
                   // Build customizations array

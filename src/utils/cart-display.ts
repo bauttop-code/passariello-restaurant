@@ -146,10 +146,13 @@ const normalizeWingsQuantityText = (text: string): string => {
 export const buildCartDisplayTitle = (item: CartItem): string => {
   let name = item.name || '';
   const itemQty = item.quantity ?? 1;
+  const categoryLower = (item.category || '').toLowerCase();
 
   // 1. Clean up "pcs" from name GLOBALLY
-  // Remove (12 pcs), (16 pcs) etc.
-  name = name.replace(/\s*\(\s*\d+\s*(?:pcs|pieces?)\s*\)\s*/gi, '');
+  // Remove (12 pcs), (16 pcs) etc, but keep dynamic PCS suffix for catering entrees.
+  if (categoryLower !== 'catering-entrees') {
+    name = name.replace(/\s*\(\s*\d+\s*(?:pcs|pieces?)\s*\)\s*/gi, '');
+  }
   // Remove marketing prefixes like "*NEW*" from cart titles.
   name = name.replace(/^\s*\*?\s*new\s*\*?\s*/i, '');
   name = name.trim();
@@ -163,7 +166,6 @@ export const buildCartDisplayTitle = (item: CartItem): string => {
 
   // Normalize specific pizza names to canonical cart title:
   // "Napoletana" and "White Pizza" should display as "Size Pizza".
-  const categoryLower = (item.category || '').toLowerCase();
   const rawNameLower = (item.name || '').toLowerCase();
   if (categoryLower === 'pizzas' && (rawNameLower.includes('napoletana') || /\bwhite\b/.test(rawNameLower))) {
     name = 'Pizza';
