@@ -5949,6 +5949,42 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     const slices = slicesMap[productId];
     return slices ? `${baseName} (${slices})` : baseName;
   };
+
+  // UI-only normalization for detail titles:
+  // remove Medium/Large/Jumbo word in catering detail header while preserving suffixes.
+  const getDetailTitleDisplay = (title: string): string => {
+    const cat = String(product.category || '').toLowerCase();
+    if (!cat.startsWith('catering-')) return title;
+    let next = String(title || '');
+    next = next.replace(/^\s*(Medium|Large|Jumbo)\s+/i, '');
+    next = next.replace(/\s+(Medium|Large|Jumbo)(?=\s*(\(|$))/i, '');
+    return next.replace(/\s{2,}/g, ' ').trim();
+  };
+
+  // For catering detail descriptions that contain both Medium and Large tray notes,
+  // keep only the sentence that matches the currently selected size.
+  const getSizeAwareCateringDescription = (description: string): string => {
+    const cat = String(product.category || '').toLowerCase();
+    if (!cat.startsWith('catering-')) return description;
+    if (selectedSize !== 'medium' && selectedSize !== 'large') return description;
+
+    const mediumSentence = description.match(/Medium\s+Tray[^.]*\./i)?.[0] || '';
+    const largeSentence = description.match(/Large\s+Tray[^.]*\./i)?.[0] || '';
+
+    if (!mediumSentence || !largeSentence) return description;
+
+    const selectedSentence = selectedSize === 'medium' ? mediumSentence : largeSentence;
+    const withoutSizeClauses = description
+      .replace(/Medium\s+Tray[^.]*\./i, '')
+      .replace(/Large\s+Tray[^.]*\./i, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (!withoutSizeClauses) return selectedSentence.trim();
+
+    const spacer = /[.!?]$/.test(withoutSizeClauses) ? ' ' : '. ';
+    return `${withoutSizeClauses}${spacer}${selectedSentence.trim()}`;
+  };
   
   // Salad states (additional)
   const [selectedSaladToppings, setSelectedSaladToppings] = useState<string[]>([]);
@@ -9101,7 +9137,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
               {/* Product Name */}
               <div className="flex items-center gap-2 mb-3">
                 <h1 className="text-2xl font-bold text-gray-900 mb-0">
-                  {product.name.toLowerCase().includes('chicken tenders')
+                  {getDetailTitleDisplay(
+                    product.name.toLowerCase().includes('chicken tenders')
                     ? 'Chicken Tenders W/FF'
                     : product.category === 'catering-pasta'
                       ? getCateringPastaDisplayName(product.name, product.id, selectedSize)
@@ -9115,7 +9152,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       ? getCateringSidesDisplayName(product.name, selectedSize)
                     : product.category === 'catering-entrees'
                       ? getCateringEntreeDisplayName(product.name, product.id, selectedSize)
-                      : product.name}
+                      : product.name
+                  )}
                 </h1>
                 {isSoupOfDayProduct && (
                   <button
@@ -9159,7 +9197,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         }
                   }
                   dangerouslySetInnerHTML={{
-                    __html: (product.id === 'app4' || product.id === 'wing4' || product.id === 'capp3')
+                    __html: getSizeAwareCateringDescription((product.id === 'app4' || product.id === 'wing4' || product.id === 'capp3')
                       ? getMozzarellaSticksDescription() 
                       : (product.id === 'wing3' || product.id === 'app6' || product.id === 'capp2')
                         ? getChickenTendersDescription()
@@ -9167,7 +9205,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           ? getAranciniRiceBallDescription()
                           : (product.id === 'app18' || (product.category === 'wings' && product.id !== 'wing3' && product.id !== 'wing4') || (product.category === 'catering-appetizers' && product.id !== 'capp2' && product.id !== 'capp3' && product.id !== 'capp4'))
                             ? getWingsDescription()
-                            : product.description
+                            : product.description)
                   }}
                 />
                 <button
@@ -9696,7 +9734,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
           <div className="flex-1 flex items-start relative z-10 bg-[#f3f4ea]">
             <div className="w-full px-8 xl:px-12 2xl:px-16 py-8 xl:py-10 2xl:py-12 bg-[#f3f4ea]">
               <h1 className="text-2xl xl:text-3xl 2xl:text-4xl font-bold text-gray-900 mb-2 xl:mb-3">
-                {product.id === 'cyo-white' 
+                {getDetailTitleDisplay(product.id === 'cyo-white' 
                   ? 'White Pizza' 
                   : product.id === 'cyo-gf12' 
                     ? 'Gluten Free Crust Pizza 12"' 
@@ -9716,7 +9754,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   ? getCateringSeafoodPastaDisplayName(product.name, product.id, selectedSize)
                                   : product.category === 'catering-sides'
                                     ? getCateringSidesDisplayName(product.name, selectedSize)
-                                : product.name}
+                                : product.name)}
               </h1>
               
               {/* Choice of two sides - Only for traditional dinners and fish */}
@@ -9756,7 +9794,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
               <p 
                 className="text-gray-600 mb-4 xl:mb-6 xl:text-lg leading-relaxed"
                 dangerouslySetInnerHTML={{
-                  __html: product.id === 'cyo-sicilian' 
+                  __html: getSizeAwareCateringDescription(product.id === 'cyo-sicilian' 
                     ? '12 Slices. Thick, square & pan baked.' 
                     : product.id === 'cyo-pan' 
                     ? '(8 Slices). Thick, round & pan baked.' 
@@ -9774,7 +9812,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           ? getAranciniRiceBallDescription()
                           : (product.id === 'app18' || (product.category === 'wings' && product.id !== 'wing3' && product.id !== 'wing4') || (product.category === 'catering-appetizers' && product.id !== 'capp2' && product.id !== 'capp3' && product.id !== 'capp4'))
                             ? getWingsDescription()
-                            : product.description
+                            : product.description)
                 }}
               />
 
@@ -25589,7 +25627,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
           )}
 
           {/* Add Desserts */}
-          {product.category !== 'catering-whole-cakes' && product.category !== 'catering-party-trays' && product.category !== 'desserts' && (
+          {product.category !== 'catering-whole-cakes' && product.category !== 'catering-party-trays' && (
           <Collapsible open={isDessertOpen} onOpenChange={setIsDessertOpen}>
             <CollapsibleTrigger asChild>
               <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
@@ -25616,7 +25654,10 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
               <div className="relative z-10 space-y-6">
                 {!product.category?.startsWith('catering-') && (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                    {dessertItems.map((item) => {
+                    {((product.category === 'pizzelle' || product.category === 'gelati')
+                      ? (allProducts || []).filter((p) => p.category === product.category)
+                      : dessertItems
+                    ).map((item) => {
                       const quantity = selectedDesserts[item.id] || 0;
                       const isActive = activeDessertItem === item.id;
                       
@@ -26006,7 +26047,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 className="desktop-summary-laptop-title font-bold text-gray-900 mb-0 leading-tight"
                 style={{ fontSize: '25px', lineHeight: 1.12 }}
               >
-                {product.name.toLowerCase().includes('chicken tenders')
+                {getDetailTitleDisplay(product.name.toLowerCase().includes('chicken tenders')
                   ? 'Chicken Tenders W/FF'
                   : product.category === 'catering-pasta'
                     ? getCateringPastaDisplayName(product.name, product.id, selectedSize)
@@ -26020,7 +26061,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     ? getCateringSidesDisplayName(product.name, selectedSize)
                   : product.category === 'catering-entrees'
                     ? getCateringEntreeDisplayName(product.name, product.id, selectedSize)
-                    : product.name}
+                    : product.name)}
               </h1>
               {isSoupOfDayProduct && (
                 <button
@@ -26060,7 +26101,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             ? ('Crispy breaded tenders served with french fries and <span class="bg-[#A72020] text-white px-2 py-0.5 rounded font-semibold">(' + (selectedChickenTendersQuantity === '64pcs' ? '32oz' : selectedChickenTendersQuantity === '32pcs' ? '16oz' : selectedChickenTendersQuantity === '16pcs' ? '8oz' : selectedChickenTendersQuantity === '8pcs' ? '4oz' : '2oz') + ')</span> Honey Mustard.')
                             : product.description))))));
 
-              const plainText = descriptionHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+              const sizeAwareDescriptionHtml = getSizeAwareCateringDescription(descriptionHtml);
+              const plainText = sizeAwareDescriptionHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
               const needsToggle = plainText.length > 90;
               return (
                 <div
@@ -26082,7 +26124,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             lineHeight: 1.4,
                           }
                     }
-                    dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+                    dangerouslySetInnerHTML={{ __html: sizeAwareDescriptionHtml }}
                   />
                   {needsToggle && (
                     <button
