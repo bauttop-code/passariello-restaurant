@@ -1464,7 +1464,6 @@ const babyClamPastaTypes: Topping[] = [
   { id: 'bcpt2', name: 'Fettuccine', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1ZagYj8uRHWq6jyyU8sR46VqfQ69AH9TH&sz=w1000' },
   { id: 'bcpt3', name: 'Gluten Free Penne', price: 10.00, image: 'https://drive.google.com/thumbnail?id=1dRXjZqbOQpxUGFj3whOJcARAifOXRLSK&sz=w1000' },
   { id: 'bcpt5', name: 'Linguine', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1iX-Ufur3xVFi3TBC33TxDnC8xnh-WQEK&sz=w1000' },
-  { id: 'bcpt4', name: 'Gnocchi', price: 5.00, image: 'https://drive.google.com/thumbnail?id=1GihoRLyGIS0u2-WlFNBcX8PxtrkOG05g&sz=w1000' },
   { id: 'bcpt7', name: 'Rigatoni', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1B2GHWA0NHWvNNhfqEJSZvquTRnTOMrte&sz=w1000' },
   { id: 'bcpt8', name: 'Spaghetti', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1dRIShq1iW1aVLKyBFremdlNa90Q_xFdY&sz=w1000' },
   { id: 'bcpt9', name: 'Ziti', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1JvFSnnImV1DJHodwU77OH3xN6zr7ekB8&sz=w1080' },
@@ -1483,7 +1482,6 @@ const calamariPastaTypes: Topping[] = [
   { id: 'cmpt2', name: 'Fettuccine', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1ZagYj8uRHWq6jyyU8sR46VqfQ69AH9TH&sz=w1000' },
   { id: 'cmpt3', name: 'Gluten Free Penne', price: 10.00, image: 'https://drive.google.com/thumbnail?id=1dRXjZqbOQpxUGFj3whOJcARAifOXRLSK&sz=w1000' },
   { id: 'cmpt5', name: 'Linguine', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1iX-Ufur3xVFi3TBC33TxDnC8xnh-WQEK&sz=w1000' },
-  { id: 'cmpt4', name: 'Gnocchi', price: 5.00, image: 'https://drive.google.com/thumbnail?id=1GihoRLyGIS0u2-WlFNBcX8PxtrkOG05g&sz=w1000' },
   { id: 'cmpt7', name: 'Rigatoni', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1B2GHWA0NHWvNNhfqEJSZvquTRnTOMrte&sz=w1000' },
   { id: 'cmpt8', name: 'Spaghetti', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1dRIShq1iW1aVLKyBFremdlNa90Q_xFdY&sz=w1000' },
   { id: 'cmpt9', name: 'Ziti', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1JvFSnnImV1DJHodwU77OH3xN6zr7ekB8&sz=w1080' },
@@ -1502,11 +1500,9 @@ const musselsPastaTypes: Topping[] = [
   { id: 'mtpt2', name: 'Fettuccine', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1ZagYj8uRHWq6jyyU8sR46VqfQ69AH9TH&sz=w1000' },
   { id: 'mtpt3', name: 'Gluten Free Penne', price: 10.00, image: 'https://drive.google.com/thumbnail?id=1dRXjZqbOQpxUGFj3whOJcARAifOXRLSK&sz=w1000' },
   { id: 'mtpt5', name: 'Linguine', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1iX-Ufur3xVFi3TBC33TxDnC8xnh-WQEK&sz=w1000' },
-  { id: 'mtpt4', name: 'Gnocchi', price: 5.00, image: 'https://drive.google.com/thumbnail?id=1GihoRLyGIS0u2-WlFNBcX8PxtrkOG05g&sz=w1000' },
   { id: 'mtpt7', name: 'Rigatoni', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1B2GHWA0NHWvNNhfqEJSZvquTRnTOMrte&sz=w1000' },
   { id: 'mtpt8', name: 'Spaghetti', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1dRIShq1iW1aVLKyBFremdlNa90Q_xFdY&sz=w1000' },
   { id: 'mtpt9', name: 'Ziti', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1JvFSnnImV1DJHodwU77OH3xN6zr7ekB8&sz=w1080' },
-  { id: 'mtpt0', name: 'No pasta', price: 0.00, image: PLACEHOLDER_TOPPING_IMAGE },
 ];
 
 // Mussels Tray - Sauce Choice (Choose exactly 1)
@@ -1522,11 +1518,9 @@ const seafoodComboPastaTypes: Topping[] = [
   { id: 'scpt2', name: 'Fettuccine', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1ZagYj8uRHWq6jyyU8sR46VqfQ69AH9TH&sz=w1000' },
   { id: 'scpt3', name: 'Gluten Free Penne', price: 10.00, image: 'https://drive.google.com/thumbnail?id=1dRXjZqbOQpxUGFj3whOJcARAifOXRLSK&sz=w1000' },
   { id: 'scpt5', name: 'Linguine', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1iX-Ufur3xVFi3TBC33TxDnC8xnh-WQEK&sz=w1000' },
-  { id: 'scpt4', name: 'Gnocchi', price: 5.00, image: 'https://drive.google.com/thumbnail?id=1GihoRLyGIS0u2-WlFNBcX8PxtrkOG05g&sz=w1000' },
   { id: 'scpt7', name: 'Rigatoni', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1B2GHWA0NHWvNNhfqEJSZvquTRnTOMrte&sz=w1000' },
   { id: 'scpt8', name: 'Spaghetti', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1dRIShq1iW1aVLKyBFremdlNa90Q_xFdY&sz=w1000' },
   { id: 'scpt9', name: 'Ziti', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1JvFSnnImV1DJHodwU77OH3xN6zr7ekB8&sz=w1080' },
-  { id: 'scpt0', name: 'No pasta', price: 0.00, image: PLACEHOLDER_TOPPING_IMAGE },
 ];
 
 // Seafood Combo Tray - Sauce Choice (Choose exactly 1)
@@ -1542,7 +1536,6 @@ const shrimpMarinaraPastaTypes: Topping[] = [
   { id: 'smpt2', name: 'Fettuccine', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1tzbNi9YKq3TC-B9_VkcqGqxSwqkKfz37&sz=w1000' },
   { id: 'smpt3', name: 'Gluten Free Penne', price: 20.00, image: 'https://drive.google.com/thumbnail?id=19DhUTVbcnbkHioBLbq9wZx-NRCvvu7Nl&sz=w1000' },
   { id: 'smpt5', name: 'Linguine', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1Ful6PZ4WaOug1uh2kOGZA9Q4tgnjTM59&sz=w1000' },
-  { id: 'smpt4', name: 'Gnocchi', price: 10.00, image: 'https://drive.google.com/thumbnail?id=1fWZ6wibVSHz7SNWTaCKN38ycxbUt9k2z&sz=w1000' },
   { id: 'smpt7', name: 'Rigatoni', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1B2GHWA0NHWvNNhfqEJSZvquTRnTOMrte&sz=w1000' },
   { id: 'smpt8', name: 'Spaghetti', price: 0.00, image: 'https://drive.google.com/thumbnail?id=10hgB8Hu9ZzN6zW-F_6EeAN3UuqTzSrAx&sz=w1000' },
   { id: 'smpt9', name: 'Ziti', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1JvFSnnImV1DJHodwU77OH3xN6zr7ekB8&sz=w1080' },
@@ -25692,7 +25685,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
           )}
 
           {/* Add Desserts */}
-          {product.category !== 'catering-beverages' && (
+          {product.category !== 'catering-beverages' && product.category !== 'beverages' && (
           <Collapsible open={isDessertOpen} onOpenChange={setIsDessertOpen}>
             <CollapsibleTrigger asChild>
               <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
