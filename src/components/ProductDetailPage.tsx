@@ -13558,7 +13558,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     }}
                   />
                   <div className="relative z-10 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {babyClamSauceChoices.map((sauce) => {
                         const isSelected = selectedBabyClamSauceChoice === sauce.id;
                         return (
@@ -13707,7 +13707,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     }}
                   />
                   <div className="relative z-10 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {calamariSubstituteSauce.map((sauce) => {
                         const isSelected = selectedCalamariSubstituteSauce === sauce.id;
                         return (
@@ -13866,7 +13866,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     }}
                   />
                   <div className="relative z-10 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {musselsSauceChoices.map((sauce) => {
                         const isSelected = selectedMusselsSauceChoice === sauce.id;
                         return (
@@ -14025,7 +14025,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     }}
                   />
                   <div className="relative z-10 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {seafoodComboSauceChoices.map((sauce) => {
                         const isSelected = selectedSeafoodComboSauceChoice === sauce.id;
                         return (
@@ -14177,7 +14177,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     }}
                   />
                   <div className="relative z-10 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {shrimpMarinaraSubstituteSauce.map((sauce) => {
                         const isSelected = selectedShrimpMarinaraSubstituteSauce === sauce.id;
                         return (
