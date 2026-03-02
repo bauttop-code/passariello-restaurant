@@ -1506,6 +1506,7 @@ const musselsPastaTypes: Topping[] = [
   { id: 'mtpt7', name: 'Rigatoni', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1B2GHWA0NHWvNNhfqEJSZvquTRnTOMrte&sz=w1000' },
   { id: 'mtpt8', name: 'Spaghetti', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1dRIShq1iW1aVLKyBFremdlNa90Q_xFdY&sz=w1000' },
   { id: 'mtpt9', name: 'Ziti', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1JvFSnnImV1DJHodwU77OH3xN6zr7ekB8&sz=w1080' },
+  { id: 'mtpt0', name: 'No pasta', price: 0.00, image: PLACEHOLDER_TOPPING_IMAGE },
 ];
 
 // Mussels Tray - Sauce Choice (Choose exactly 1)
@@ -1525,6 +1526,7 @@ const seafoodComboPastaTypes: Topping[] = [
   { id: 'scpt7', name: 'Rigatoni', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1B2GHWA0NHWvNNhfqEJSZvquTRnTOMrte&sz=w1000' },
   { id: 'scpt8', name: 'Spaghetti', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1dRIShq1iW1aVLKyBFremdlNa90Q_xFdY&sz=w1000' },
   { id: 'scpt9', name: 'Ziti', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1JvFSnnImV1DJHodwU77OH3xN6zr7ekB8&sz=w1080' },
+  { id: 'scpt0', name: 'No pasta', price: 0.00, image: PLACEHOLDER_TOPPING_IMAGE },
 ];
 
 // Seafood Combo Tray - Sauce Choice (Choose exactly 1)
@@ -8378,7 +8380,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     const seafoodPastaTypePrice = selectedSeafoodPastaType ? (seafoodPastaTypes.find(t => t.id === selectedSeafoodPastaType)?.price || 0) : 0;
     
     // Calamari Marinara Tray prices
-    const calamariPastaTypePrice = selectedCalamariPastaType ? (calamariMarinaraPastaTypes.find(t => t.id === selectedCalamariPastaType)?.price || 0) : 0;
+    const calamariPastaTypePrice = selectedCalamariPastaType ? (calamariPastaTypes.find(t => t.id === selectedCalamariPastaType)?.price || 0) : 0;
     
     // Mussels Tray prices
     const musselsPastaTypePrice = selectedMusselsPastaType ? (musselsPastaTypes.find(t => t.id === selectedMusselsPastaType)?.price || 0) : 0;
@@ -13713,7 +13715,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   />
                   <div className="relative z-10 space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {[...calamariSubstituteSauce, { id: 'cmss-no', name: 'No Sauce', price: 0 }].map((sauce) => {
+                      {calamariSubstituteSauce.map((sauce) => {
                         const isSelected = selectedCalamariSubstituteSauce === sauce.id;
                         return (
                           <div
@@ -13789,6 +13791,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {musselsPastaTypes.map((type) => {
                         const isSelected = selectedMusselsPastaType === type.id;
+                        const isNoPastaOption = type.name.toLowerCase() === 'no pasta';
                         return (
                           <div
                             key={type.id}
@@ -13796,25 +13799,33 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedMusselsPastaType(type.id);
                               setMusselsPastaTypeError(false);
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
+                            className={`flex items-center ${isNoPastaOption ? 'gap-3 px-4 py-3' : 'gap-0'} rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
                               isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
                             }`}
                           >
-                            <div className="w-14 h-14 flex-shrink-0 relative">
-                              <ImageWithFallback
-                                src={type.image}
-                                alt={type.name}
-                                className="w-full h-full object-cover"
-                              />
-                              {isSelected && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                                  <div className="bg-white rounded-full p-0.5">
-                                    <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
+                            {isNoPastaOption ? (
+                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                isSelected ? 'border-[#A72020]' : 'border-gray-300'
+                              }`}>
+                                {isSelected && <div className="w-3 h-3 rounded-full bg-[#A72020]" />}
+                              </div>
+                            ) : (
+                              <div className="w-14 h-14 flex-shrink-0 relative">
+                                <ImageWithFallback
+                                  src={type.image}
+                                  alt={type.name}
+                                  className="w-full h-full object-cover"
+                                />
+                                {isSelected && (
+                                  <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                    <div className="bg-white rounded-full p-0.5">
+                                      <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
+                                    </div>
                                   </div>
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex-1 px-4 py-3 flex items-center justify-between">
+                                )}
+                              </div>
+                            )}
+                            <div className={`flex-1 ${isNoPastaOption ? '' : 'px-4 py-3'} flex items-center justify-between`}>
                               <span className="text-gray-900">{type.name}</span>
                               <span className="text-sm text-gray-900">${type.price.toFixed(2)}</span>
                             </div>
@@ -13863,7 +13874,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   />
                   <div className="relative z-10 space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {[...musselsSauceChoices, { id: 'msc-no', name: 'No Sauce', price: 0 }].map((sauce) => {
+                      {musselsSauceChoices.map((sauce) => {
                         const isSelected = selectedMusselsSauceChoice === sauce.id;
                         return (
                           <div
@@ -13939,6 +13950,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {seafoodComboPastaTypes.map((type) => {
                         const isSelected = selectedSeafoodComboPastaType === type.id;
+                        const isNoPastaOption = type.name.toLowerCase() === 'no pasta';
                         return (
                           <div
                             key={type.id}
@@ -13946,25 +13958,33 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedSeafoodComboPastaType(type.id);
                               setSeafoodComboPastaTypeError(false);
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
+                            className={`flex items-center ${isNoPastaOption ? 'gap-3 px-4 py-3' : 'gap-0'} rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
                               isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
                             }`}
                           >
-                            <div className="w-14 h-14 flex-shrink-0 relative">
-                              <ImageWithFallback
-                                src={type.image}
-                                alt={type.name}
-                                className="w-full h-full object-cover"
-                              />
-                              {isSelected && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                                  <div className="bg-white rounded-full p-0.5">
-                                    <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
+                            {isNoPastaOption ? (
+                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                isSelected ? 'border-[#A72020]' : 'border-gray-300'
+                              }`}>
+                                {isSelected && <div className="w-3 h-3 rounded-full bg-[#A72020]" />}
+                              </div>
+                            ) : (
+                              <div className="w-14 h-14 flex-shrink-0 relative">
+                                <ImageWithFallback
+                                  src={type.image}
+                                  alt={type.name}
+                                  className="w-full h-full object-cover"
+                                />
+                                {isSelected && (
+                                  <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                    <div className="bg-white rounded-full p-0.5">
+                                      <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
+                                    </div>
                                   </div>
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex-1 px-4 py-3 flex items-center justify-between">
+                                )}
+                              </div>
+                            )}
+                            <div className={`flex-1 ${isNoPastaOption ? '' : 'px-4 py-3'} flex items-center justify-between`}>
                               <span className="text-gray-900">{type.name}</span>
                               <span className="text-sm text-gray-900">${type.price.toFixed(2)}</span>
                             </div>
@@ -14013,7 +14033,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   />
                   <div className="relative z-10 space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {[...seafoodComboSauceChoices, { id: 'scsc-no', name: 'No Sauce', price: 0 }].map((sauce) => {
+                      {seafoodComboSauceChoices.map((sauce) => {
                         const isSelected = selectedSeafoodComboSauceChoice === sauce.id;
                         return (
                           <div
@@ -14165,7 +14185,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   />
                   <div className="relative z-10 space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {[...shrimpMarinaraSubstituteSauce, { id: 'smss-no', name: 'No Sauce', price: 0 }].map((sauce) => {
+                      {shrimpMarinaraSubstituteSauce.map((sauce) => {
                         const isSelected = selectedShrimpMarinaraSubstituteSauce === sauce.id;
                         return (
                           <div
@@ -18388,6 +18408,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {seafoodPastaTypes.map((pastaType) => {
                       const isSelected = selectedSeafoodPastaType === pastaType.id;
+                      const isNoPastaOption = pastaType.name.toLowerCase() === 'no pasta';
                       return (
                         <div
                           key={pastaType.id}
@@ -18395,25 +18416,33 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSeafoodPastaType(pastaType.id);
                             setSeafoodPastaTypeError(false);
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
+                          className={`flex items-center ${isNoPastaOption ? 'gap-3 px-4 py-3' : 'gap-0'} rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
                             isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
                           }`}
                         >
-                          <div className="w-14 h-14 flex-shrink-0 relative">
-                            <ImageWithFallback
-                              src={SEAFOOD_PASTA_TYPE_IMAGES[pastaType.id]}
-                              alt={pastaType.name}
-                              className="w-full h-full object-cover"
-                            />
-                            {isSelected && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                                <div className="bg-white rounded-full p-0.5">
-                                  <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
+                          {isNoPastaOption ? (
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                              isSelected ? 'border-[#A72020]' : 'border-gray-300'
+                            }`}>
+                              {isSelected && <div className="w-3 h-3 rounded-full bg-[#A72020]" />}
+                            </div>
+                          ) : (
+                            <div className="w-14 h-14 flex-shrink-0 relative">
+                              <ImageWithFallback
+                                src={SEAFOOD_PASTA_TYPE_IMAGES[pastaType.id]}
+                                alt={pastaType.name}
+                                className="w-full h-full object-cover"
+                              />
+                              {isSelected && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                  <div className="bg-white rounded-full p-0.5">
+                                    <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
+                                  </div>
                                 </div>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 px-4 py-3 flex items-center justify-between">
+                              )}
+                            </div>
+                          )}
+                          <div className={`flex-1 ${isNoPastaOption ? '' : 'px-4 py-3'} flex items-center justify-between`}>
                             <span className="text-gray-900">{pastaType.name}</span>
                             {pastaType.price > 0 && (
                               <span className="text-sm text-gray-900">${pastaType.price.toFixed(2)}</span>
@@ -18507,6 +18536,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {seafoodPastaTypes.map((pastaType) => {
                       const isSelected = selectedSeafoodPastaType === pastaType.id;
+                      const isNoPastaOption = pastaType.name.toLowerCase() === 'no pasta';
                       return (
                         <div
                           key={pastaType.id}
@@ -18514,25 +18544,33 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSeafoodPastaType(pastaType.id);
                             setSeafoodPastaTypeError(false);
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
+                          className={`flex items-center ${isNoPastaOption ? 'gap-3 px-4 py-3' : 'gap-0'} rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
                             isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
                           }`}
                         >
-                          <div className="w-14 h-14 flex-shrink-0 relative">
-                            <ImageWithFallback
-                              src={SEAFOOD_PASTA_TYPE_IMAGES[pastaType.id]}
-                              alt={pastaType.name}
-                              className="w-full h-full object-cover"
-                            />
-                            {isSelected && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                                <div className="bg-white rounded-full p-0.5">
-                                  <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
+                          {isNoPastaOption ? (
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                              isSelected ? 'border-[#A72020]' : 'border-gray-300'
+                            }`}>
+                              {isSelected && <div className="w-3 h-3 rounded-full bg-[#A72020]" />}
+                            </div>
+                          ) : (
+                            <div className="w-14 h-14 flex-shrink-0 relative">
+                              <ImageWithFallback
+                                src={SEAFOOD_PASTA_TYPE_IMAGES[pastaType.id]}
+                                alt={pastaType.name}
+                                className="w-full h-full object-cover"
+                              />
+                              {isSelected && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                  <div className="bg-white rounded-full p-0.5">
+                                    <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
+                                  </div>
                                 </div>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 px-4 py-3 flex items-center justify-between">
+                              )}
+                            </div>
+                          )}
+                          <div className={`flex-1 ${isNoPastaOption ? '' : 'px-4 py-3'} flex items-center justify-between`}>
                             <span className="text-gray-900">{pastaType.name}</span>
                             {pastaType.price > 0 && (
                               <span className="text-sm text-gray-900">${pastaType.price.toFixed(2)}</span>
@@ -18632,6 +18670,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {seafoodPastaTypes.map((pastaType) => {
                       const isSelected = selectedSeafoodPastaType === pastaType.id;
+                      const isNoPastaOption = pastaType.name.toLowerCase() === 'no pasta';
                       return (
                         <div
                           key={pastaType.id}
@@ -18639,25 +18678,33 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSeafoodPastaType(pastaType.id);
                             setSeafoodPastaTypeError(false);
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
+                          className={`flex items-center ${isNoPastaOption ? 'gap-3 px-4 py-3' : 'gap-0'} rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
                             isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
                           }`}
                         >
-                          <div className="w-14 h-14 flex-shrink-0 relative">
-                            <ImageWithFallback
-                              src={SEAFOOD_PASTA_TYPE_IMAGES[pastaType.id]}
-                              alt={pastaType.name}
-                              className="w-full h-full object-cover"
-                            />
-                            {isSelected && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                                <div className="bg-white rounded-full p-0.5">
-                                  <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
+                          {isNoPastaOption ? (
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                              isSelected ? 'border-[#A72020]' : 'border-gray-300'
+                            }`}>
+                              {isSelected && <div className="w-3 h-3 rounded-full bg-[#A72020]" />}
+                            </div>
+                          ) : (
+                            <div className="w-14 h-14 flex-shrink-0 relative">
+                              <ImageWithFallback
+                                src={SEAFOOD_PASTA_TYPE_IMAGES[pastaType.id]}
+                                alt={pastaType.name}
+                                className="w-full h-full object-cover"
+                              />
+                              {isSelected && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                  <div className="bg-white rounded-full p-0.5">
+                                    <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
+                                  </div>
                                 </div>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 px-4 py-3 flex items-center justify-between">
+                              )}
+                            </div>
+                          )}
+                          <div className={`flex-1 ${isNoPastaOption ? '' : 'px-4 py-3'} flex items-center justify-between`}>
                             <span className="text-gray-900">{pastaType.name}</span>
                             {pastaType.price > 0 && (
                               <span className="text-sm text-gray-900">+${pastaType.price.toFixed(2)}</span>
@@ -18751,6 +18798,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {seafoodPastaTypes.map((pastaType) => {
                       const isSelected = selectedSeafoodPastaType === pastaType.id;
+                      const isNoPastaOption = pastaType.name.toLowerCase() === 'no pasta';
                       return (
                         <div
                           key={pastaType.id}
@@ -18758,25 +18806,33 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSeafoodPastaType(pastaType.id);
                             setSeafoodPastaTypeError(false);
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
+                          className={`flex items-center ${isNoPastaOption ? 'gap-3 px-4 py-3' : 'gap-0'} rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
                             isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
                           }`}
                         >
-                          <div className="w-14 h-14 flex-shrink-0 relative">
-                            <ImageWithFallback
-                              src={SEAFOOD_PASTA_TYPE_IMAGES[pastaType.id]}
-                              alt={pastaType.name}
-                              className="w-full h-full object-cover"
-                            />
-                            {isSelected && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                                <div className="bg-white rounded-full p-0.5">
-                                  <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
+                          {isNoPastaOption ? (
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                              isSelected ? 'border-[#A72020]' : 'border-gray-300'
+                            }`}>
+                              {isSelected && <div className="w-3 h-3 rounded-full bg-[#A72020]" />}
+                            </div>
+                          ) : (
+                            <div className="w-14 h-14 flex-shrink-0 relative">
+                              <ImageWithFallback
+                                src={SEAFOOD_PASTA_TYPE_IMAGES[pastaType.id]}
+                                alt={pastaType.name}
+                                className="w-full h-full object-cover"
+                              />
+                              {isSelected && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                  <div className="bg-white rounded-full p-0.5">
+                                    <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
+                                  </div>
                                 </div>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 px-4 py-3 flex items-center justify-between">
+                              )}
+                            </div>
+                          )}
+                          <div className={`flex-1 ${isNoPastaOption ? '' : 'px-4 py-3'} flex items-center justify-between`}>
                             <span className="text-gray-900">{pastaType.name}</span>
                             {pastaType.price > 0 && (
                               <span className="text-sm text-gray-900">+${pastaType.price.toFixed(2)}</span>
@@ -18870,6 +18926,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {seafoodPastaTypes.map((pastaType) => {
                       const isSelected = selectedSeafoodPastaType === pastaType.id;
+                      const isNoPastaOption = pastaType.name.toLowerCase() === 'no pasta';
                       return (
                         <div
                           key={pastaType.id}
@@ -18877,25 +18934,33 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSeafoodPastaType(pastaType.id);
                             setSeafoodPastaTypeError(false);
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
+                          className={`flex items-center ${isNoPastaOption ? 'gap-3 px-4 py-3' : 'gap-0'} rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
                             isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
                           }`}
                         >
-                          <div className="w-14 h-14 flex-shrink-0 relative">
-                            <ImageWithFallback
-                              src={SEAFOOD_PASTA_TYPE_IMAGES[pastaType.id]}
-                              alt={pastaType.name}
-                              className="w-full h-full object-cover"
-                            />
-                            {isSelected && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                                <div className="bg-white rounded-full p-0.5">
-                                  <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
+                          {isNoPastaOption ? (
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                              isSelected ? 'border-[#A72020]' : 'border-gray-300'
+                            }`}>
+                              {isSelected && <div className="w-3 h-3 rounded-full bg-[#A72020]" />}
+                            </div>
+                          ) : (
+                            <div className="w-14 h-14 flex-shrink-0 relative">
+                              <ImageWithFallback
+                                src={SEAFOOD_PASTA_TYPE_IMAGES[pastaType.id]}
+                                alt={pastaType.name}
+                                className="w-full h-full object-cover"
+                              />
+                              {isSelected && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                  <div className="bg-white rounded-full p-0.5">
+                                    <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
+                                  </div>
                                 </div>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 px-4 py-3 flex items-center justify-between">
+                              )}
+                            </div>
+                          )}
+                          <div className={`flex-1 ${isNoPastaOption ? '' : 'px-4 py-3'} flex items-center justify-between`}>
                             <span className="text-gray-900">{pastaType.name}</span>
                             {pastaType.price > 0 && (
                               <span className="text-sm text-gray-900">+${pastaType.price.toFixed(2)}</span>
@@ -25627,7 +25692,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
           )}
 
           {/* Add Desserts */}
-          {product.category !== 'catering-whole-cakes' && product.category !== 'catering-party-trays' && (
+          {product.category !== 'catering-beverages' && (
           <Collapsible open={isDessertOpen} onOpenChange={setIsDessertOpen}>
             <CollapsibleTrigger asChild>
               <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
@@ -25687,7 +25752,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 )}
 
                 {/* Whole Cakes Section - Only for catering products */}
-                {product.category && product.category.startsWith('catering-') && (
+                {product.category && product.category.startsWith('catering-') && product.category !== 'catering-party-trays' && (
                   <>
                     <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg">
                       <span className="font-semibold" style={{fontSize: 'calc(1em + 3px)'}}>Whole Cakes</span>
@@ -25724,7 +25789,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 )}
 
                 {/* Party Trays Section - Only for catering products */}
-                {product.category && product.category.startsWith('catering-') && (
+                {product.category && product.category.startsWith('catering-') && product.category !== 'catering-whole-cakes' && (
                   <>
                     <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg">
                       <span className="font-semibold" style={{fontSize: 'calc(1em + 3px)'}}>Party Trays</span>
@@ -25761,7 +25826,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 )}
 
                 {/* Individual Desserts Section - Catering order: Whole Cakes -> Party Trays -> Desserts */}
-                {product.category && product.category.startsWith('catering-') && (
+                {product.category && product.category.startsWith('catering-') && product.category !== 'catering-party-trays' && product.category !== 'catering-whole-cakes' && (
                   <>
                     <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg">
                       <span className="font-semibold" style={{fontSize: 'calc(1em + 3px)'}}>Desserts</span>
@@ -25802,7 +25867,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
           )}
 
           {/* Add Beverages */}
-          {product.category !== 'beverages' && product.category !== 'catering-beverages' && (
+          {product.category !== 'beverages' && (
           <Collapsible open={isBeverageOpen} onOpenChange={setIsBeverageOpen}>
             <CollapsibleTrigger asChild>
               <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
@@ -25827,153 +25892,60 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 }}
               />
               <div className="relative z-10 space-y-6">
-                {/* 20oz Divider */}
-                <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg">
-                  <span className="font-semibold">20oz</span>
-                </div>
+                {(() => {
+                  const beverageSections = product.category === 'catering-beverages'
+                    ? [
+                        { title: '2 Liter', items: beverageItems.filter(item => item.id.startsWith('b2')) },
+                        { title: '20oz', items: beverageItems.filter(item => item.id.startsWith('b1')) },
+                        { title: 'Water', items: beverageItems.filter(item => item.id === 'b3' || item.id === 'b4') },
+                        { title: 'Kids', items: beverageItems.filter(item => item.id === 'b5' || item.id === 'b6') },
+                      ]
+                    : [
+                        { title: '20oz', items: beverageItems.filter(item => item.id.startsWith('b1')) },
+                        { title: '2 Liter', items: beverageItems.filter(item => item.id.startsWith('b2')) },
+                        { title: 'Water', items: beverageItems.filter(item => item.id === 'b3' || item.id === 'b4') },
+                        { title: 'Kids', items: beverageItems.filter(item => item.id === 'b5' || item.id === 'b6') },
+                      ];
 
-                {/* 20oz Section */}
-                <div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                    {beverageItems.filter(item => item.id.startsWith('b1')).map((item) => {
-                      const quantity = selectedBeverages[item.id] || 0;
-                      const isActive = activeBeverageItem === item.id;
-                      
-                      return (
-                        <AddonCard
-                          key={item.id}
-                          item={item}
-                          quantity={quantity}
-                          isActive={isActive}
-                          onSelect={() => {
-                            if (quantity === 0) {
-                              handleBeverageToggle(item.id);
-                              setActiveBeverageItem(item.id);
-                            } else if (!isActive) {
-                              setActiveBeverageItem(item.id);
-                            } else {
-                              handleBeverageToggle(item.id);
-                              setActiveBeverageItem(null);
-                            }
-                          }}
-                          onIncrement={() => handleBeverageIncrement(item.id)}
-                          onDecrement={() => handleBeverageDecrement(item.id)}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
+                  return beverageSections.map((section) => (
+                    <div key={section.title} className="space-y-6">
+                      <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg">
+                        <span className="font-semibold">{section.title}</span>
+                      </div>
 
-                {/* 2 Liter Divider */}
-                <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg">
-                  <span className="font-semibold">2 Liter</span>
-                </div>
+                      <div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                          {section.items.map((item) => {
+                            const quantity = selectedBeverages[item.id] || 0;
+                            const isActive = activeBeverageItem === item.id;
 
-                {/* 2 Liter Section */}
-                <div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                    {beverageItems.filter(item => item.id.startsWith('b2')).map((item) => {
-                      const quantity = selectedBeverages[item.id] || 0;
-                      const isActive = activeBeverageItem === item.id;
-                      
-                      return (
-                        <AddonCard
-                          key={item.id}
-                          item={item}
-                          quantity={quantity}
-                          isActive={isActive}
-                          onSelect={() => {
-                            if (quantity === 0) {
-                              handleBeverageToggle(item.id);
-                              setActiveBeverageItem(item.id);
-                            } else if (!isActive) {
-                              setActiveBeverageItem(item.id);
-                            } else {
-                              handleBeverageToggle(item.id);
-                              setActiveBeverageItem(null);
-                            }
-                          }}
-                          onIncrement={() => handleBeverageIncrement(item.id)}
-                          onDecrement={() => handleBeverageDecrement(item.id)}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Water Divider */}
-                <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg">
-                  <span className="font-semibold">Water</span>
-                </div>
-
-                {/* Water Section */}
-                <div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                    {beverageItems.filter(item => item.id === 'b3' || item.id === 'b4').map((item) => {
-                      const quantity = selectedBeverages[item.id] || 0;
-                      const isActive = activeBeverageItem === item.id;
-                      
-                      return (
-                        <AddonCard
-                          key={item.id}
-                          item={item}
-                          quantity={quantity}
-                          isActive={isActive}
-                          onSelect={() => {
-                            if (quantity === 0) {
-                              handleBeverageToggle(item.id);
-                              setActiveBeverageItem(item.id);
-                            } else if (!isActive) {
-                              setActiveBeverageItem(item.id);
-                            } else {
-                              handleBeverageToggle(item.id);
-                              setActiveBeverageItem(null);
-                            }
-                          }}
-                          onIncrement={() => handleBeverageIncrement(item.id)}
-                          onDecrement={() => handleBeverageDecrement(item.id)}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Kids Divider */}
-                <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg">
-                  <span className="font-semibold">Kids</span>
-                </div>
-
-                {/* Kids Section */}
-                <div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                    {beverageItems.filter(item => item.id === 'b5' || item.id === 'b6').map((item) => {
-                      const quantity = selectedBeverages[item.id] || 0;
-                      const isActive = activeBeverageItem === item.id;
-                      
-                      return (
-                        <AddonCard
-                          key={item.id}
-                          item={item}
-                          quantity={quantity}
-                          isActive={isActive}
-                          onSelect={() => {
-                            if (quantity === 0) {
-                              handleBeverageToggle(item.id);
-                              setActiveBeverageItem(item.id);
-                            } else if (!isActive) {
-                              setActiveBeverageItem(item.id);
-                            } else {
-                              handleBeverageToggle(item.id);
-                              setActiveBeverageItem(null);
-                            }
-                          }}
-                          onIncrement={() => handleBeverageIncrement(item.id)}
-                          onDecrement={() => handleBeverageDecrement(item.id)}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
+                            return (
+                              <AddonCard
+                                key={item.id}
+                                item={item}
+                                quantity={quantity}
+                                isActive={isActive}
+                                onSelect={() => {
+                                  if (quantity === 0) {
+                                    handleBeverageToggle(item.id);
+                                    setActiveBeverageItem(item.id);
+                                  } else if (!isActive) {
+                                    setActiveBeverageItem(item.id);
+                                  } else {
+                                    handleBeverageToggle(item.id);
+                                    setActiveBeverageItem(null);
+                                  }
+                                }}
+                                onIncrement={() => handleBeverageIncrement(item.id)}
+                                onDecrement={() => handleBeverageDecrement(item.id)}
+                              />
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  ));
+                })()}
               </div>
             </CollapsibleContent>
           </Collapsible>
