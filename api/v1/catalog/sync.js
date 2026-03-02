@@ -1,11 +1,11 @@
-import { getSupabaseAdmin } from '../../../_lib/supabase-admin.js';
+import { getSupabaseAdmin } from '../../_lib/supabase-admin.js';
 import {
   normalizeProduct,
   readJsonBody,
   requireApiKey,
   sendJson,
   withCors,
-} from '../../../_lib/voice-api.js';
+} from '../../_lib/voice-api.js';
 
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {

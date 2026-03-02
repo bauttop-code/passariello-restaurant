@@ -1,5 +1,5 @@
-import { getSupabaseAdmin } from '../../../../_lib/supabase-admin.js';
-import { sendJson, withCors } from '../../../../_lib/voice-api.js';
+import { getSupabaseAdmin } from '../../../_lib/supabase-admin.js';
+import { sendJson, withCors } from '../../../_lib/voice-api.js';
 
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {

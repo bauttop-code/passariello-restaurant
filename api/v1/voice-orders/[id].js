@@ -1,5 +1,5 @@
-import { getSupabaseAdmin } from '../../../_lib/supabase-admin.js';
-import { readJsonBody, requireApiKey, sendJson, withCors } from '../../../_lib/voice-api.js';
+import { getSupabaseAdmin } from '../../_lib/supabase-admin.js';
+import { readJsonBody, requireApiKey, sendJson, withCors } from '../../_lib/voice-api.js';
 
 const ALLOWED_STATUS = ['pending', 'accepted', 'rejected', 'sent_to_pos', 'completed'];
 

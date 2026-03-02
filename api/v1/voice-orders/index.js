@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from '../../../_lib/supabase-admin.js';
+import { getSupabaseAdmin } from '../../_lib/supabase-admin.js';
 import {
   newVoiceOrderId,
   readJsonBody,
@@ -6,7 +6,7 @@ import {
   sendJson,
   validateVoiceOrderItems,
   withCors,
-} from '../../../_lib/voice-api.js';
+} from '../../_lib/voice-api.js';
 
 async function getCatalogProducts(supabase) {
   const { data, error } = await supabase
