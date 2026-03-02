@@ -707,21 +707,18 @@ export function CartSidebar({
                     onClick={() => {
                       const product = allProducts?.find(p => p.id === item.id);
                       if (product) {
-                        // Mark that user is customizing (not closing to checkout)
+                        onAddToCart?.(product, 1);
+                        // Close recommendations and go straight to checkout after add
                         setIsCustomizing(true);
-                        // Close recommendations dialog
                         setShowRecommendations(false);
-                        // Close cart sidebar
                         onClose();
-                        // Open product detail view
-                        if (onProductClick) {
-                          onProductClick(product);
-                        }
+                        onCheckout?.();
+                        setTimeout(() => setIsCustomizing(false), 0);
                       }
                     }}
                   >
                     <span className="sm:inline max-sm:hidden">ADD</span>
-                    <span className="hidden max-sm:inline">ADD & CUSTOMIZE</span>
+                    <span className="hidden max-sm:inline">ADD</span>
                   </Button>
                 </div>
               </div>
