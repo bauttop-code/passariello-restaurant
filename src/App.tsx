@@ -43,6 +43,7 @@ import { getPickupEligibility, type PickupStore } from './utils/pickupEligibilit
 import { useAutoLocationResolution } from './hooks/useAutoLocationResolution';
 import { getSupabaseClient } from './utils/supabase/client';
 import { trackProductView, getRecommendedProducts } from './utils/productRecommendations';
+import { syncVoiceCatalog } from './utils/voiceCatalogSync';
 import traditionalDinnersImage1 from 'figma:asset/3d529cb84ae66dbfa34608dfbb0b31f962071207.png';
 import traditionalDinnersImage2 from 'figma:asset/754da828dbf51bd8e4e1463a5b58479fab3fb1ff.png';
 
@@ -3682,6 +3683,11 @@ export default function App() {
   const [scheduledDateString, setScheduledDateString] = useState('Today');
   const [scheduledTimeString, setScheduledTimeString] = useState('ASAP');
   const sectionRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+  // Sync full website catalog to voice API (if VITE_VOICE_API_URL is configured)
+  useEffect(() => {
+    syncVoiceCatalog(products);
+  }, []);
 
   // Map section IDs to category IDs for the header highlight
   const mapSectionIdToCategory = (id: string) => {

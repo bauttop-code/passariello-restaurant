@@ -4848,44 +4848,44 @@ export const buildCartDisplayLines = (item: CartItem): string[] => {
   if (isCheesesteakItem) {
       // Cheesesteaks already uses strict deterministic ordering in dedicated builder.
       // Avoid secondary global reordering to prevent section drift.
-      return buildCheesesteakLines(item, rawLines, itemQty);
+      return consolidateSemanticLines(buildCheesesteakLines(item, rawLines, itemQty));
   }
 
   // B.1) Hot Hoagies (strict deterministic order)
   if (item.category === 'hot-hoagies') {
-      return buildHotHoagieLines(item, rawLines, itemQty);
+      return consolidateSemanticLines(buildHotHoagieLines(item, rawLines, itemQty));
   }
 
   // B.2) Cold Hoagies (strict deterministic order)
   if (item.category === 'cold-hoagies') {
-      return buildColdHoagieLines(item, rawLines, itemQty);
+      return consolidateSemanticLines(buildColdHoagieLines(item, rawLines, itemQty));
   }
 
   // B.3) Wraps (strict deterministic order)
   if (item.category === 'wraps') {
-      return buildWrapLines(item, rawLines, itemQty);
+      return consolidateSemanticLines(buildWrapLines(item, rawLines, itemQty));
   }
 
   // B.4) Create Your Own Fresh Salad (strict deterministic order)
   if (item.category === 'create-salad') {
       // Keep per-section lines intact. Global semantic consolidation can hide
       // "Extra Toppings" when they share the same label as regular toppings.
-      return buildCreateSaladLines(item, rawLines, itemQty);
+      return consolidateSemanticLines(buildCreateSaladLines(item, rawLines, itemQty));
   }
 
   // B.5) Specialty Fresh Salad (strict deterministic order)
   if (item.category === 'salads') {
-      return buildSpecialtySaladLines(item, rawLines, itemQty);
+      return consolidateSemanticLines(buildSpecialtySaladLines(item, rawLines, itemQty));
   }
 
   // B.6) Soups (strict deterministic order)
   if (item.category === 'soups') {
-      return buildSoupsLines(item, rawLines, itemQty);
+      return consolidateSemanticLines(buildSoupsLines(item, rawLines, itemQty));
   }
 
   // B.7) Kids Menu (strict deterministic order)
   if (item.category === 'kids' || item.category === 'kids-menu') {
-      return buildKidsLines(item, rawLines, itemQty);
+      return consolidateSemanticLines(buildKidsLines(item, rawLines, itemQty));
   }
 
   // C) Wings
@@ -4908,14 +4908,14 @@ export const buildCartDisplayLines = (item: CartItem): string[] => {
   if (item.category === 'pizzas' && item.productId?.startsWith('cyo-')) {
     // CYO already has strict deterministic ordering; avoid secondary global reordering
     // that can push unmapped lines to the end.
-    return buildCyoPizzaLines(item, rawLines, itemQty);
+    return consolidateSemanticLines(buildCyoPizzaLines(item, rawLines, itemQty));
   }
 
   // C.5.2) SPECIALTY PIZZA (Strict Spec)
   if (item.category === 'specialty-pizza') {
       // Specialty already uses strict deterministic ordering in profile builder.
       // Avoid secondary global reordering that can reclassify lines and break order.
-      return buildSpecialtyPizzaLines(item, rawLines, itemQty);
+      return consolidateSemanticLines(buildSpecialtyPizzaLines(item, rawLines, itemQty));
   }
 
   // C.5.3) BROOKLYN PIZZA (Strict Spec)
@@ -4923,12 +4923,12 @@ export const buildCartDisplayLines = (item: CartItem): string[] => {
       // Brooklyn already uses strict deterministic ordering in profile builder.
       // Avoid secondary global reordering that can push side-distribution toppings
       // (Left/Right) to leftovers at the end.
-      return buildBrooklynPizzaLines(item, rawLines, itemQty);
+      return consolidateSemanticLines(buildBrooklynPizzaLines(item, rawLines, itemQty));
   }
 
   // C.5.35) BY THE SLICE (Strict Spec)
   if (item.category === 'by-the-slice') {
-      return buildByTheSliceLines(item, rawLines, itemQty);
+      return consolidateSemanticLines(buildByTheSliceLines(item, rawLines, itemQty));
   }
 
   // C.5.4) STROMBOLI / CALZONE (Strict Spec)
@@ -4936,7 +4936,7 @@ export const buildCartDisplayLines = (item: CartItem): string[] => {
       // Stromboli already builds strict order:
       // Choose Your Dipping Sauce -> Additional Toppings -> Dessert -> Beverages.
       // Avoid global reordering because it can reclassify Bleu/Ranch and break order.
-      return buildStromboliCalzoneLines(item, rawLines, itemQty);
+      return consolidateSemanticLines(buildStromboliCalzoneLines(item, rawLines, itemQty));
   }
 
   // E) Structured Profiles (CYO, Minucci, Specialty, Brooklyn, Stromboli)

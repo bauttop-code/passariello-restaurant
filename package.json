@@ -61,6 +61,8 @@
       },
       "scripts": {
           "dev": "vite",
-          "build": "vite build"
+          "build": "vite build",
+          "api:dev": "node api/server.mjs",
+          "api:dev:watch": "node --watch api/server.mjs"
       }
   }
