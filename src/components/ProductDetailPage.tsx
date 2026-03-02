@@ -4853,7 +4853,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
   const [activeBeverageItem, setActiveBeverageItem] = useState<string | null>(null);
 
   const isChafingCategory = (category?: string) =>
-    ['catering-entrees', 'catering-pasta', 'catering-seafood-pasta', 'catering-sides'].includes(category || '');
+    ['catering-entrees', 'catering-pasta', 'catering-seafood-pasta', 'catering-sides', 'catering-appetizers'].includes(category || '');
 
   const isIncludedRequestCategory = (category?: string) =>
     [

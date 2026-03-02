@@ -4222,7 +4222,7 @@ const getDesiredOrder = (item: CartItem): { mode: 'full' | 'tail'; sections: str
   if (category === 'catering-desserts') return { mode: 'full', sections: ['Whole Cakes', 'Party Trays', 'Dessert', 'Beverages'] };
   if (category === 'catering-beverages') return { mode: 'full', sections: ['Dessert'] };
   if (category === 'appetizers') return { mode: 'tail', sections: ['Dessert', 'Beverages'] };
-  if (category === 'catering-appetizers') return { mode: 'tail', sections: ['Included and Available Upon Request', 'Whole Cakes', 'Party Trays', 'Dessert', 'Beverages'] };
+  if (category === 'catering-appetizers') return { mode: 'tail', sections: ['Included and Available Upon Request', 'Chafing Kit', 'Whole Cakes', 'Party Trays', 'Dessert', 'Beverages'] };
   return null;
 };
 
