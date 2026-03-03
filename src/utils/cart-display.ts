@@ -88,6 +88,14 @@ const isAppetizerWithArtifacts = (item: CartItem): boolean => {
   );
 };
 
+// Extra sides are stored with labels like "Add Wings (10)".
+// In cart reporting we show the side name only.
+const normalizeExtraSideLabel = (value: string): string => {
+  const text = String(value || '').trim();
+  if (!text) return text;
+  return text.replace(/^add\s+/i, '').trim();
+};
+
 // --- QTY & SIZE HELPERS ---
 
 const formatQtyPrefix = (qty: number): string => {
@@ -2270,7 +2278,10 @@ const buildHotHoagieLines = (item: CartItem, rawLines: { text: string; originalS
 
   const pushUnique = (section: (typeof order)[number], value: string) => {
     const raw = String(value || '').trim();
-    const text = section === 'On The Side Toppings' ? withOnTheSidePrefix(raw) : raw;
+    let text = section === 'On The Side Toppings' ? withOnTheSidePrefix(raw) : raw;
+    if (section === 'Would You Like To Add Extra Sides') {
+      text = normalizeExtraSideLabel(text);
+    }
     if (!text) return;
     if (!buckets[section].includes(text)) buckets[section].push(text);
   };
@@ -2437,6 +2448,7 @@ const buildColdHoagieLines = (item: CartItem, rawLines: { text: string; original
     let text = raw;
     if (section === 'On The Side Toppings') text = withOnTheSidePrefix(text);
     if (section === 'Side of Extra Chips') text = withChipsSuffix(text);
+    if (section === 'Would You Like To Add Extra Sides') text = normalizeExtraSideLabel(text);
     if (!buckets[section].includes(text)) buckets[section].push(text);
   };
 
@@ -3376,7 +3388,8 @@ const buildCheesesteakLines = (item: CartItem, rawLines: { text: string; origina
             buckets[resolved].push(withOnTheSidePrefix(t));
             return;
         }
-        buckets[resolved].push(t);
+        const next = resolved === 'EXTRA_SIDES' ? normalizeExtraSideLabel(t) : t;
+        buckets[resolved].push(next);
     };
 
     // PROCESS INPUTS
