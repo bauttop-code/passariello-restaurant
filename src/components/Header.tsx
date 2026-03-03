@@ -65,8 +65,8 @@ interface Category {
 }
 
 interface HeaderProps {
-  mode: 'regular' | 'guest-favorites' | 'catering';
-  onModeChange: (mode: 'regular' | 'guest-favorites' | 'catering') => void;
+  mode: 'regular' | 'guest-favorites' | 'catering' | 'reorder';
+  onModeChange: (mode: 'regular' | 'guest-favorites' | 'catering' | 'reorder') => void;
   cartItemsCount?: number;
   cartItems?: CartItem[];
   onLogoClick?: () => void;
@@ -158,13 +158,10 @@ export function Header({ mode, onModeChange, cartItemsCount = 0, cartItems = [],
   const navScrollRef = useRef<HTMLDivElement>(null);
   const categoryButtonsRef = useRef<{ [key: string]: HTMLButtonElement | null }>({});
   
-  // ORDER NOW uses the same categories as regular menu
-  // For regular mode, combine regular categories (minus 'catering') with catering categories
+  // Catering categories must only appear when catering mode is active.
   const categories = mode === 'catering' 
     ? cateringCategories 
-    : mode === 'regular' 
-      ? [...regularCategories.filter(c => c.id !== 'catering'), ...cateringCategories]
-      : regularCategories;
+    : regularCategories;
   
   // Allow external control of cart open state
   React.useEffect(() => {
@@ -625,6 +622,16 @@ export function Header({ mode, onModeChange, cartItemsCount = 0, cartItems = [],
                 MENU
               </button>
               <button
+                onClick={() => onModeChange('catering')}
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                  mode === 'catering'
+                    ? 'bg-[#8B734B] text-white'
+                    : 'bg-transparent text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                CATERING
+              </button>
+              <button
                 onClick={() => onModeChange('guest-favorites')}
                 className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                   mode === 'guest-favorites'
@@ -635,9 +642,9 @@ export function Header({ mode, onModeChange, cartItemsCount = 0, cartItems = [],
                 GUEST FAVORITES
               </button>
               <button
-                onClick={() => onModeChange('catering')}
+                onClick={() => onModeChange('reorder')}
                 className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                  mode === 'catering'
+                  mode === 'reorder'
                     ? 'bg-[#8B734B] text-white'
                     : 'bg-transparent text-gray-600 hover:bg-gray-200'
                 }`}
@@ -709,7 +716,7 @@ export function Header({ mode, onModeChange, cartItemsCount = 0, cartItems = [],
       </div>
 
       {/* Category Navigation - Only show for regular and catering modes */}
-      {mode !== 'guest-favorites' && (
+      {(mode === 'regular' || mode === 'catering') && (
       <div className="relative">
         <div className="w-full py-2 lg:py-2.5 xl:py-3 bg-white">
           {/* Left Arrow */}

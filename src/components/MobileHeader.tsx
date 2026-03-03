@@ -225,7 +225,7 @@ export function MobileHeader({
         </Button>
       </div>
 
-      {/* Tab Navigation - MENU | GUEST FAVORITES | REORDER */}
+      {/* Tab Navigation - MENU | CATERING | GUEST FAVORITES | REORDER */}
       <div className="flex items-center border-b bg-white">
         <button
           onClick={() => onModeChange('regular')}
@@ -236,6 +236,16 @@ export function MobileHeader({
           }`}
         >
           MENU
+        </button>
+        <button
+          onClick={() => onModeChange('catering')}
+          className={`flex-1 py-3 text-sm font-semibold uppercase transition-all border-b-[3px] ${
+            mode === 'catering'
+              ? 'text-[#a72020] border-[#a72020]'
+              : 'text-gray-600 border-transparent'
+          }`}
+        >
+          CATERING
         </button>
         <button
           onClick={() => onModeChange('guest-favorites')}
@@ -260,7 +270,7 @@ export function MobileHeader({
       </div>
 
       {/* Category Navigation with Horizontal Scroll - Only show for regular and catering modes */}
-      {mode !== 'guest-favorites' && (
+      {(mode === 'regular' || mode === 'catering') && (
       <div className="relative border-b bg-white overflow-hidden">
         {/* Scrollable Categories with Search Icon */}
         <div className="flex items-center gap-3 px-4 py-3">
