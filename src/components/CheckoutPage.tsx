@@ -1,6 +1,6 @@
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { useState, useEffect } from 'react';
-import { MapPin, Calendar, Lock, CreditCard, Info, X } from 'lucide-react';
+import { MapPin, Calendar, Lock, CreditCard, Info } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -417,126 +417,6 @@ export function CheckoutPage({
 
   return (
     <div className="min-h-screen bg-gray-50 relative z-[105]">
-      {/* Order Details Drawer */}
-      {showOrderDetails && (
-        <>
-          {/* Overlay */}
-          <div 
-            className="fixed inset-0 z-[200]"
-            onClick={() => setShowOrderDetails(false)}
-          />
-          
-          {/* Drawer */}
-          <div className="fixed right-0 top-0 h-full w-full sm:max-w-md bg-white shadow-2xl z-[201] overflow-y-auto">
-            {/* Header */}
-            <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-              <h2 className="text-2xl font-semibold">Order Details</h2>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowOrderDetails(false)}
-                className="hover:bg-gray-100"
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
-
-            {/* Items List */}
-            <div className="p-6 space-y-4">
-              {items.map((item) => (
-                <div key={item.id} className="pb-4 border-b border-gray-200">
-                  <div className="flex gap-3 mb-3">
-                    {/* Image */}
-                    <div className="w-28 h-28 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                      {item.image && (
-                        <ImageWithFallback
-                          src={item.image}
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                        />
-                      )}
-                    </div>
-
-                    {/* Item Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-extrabold text-lg text-[#404041]" style={{ fontFamily: "'Ancizar Sans', sans-serif" }}>
-                            {(() => {
-                              try {
-                                return buildCartDisplayTitle(item as any);
-                              } catch (err) {
-                                console.error('[CheckoutPage] Title render error:', err, item);
-                                return item.name || 'Item';
-                              }
-                            })()}
-                          </h3>
-                        </div>
-                        <span className="font-semibold text-[#A72020] whitespace-nowrap">
-                          ${(item.price * item.quantity).toFixed(2)}
-                        </span>
-                      </div>
-
-                      {/* Same detail formatting rules as the regular cart */}
-                      <div className="mt-2 space-y-1 text-[11px] leading-snug text-gray-700">
-                        {(() => {
-                          let lines: string[] = [];
-                          try {
-                            lines = buildCartDisplayLines(item as any);
-                          } catch (err) {
-                            console.error('[CheckoutPage] Lines render error:', err, item);
-                            lines = [];
-                          }
-
-                          return lines.map((line, idx) => (
-                            // Keep same wing/appetizer cleanup behavior as cart sidebar.
-                            (item.name?.toLowerCase().includes('mozzarella') && line.toLowerCase().includes('ranch')) ? null : (
-                              <div key={idx} className="text-gray-700">
-                                {line}
-                              </div>
-                            )
-                          ));
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons - same style as regular cart */}
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => onRemoveItem?.(item.id)}
-                      className="text-sm text-[#A72020] font-semibold hover:text-[#8b1919] uppercase"
-                    >
-                      REMOVE
-                    </button>
-                    <button
-                      onClick={() => onEditItem?.(item.id)}
-                      className="text-sm text-[#A72020] font-semibold hover:text-[#8b1919] uppercase"
-                    >
-                      EDIT
-                    </button>
-                    <button
-                      onClick={() => onDuplicateItem?.(item.id)}
-                      className="text-sm text-[#A72020] font-semibold hover:text-[#8b1919] uppercase"
-                    >
-                      DUPLICATE
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Footer with Subtotal */}
-            <div className="sticky bottom-0 bg-gray-50 border-t px-6 py-4">
-              <div className="flex items-center justify-between text-lg">
-                <span className="font-medium">Subtotal</span>
-                <span className="font-semibold text-xl">${subtotal.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-
       {/* Header with Location and Schedule Info */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 py-6">
@@ -1096,25 +976,81 @@ export function CheckoutPage({
 
               {/* Order Items (Collapsible) */}
               {showOrderDetails && (
-                <div className="mb-4 space-y-3 border-t pt-3">
+                <div className="mb-4 space-y-4 border-t pt-3">
                   {items.map((item) => (
-                    <div key={item.id} className="flex gap-3">
-                      <div className="w-12 h-12 rounded bg-gray-100 flex-shrink-0">
-                        {item.image && (
-                          <ImageWithFallback
-                            src={item.image}
-                            alt={item.name}
-                            className="w-full h-full object-cover rounded"
-                          />
-                        )}
+                    <div key={item.id} className="pb-4 border-b border-gray-200">
+                      <div className="flex gap-3 mb-3">
+                        <div className="w-20 h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                          {item.image && (
+                            <ImageWithFallback
+                              src={item.image}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                            />
+                          )}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-extrabold text-[#404041]" style={{ fontFamily: "'Ancizar Sans', sans-serif" }}>
+                                {(() => {
+                                  try {
+                                    return buildCartDisplayTitle(item as any);
+                                  } catch (err) {
+                                    console.error('[CheckoutPage] Title render error:', err, item);
+                                    return item.name || 'Item';
+                                  }
+                                })()}
+                              </h3>
+                            </div>
+                            <span className="font-semibold text-[#A72020] whitespace-nowrap">
+                              ${(item.price * item.quantity).toFixed(2)}
+                            </span>
+                          </div>
+
+                          <div className="mt-2 space-y-1 text-[11px] leading-snug text-gray-700">
+                            {(() => {
+                              let lines: string[] = [];
+                              try {
+                                lines = buildCartDisplayLines(item as any);
+                              } catch (err) {
+                                console.error('[CheckoutPage] Lines render error:', err, item);
+                                lines = [];
+                              }
+
+                              return lines.map((line, idx) => (
+                                (item.name?.toLowerCase().includes('mozzarella') && line.toLowerCase().includes('ranch')) ? null : (
+                                  <div key={idx} className="text-gray-700">
+                                    {line}
+                                  </div>
+                                )
+                              ));
+                            })()}
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{buildCartDisplayTitle(item as any)}</p>
-                        <p className="text-xs text-gray-600">Qty: {item.quantity}</p>
+
+                      <div className="flex items-center gap-4">
+                        <button
+                          onClick={() => onRemoveItem?.(item.id)}
+                          className="text-xs text-[#A72020] font-semibold hover:text-[#8b1919] uppercase"
+                        >
+                          REMOVE
+                        </button>
+                        <button
+                          onClick={() => onEditItem?.(item.id)}
+                          className="text-xs text-[#A72020] font-semibold hover:text-[#8b1919] uppercase"
+                        >
+                          EDIT
+                        </button>
+                        <button
+                          onClick={() => onDuplicateItem?.(item.id)}
+                          className="text-xs text-[#A72020] font-semibold hover:text-[#8b1919] uppercase"
+                        >
+                          DUPLICATE
+                        </button>
                       </div>
-                      <p className="text-sm font-medium whitespace-nowrap">
-                        ${(item.price * item.quantity).toFixed(2)}
-                      </p>
                     </div>
                   ))}
                 </div>

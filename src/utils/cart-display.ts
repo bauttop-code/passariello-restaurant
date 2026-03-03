@@ -167,6 +167,9 @@ export const buildCartDisplayTitle = (item: CartItem): string => {
   }
   // Remove marketing prefixes like "*NEW*" from cart titles.
   name = name.replace(/^\s*\*?\s*new\s*\*?\s*/i, '');
+  // Legacy cleanup: some extra-side items were persisted as "1 Add Wings (10)".
+  // Keep leading quantity but drop "Add".
+  name = name.replace(/^(\d+\s+)?add\s+/i, '$1');
   name = name.trim();
 
   // Catering title normalization:
