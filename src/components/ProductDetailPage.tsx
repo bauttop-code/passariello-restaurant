@@ -2640,7 +2640,7 @@ const cheeseBurgerDeluxeNoToppings: Topping[] = [
 const hotHoagieExtraSides: Topping[] = [
   {
     id: 'hh-side-wings',
-    name: 'Wings (10)',
+    name: '10 Wings',
     price: 16.99,
     image: 'https://drive.google.com/thumbnail?id=1ujoCteMfDts1Tt-7WRf5dc6DYjbg_yoy&sz=w1000',
   },
@@ -3934,7 +3934,7 @@ const sideToppingItems = [
 
 // Extra Sides for cheesesteaks
 const extraSidesItems = [
-  { id: 'es1', name: 'Wings (10)', price: 16.99, image: 'https://drive.google.com/thumbnail?id=1ujoCteMfDts1Tt-7WRf5dc6DYjbg_yoy&sz=w1000' },
+  { id: 'es1', name: '10 Wings', price: 16.99, image: 'https://drive.google.com/thumbnail?id=1ujoCteMfDts1Tt-7WRf5dc6DYjbg_yoy&sz=w1000' },
   { id: 'es2', name: 'French Fries', price: 6.99, image: 'https://drive.google.com/thumbnail?id=1xz1mbhHg-7TJeZA0R-bgI8HqO1x8fEmP&sz=w1000?v=2' },
   { id: 'es3', name: 'Cheese FF', price: 8.49, image: 'https://drive.google.com/thumbnail?id=1SMkT74Ru2ZtYe62tK3slyVlx1GbLqhq2&sz=w1000' },
   { id: 'es4', name: 'Passariello Fries', price: 11.49, image: 'https://drive.google.com/thumbnail?id=1yEvT2uA7-8vynMXmCDhF55hi-4msjdzp&sz=w1000' },
@@ -7464,20 +7464,20 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
             .reduce((acc, opt) => acc + (typeof opt.price === 'number' ? opt.price : 0), 0)
         );
       }, 0);
-      const linePrice = ((side.price || 0) + selectedOptionsTotal) * qty;
+      const unitPrice = (side.price || 0) + selectedOptionsTotal;
 
       const sideProduct: Product = {
         id: `extra-side-${key.replace(':', '-')}`,
-        name: `${qty} ${normalizeSideLabel(side.name)}`,
+        name: normalizeSideLabel(side.name),
         description: 'Customized extra side',
-        price: `$${linePrice.toFixed(2)}`,
+        price: `$${unitPrice.toFixed(2)}`,
         image: side.image || '',
         // Use a dedicated category so cart rendering does not collapse these
         // custom side selections under appetizer-tail formatting.
         category: 'extra-sides',
       };
 
-      onAddToCart(sideProduct, 1, customizations, selections);
+      onAddToCart(sideProduct, qty, customizations, selections);
     });
   };
 

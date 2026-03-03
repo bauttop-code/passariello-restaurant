@@ -4104,13 +4104,251 @@ export default function App() {
     });
     
     setCartItems(prev => {
+      const extractedAddonSelections: CartSelection[] = [];
+      const originalCustomizations = customizations || [];
+
+      const normalizeName = (value: string) =>
+        String(value || '')
+          .toLowerCase()
+          .replace(/['’]/g, '')
+          .replace(/[^a-z0-9]+/g, ' ')
+          .trim();
+
+      const cleanSelectionLabel = (value: string) =>
+        String(value || '')
+          .replace(/\s+x\d+$/i, '')
+          .replace(/^add\s+/i, '')
+          .trim();
+
+      const isDessertCategory = (cat: string) =>
+        cat === 'desserts' || cat === 'catering-desserts' || cat === 'pizzelle' || cat === 'gelati';
+      const isBeverageCategory = (cat: string) =>
+        cat === 'beverages' || cat === 'catering-beverages';
+
+      const dessertCandidates = products.filter(p => isDessertCategory(String(p.category || '').toLowerCase()));
+      const beverageCandidates = products.filter(p => isBeverageCategory(String(p.category || '').toLowerCase()));
+      const dessertNameSet = new Set(dessertCandidates.map(p => normalizeName(String(p.name || ''))));
+      const beverageNameSet = new Set(beverageCandidates.map(p => normalizeName(String(p.name || ''))));
+      const isBaseCatering = String(product.category || '').toLowerCase().startsWith('catering-');
+      const beverageLabelPattern = /\b(20oz|2l|soda|pepsi|starry|dew|ginger ale|root beer|iced tea|water|sparkling|juice|chocolate milk)\b/i;
+      const dessertLabelPattern = /\b(cake|cookie|brownie|cannoli|tiramisu|cheesecake|lava|pie|gelato|pizzelle|mascarpone)\b/i;
+      const addonLabelsFromCustomizations = new Set<string>();
+
+      originalCustomizations.forEach(c => {
+        const category = String(c?.category || '').toLowerCase();
+        if (!category.includes('dessert') && !category.includes('beverage')) return;
+        const items = Array.isArray(c?.items) ? c.items : [];
+        items.forEach((raw: string) => {
+          const cleaned = cleanSelectionLabel(String(raw || ''));
+          if (cleaned) addonLabelsFromCustomizations.add(normalizeName(cleaned));
+        });
+      });
+
+      const classifyAddonSelection = (sel: CartSelection): 'dessert' | 'beverage' | null => {
+        const type = String(sel.type || '').toLowerCase();
+        const groupTitle = String(sel.groupTitle || '').toLowerCase();
+        const groupId = String(sel.groupId || '').toLowerCase();
+        const labelNorm = normalizeName(cleanSelectionLabel(String(sel.label || '')));
+        const rawLabel = cleanSelectionLabel(String(sel.label || ''));
+
+        if (
+          type === 'dessert' ||
+          groupTitle.includes('dessert') ||
+          groupId.includes('dessert') ||
+          dessertNameSet.has(labelNorm) ||
+          dessertLabelPattern.test(rawLabel)
+        ) {
+          return 'dessert';
+        }
+
+        if (
+          type === 'beverage' ||
+          groupTitle.includes('beverage') ||
+          groupId.includes('beverage') ||
+          beverageNameSet.has(labelNorm) ||
+          beverageLabelPattern.test(rawLabel)
+        ) {
+          return 'beverage';
+        }
+
+        return null;
+      };
+
+      const isAddonSelection = (sel: CartSelection) => {
+        return classifyAddonSelection(sel) !== null;
+      };
+
+      const parentSelections = validatedSelections.filter(sel => {
+        const isAddon = isAddonSelection(sel);
+        if (isAddon) {
+          const normalizedLabel = normalizeName(cleanSelectionLabel(String(sel.label || '')));
+          // If customizations explicitly carry addon labels, trust that list to avoid stale/ghost addon selections.
+          if (
+            addonLabelsFromCustomizations.size === 0 ||
+            addonLabelsFromCustomizations.has(normalizedLabel)
+          ) {
+            extractedAddonSelections.push(sel);
+          }
+        }
+        return !isAddon;
+      });
+
+      const parentCustomizations = (customizations || []).filter(c => {
+        const category = String(c.category || '').toLowerCase();
+        return !category.includes('dessert') && !category.includes('beverage');
+      }).map(c => {
+        const items = Array.isArray(c.items) ? c.items : [];
+        const filteredItems = items.filter((raw: string) => {
+          const label = cleanSelectionLabel(String(raw || ''));
+          const normalized = normalizeName(label);
+          const looksDessert = dessertNameSet.has(normalized) || dessertLabelPattern.test(label);
+          const looksBeverage = beverageNameSet.has(normalized) || beverageLabelPattern.test(label);
+          return !looksDessert && !looksBeverage;
+        });
+        return { ...c, items: filteredItems };
+      }).filter(c => Array.isArray(c.items) ? c.items.length > 0 : true);
+
+      const parseAddonFromSelection = (sel: CartSelection): { addonProductId: string; qty: number } | null => {
+        const rawId = String(sel.id || '');
+        const rawLabel = String(sel.label || '').trim();
+        const addonClass = classifyAddonSelection(sel);
+        const isDessert = addonClass === 'dessert';
+        const isBeverage = addonClass === 'beverage';
+
+        if (!isDessert && !isBeverage) return null;
+
+        let addonProductId = '';
+        let qty = 1;
+
+        const addonCandidatesBase = isDessert ? dessertCandidates : beverageCandidates;
+        const addonCandidates = addonCandidatesBase.slice().sort((a, b) => {
+          const aCat = String(a.category || '').toLowerCase();
+          const bCat = String(b.category || '').toLowerCase();
+          const aIsCatering = aCat.startsWith('catering-');
+          const bIsCatering = bCat.startsWith('catering-');
+          if (aIsCatering === bIsCatering) return 0;
+          return aIsCatering === isBaseCatering ? -1 : 1;
+        });
+
+        // First resolve by label to avoid cross-file ID mismatches (notably beverages).
+        if (rawLabel) {
+          const qtyFromLabel = rawLabel.match(/\s+x(\d+)$/i);
+          if (qtyFromLabel) {
+            qty = Number.parseInt(qtyFromLabel[1], 10) || 1;
+          }
+
+          const cleanLabel = cleanSelectionLabel(rawLabel);
+
+          const normalizedLabel = normalizeName(cleanLabel);
+
+          const exactByName = addonCandidates.find(
+            p => normalizeName(String(p.name || '')) === normalizedLabel
+          );
+
+          if (exactByName) {
+            addonProductId = exactByName.id;
+          } else {
+            const fuzzyByName = addonCandidates.find(p => {
+              const normalizedProduct = normalizeName(String(p.name || ''));
+              return (
+                normalizedLabel.includes(normalizedProduct) ||
+                normalizedProduct.includes(normalizedLabel)
+              );
+            });
+            if (fuzzyByName) addonProductId = fuzzyByName.id;
+          }
+        }
+
+        // Supports: dessert-<id>-qty-<n>, beverage-<id>-qty-<n>, <id>-qty-<n>
+        if (!addonProductId) {
+          const prefixedMatch = rawId.match(/^(?:dessert|beverage)-(.+)-qty-(\d+)$/i);
+          const genericMatch = rawId.match(/^(.+)-qty-(\d+)$/i);
+
+          let parsedId = '';
+          if (prefixedMatch) {
+            parsedId = prefixedMatch[1];
+            qty = Number.parseInt(prefixedMatch[2], 10) || 1;
+          } else if (genericMatch) {
+            parsedId = genericMatch[1];
+            qty = Number.parseInt(genericMatch[2], 10) || 1;
+          } else if (rawId) {
+            parsedId = rawId;
+          }
+
+          if (parsedId) {
+            const byId = addonCandidates.find(p => p.id === parsedId);
+            if (byId) addonProductId = byId.id;
+          }
+        }
+
+        if (!addonProductId) return null;
+        return { addonProductId, qty: Math.max(1, qty) };
+      };
+
+      const parseMoney = (raw: unknown): number => {
+        if (typeof raw === 'number') return raw;
+        return Number.parseFloat(String(raw ?? '').replace(/[^0-9.]/g, '')) || 0;
+      };
+
+      const addOrMergeSimpleItem = (
+        items: CartItem[],
+        addonProduct: Product,
+        addonQty: number
+      ) => {
+        const existingIndex = items.findIndex(i =>
+          i.productId === addonProduct.id &&
+          String(i.category || '').toLowerCase() === String(addonProduct.category || '').toLowerCase() &&
+          (!i.customizations || i.customizations.length === 0) &&
+          (!i.selections || i.selections.length === 0)
+        );
+
+        if (existingIndex >= 0) {
+          const current = items[existingIndex];
+          items[existingIndex] = { ...current, quantity: current.quantity + addonQty };
+          return;
+        }
+
+        items.push({
+          id: `${addonProduct.id}-${Date.now()}-${Math.random()}`,
+          productId: addonProduct.id,
+          name: addonProduct.name,
+          price: parseMoney((addonProduct as any)?.price),
+          quantity: addonQty,
+          image: addonProduct.image,
+          customizations: [],
+          selections: [],
+          category: addonProduct.category
+        });
+      };
+
       // If editing, update the specific item
       if (isEditMode && editingItemId) {
-        return prev.map(item => 
+        const updated = prev.map(item => 
           item.id === editingItemId 
-            ? { ...item, quantity, customizations: customizations || item.customizations, selections: validatedSelections }
+            ? { ...item, quantity, customizations: parentCustomizations, selections: parentSelections }
             : item
         );
+
+        // Desserts/beverages are stored as separate cart items and merged by product.
+        if (extractedAddonSelections.length > 0) {
+          const addonQtyByProductId = new Map<string, number>();
+          extractedAddonSelections.forEach(sel => {
+            const parsed = parseAddonFromSelection(sel);
+            if (!parsed) return;
+            const prevQty = addonQtyByProductId.get(parsed.addonProductId) || 0;
+            addonQtyByProductId.set(parsed.addonProductId, Math.max(prevQty, parsed.qty));
+          });
+
+          addonQtyByProductId.forEach((qtyToAdd, addonProductId) => {
+            const addonProduct = products.find(p => p.id === addonProductId);
+            if (!addonProduct) return;
+            const addonPrice = parseMoney((addonProduct as any)?.price);
+            if (addonPrice <= 0 || normalizeName(String(addonProduct.name || '')) === 'no thank you') return;
+            addOrMergeSimpleItem(updated, addonProduct, qtyToAdd);
+          });
+        }
+
+        return updated;
       }
       
       // Always add as new item with unique ID (don't merge duplicates)
@@ -4128,8 +4366,8 @@ export default function App() {
         price: normalizedPrice,
         quantity: quantity,
         image: product.image,
-        customizations: customizations || [],
-        selections: validatedSelections,
+        customizations: parentCustomizations,
+        selections: parentSelections,
         category: product.category
       };
       
@@ -4140,6 +4378,25 @@ export default function App() {
       });
       
       const nextCartItems = [...prev, newItem];
+
+      // Desserts/beverages are stored as separate cart items and merged by product.
+      if (extractedAddonSelections.length > 0) {
+        const addonQtyByProductId = new Map<string, number>();
+        extractedAddonSelections.forEach(sel => {
+          const parsed = parseAddonFromSelection(sel);
+          if (!parsed) return;
+          const prevQty = addonQtyByProductId.get(parsed.addonProductId) || 0;
+          addonQtyByProductId.set(parsed.addonProductId, Math.max(prevQty, parsed.qty));
+        });
+
+        addonQtyByProductId.forEach((qtyToAdd, addonProductId) => {
+          const addonProduct = products.find(p => p.id === addonProductId);
+          if (!addonProduct) return;
+          const addonPrice = parseMoney((addonProduct as any)?.price);
+          if (addonPrice <= 0 || normalizeName(String(addonProduct.name || '')) === 'no thank you') return;
+          addOrMergeSimpleItem(nextCartItems, addonProduct, qtyToAdd);
+        });
+      }
       
       console.log('[DEBUG] handleAddToCart → cartItems before set', {
         addedProductId: product.id,

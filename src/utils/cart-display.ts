@@ -149,6 +149,16 @@ const normalizeWingsQuantityText = (text: string): string => {
   return text;
 };
 
+const normalizeParenQuantityName = (text: string): string => {
+  const trimmed = String(text || '').trim();
+  const match = trimmed.match(/^(.*?)\s*\((\d+)\)\s*$/);
+  if (!match) return trimmed;
+  const base = String(match[1] || '').trim();
+  const qty = String(match[2] || '').trim();
+  if (!base || !qty) return trimmed;
+  return `${qty} ${base}`;
+};
+
 // --- TITLE BUILDER ---
 
 export const buildCartDisplayTitle = (item: CartItem): string => {
@@ -170,6 +180,8 @@ export const buildCartDisplayTitle = (item: CartItem): string => {
   // Legacy cleanup: some extra-side items were persisted as "1 Add Wings (10)".
   // Keep leading quantity but drop "Add".
   name = name.replace(/^(\d+\s+)?add\s+/i, '$1');
+  // Legacy cleanup: convert "Wings (10)" style names to "10 Wings".
+  name = normalizeParenQuantityName(name);
   name = name.trim();
 
   // Catering title normalization:
