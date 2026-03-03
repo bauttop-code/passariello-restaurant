@@ -5023,6 +5023,21 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       if (isCheesesteakProduct) {
         const editSelections = Array.isArray(editingCartItem.selections) ? editingCartItem.selections : [];
         const uniqueIds = (ids: string[]) => Array.from(new Set(ids.filter(Boolean)));
+        const normalizeSection = (sel: any): string => {
+          const gt = String(sel?.groupTitle || '').trim().toLowerCase();
+          const gid = String(sel?.groupId || '').trim().toLowerCase();
+          const typ = String(sel?.type || '').trim().toLowerCase();
+          if (gt.includes('toast option')) return 'toast';
+          if (gt === 'cheese' || gt.includes('cheese') || typ === 'cheese') return 'cheese';
+          if (gt === 'toppings') return 'toppings';
+          if (gt === 'extra toppings') return 'extra_toppings';
+          if (gt === 'lite toppings') return 'lite_toppings';
+          if (gt === 'no toppings') return 'no_toppings';
+          if (gt === 'on the side toppings' || gid.includes('cheesesteak_on_the_side_toppings') || gid.includes('cheesesteak_side_toppings_required')) return 'on_side_toppings';
+          if (gt === 'side toppings') return 'side_toppings';
+          if (gt.includes('add extra sides') || gt === 'extra sides' || gid.includes('extra_sides')) return 'extra_sides';
+          return '';
+        };
 
         const toastIds = new Set(['toast', 'no-toast']);
         const cheeseIds = new Set((cheeseOptions || []).map((x: any) => String(x.id)));
@@ -5068,12 +5083,13 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
             return cheeseIds.has(id) || gt === 'cheese' || typ === 'cheese';
           })?.id || '';
 
-        const toppingsFromSection = collect((sel: any) => String(sel?.groupTitle || '').trim() === 'Toppings');
-        const extraFromSection = collect((sel: any) => String(sel?.groupTitle || '').trim() === 'Extra Toppings');
-        const liteFromSection = collect((sel: any) => String(sel?.groupTitle || '').trim() === 'Lite Toppings');
-        const noFromSection = collect((sel: any) => String(sel?.groupTitle || '').trim() === 'No Toppings');
-        const sideFromSection = collect((sel: any) => String(sel?.groupTitle || '').trim() === 'Side Toppings');
-        const extraSidesFromSection = collect((sel: any) => String(sel?.groupTitle || '').toLowerCase().includes('add extra sides'));
+        const toppingsFromSection = collect((sel: any) => normalizeSection(sel) === 'toppings');
+        const extraFromSection = collect((sel: any) => normalizeSection(sel) === 'extra_toppings');
+        const liteFromSection = collect((sel: any) => normalizeSection(sel) === 'lite_toppings');
+        const noFromSection = collect((sel: any) => normalizeSection(sel) === 'no_toppings');
+        const sideFromSection = collect((sel: any) => normalizeSection(sel) === 'side_toppings');
+        const requiredSideFromSection = collect((sel: any) => normalizeSection(sel) === 'on_side_toppings');
+        const extraSidesFromSection = collect((sel: any) => normalizeSection(sel) === 'extra_sides');
 
         const selectedToppingsIds = uniqueIds([
           ...toppingsFromSection.filter((id) => baseToppingsIds.has(id) || extraToppingsIds.has(id) || liteToppingsIds.has(id) || noToppingsIds.has(id)),
@@ -5091,14 +5107,20 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
         const selectedNoToppingsIds = uniqueIds(noFromSection.filter((id) => (noToppingItems || []).some((x: any) => String(x.id) === id)));
 
         const selectedRequiredSideIds = uniqueIds(
-          sideFromSection.filter((id) => requiredSideToppingsIds.has(id))
+          [...requiredSideFromSection, ...sideFromSection].filter((id) => requiredSideToppingsIds.has(id))
         );
         const selectedRegularSideIds = uniqueIds(
           sideFromSection.filter((id) => sideToppingsIds.has(id))
         );
-        const selectedExtraSideIds = uniqueIds(
-          extraSidesFromSection.filter((id) => extraSidesIds.has(id))
-        );
+        const selectedExtraSideIdsRaw = extraSidesFromSection.filter((id) => extraSidesIds.has(id));
+        const selectedExtraSideIds = uniqueIds(selectedExtraSideIdsRaw);
+        const extraSideCounts = selectedExtraSideIdsRaw.reduce((acc, id) => {
+          acc[id] = (acc[id] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+        const selectedExtraSideIdsExpanded = selectedExtraSideIdsRaw.length > 0
+          ? selectedExtraSideIdsRaw
+          : selectedExtraSideIds;
 
         const dessertCounts: Record<string, number> = {};
         editSelections.forEach((sel: any) => {
@@ -5128,7 +5150,17 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
         setSelectedNoToppingsCheesesteak(selectedNoToppingsIds);
         setSelectedSideToppings(selectedRegularSideIds);
         setSelectedCheesesteakSideToppingsRequired(selectedRequiredSideIds);
-        setSelectedExtraSides(selectedExtraSideIds);
+        setSelectedExtraSides(selectedExtraSideIdsExpanded);
+        setExtraSideQuantities((prev) => {
+          const next: Record<string, number> = {};
+          Object.entries(prev || {}).forEach(([k, v]) => {
+            if (!k.startsWith('cheesesteak:')) next[k] = v;
+          });
+          Object.entries(extraSideCounts).forEach(([sideId, qty]) => {
+            next[makeExtraSideKey('cheesesteak', sideId)] = qty;
+          });
+          return next;
+        });
         setSelectedDesserts(dessertCounts);
         setSelectedBeverages(beverageCounts);
 
@@ -5150,6 +5182,200 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
         });
         return ids;
       };
+
+      // Primary restore path: selections (cart display is already based on this).
+      // This fills gaps where legacy customizations are incomplete per item/category.
+      const editSelections = Array.isArray(editingCartItem.selections) ? editingCartItem.selections : [];
+      if (editSelections.length > 0) {
+        const allSelIds = editSelections.map((s: any) => String(s?.id || '').trim()).filter(Boolean);
+        const allSelLabels = editSelections.map((s: any) => String(s?.label || '').trim()).filter(Boolean);
+        const idSet = new Set(allSelIds);
+
+        const parseExtraRecord = (prefix: string) => {
+          const record: Record<string, string> = {};
+          editSelections.forEach((sel: any) => {
+            const sid = String(sel?.id || '').trim();
+            if (!sid.startsWith(`${prefix}:`)) return;
+            const parts = sid.split(':');
+            if (parts.length < 3) return;
+            const optionId = parts[1];
+            const size = parts[2];
+            if (optionId && size) record[optionId] = size;
+          });
+          return record;
+        };
+
+        const resolveQtyOptionId = (validOptionIds: string[], fallbackGroupMatch: (sel: any) => boolean) => {
+          const direct = allSelIds.find((id) => validOptionIds.includes(id));
+          if (direct) return direct;
+
+          const qtySel = editSelections.find((sel: any) => fallbackGroupMatch(sel));
+          if (!qtySel) return '';
+
+          const label = String(qtySel?.label || '');
+          const countMatch = label.match(/\b(\d+)\b/);
+          if (!countMatch) return '';
+          const count = countMatch[1];
+          const asPcs = `${count}pcs`;
+          const asPc = `${count}pc`;
+          if (validOptionIds.includes(asPcs)) return asPcs;
+          if (validOptionIds.includes(asPc)) return asPc;
+          return '';
+        };
+
+        // Wings
+        const isWingsProductForEdit =
+          product.id === 'app18' ||
+          product.id === 'w1' ||
+          product.id === 'capp1' ||
+          (product.category === 'wings') ||
+          product.name.toLowerCase().includes('wings');
+        if (isWingsProductForEdit) {
+          const wingQty = resolveQtyOptionId(
+            wingsQuantityOptions.map((o) => o.id),
+            (sel) => {
+              const gid = String(sel?.groupId || '').toLowerCase();
+              const gt = String(sel?.groupTitle || '').toLowerCase();
+              const label = String(sel?.label || '').toLowerCase();
+              return gid.includes('wings_quantity') || gt === 'quantity' || label.includes('wings') || label.includes('pcs');
+            }
+          );
+          if (wingQty) setSelectedWingsQuantity(wingQty);
+
+          const wingSauceId = allSelIds.find((id) =>
+            wingsSauceOptions.some((o) => o.id === id) || chickenTendersSauceOptions.some((o) => o.id === id)
+          );
+          if (wingSauceId) setSelectedWingsSauce(wingSauceId);
+
+          const wingInstructionIds = allSelIds.filter((id) => wingsSpecialInstructionsOptions.some((o) => o.id === id));
+          if (wingInstructionIds.length > 0) setSelectedWingsSpecialInstructions(Array.from(new Set(wingInstructionIds)));
+
+          const wingsExtraSauceRecord = parseExtraRecord('wings_extra_sauce');
+          if (Object.keys(wingsExtraSauceRecord).length > 0) setSelectedWingsExtraSauce(wingsExtraSauceRecord);
+
+          const wingsExtraCheeseRanchRecord = parseExtraRecord('wings_extra_cheese_ranch');
+          if (Object.keys(wingsExtraCheeseRanchRecord).length > 0) setSelectedWingsExtraCheeseRanch(wingsExtraCheeseRanchRecord);
+        }
+
+        // Chicken Tenders
+        const isChickenTendersProductForEdit =
+          product.id === 'app6' || product.id === 'wing3' || product.id === 'capp2' || product.name.toLowerCase().includes('chicken tenders');
+        if (isChickenTendersProductForEdit) {
+          const tendersQty = resolveQtyOptionId(
+            chickenTendersQuantityOptions.map((o) => o.id),
+            (sel) => {
+              const gid = String(sel?.groupId || '').toLowerCase();
+              const gt = String(sel?.groupTitle || '').toLowerCase();
+              const label = String(sel?.label || '').toLowerCase();
+              return gid.includes('chicken_tenders_quantity') || gt === 'quantity' || label.includes('chicken tenders') || label.includes('pcs');
+            }
+          );
+          if (tendersQty) setSelectedChickenTendersQuantity(tendersQty);
+
+          const tendersSauceId = allSelIds.find((id) => chickenTendersSauceOptions.some((o) => o.id === id));
+          if (tendersSauceId) setSelectedChickenTendersSauce(tendersSauceId);
+
+          const tendersInstructionIds = allSelIds.filter((id) => chickenTendersSpecialInstructionsOptions.some((o) => o.id === id));
+          if (tendersInstructionIds.length > 0) setSelectedChickenTendersSpecialInstructions(Array.from(new Set(tendersInstructionIds)));
+
+          const tendersExtraSauceRecord = parseExtraRecord('chicken_tenders_extra_sauce');
+          if (Object.keys(tendersExtraSauceRecord).length > 0) setSelectedChickenTendersExtraSauce(tendersExtraSauceRecord);
+
+          const tendersExtraCheeseRanchRecord = parseExtraRecord('chicken_tenders_extra_cheese_ranch');
+          if (Object.keys(tendersExtraCheeseRanchRecord).length > 0) setSelectedChickenTendersExtraCheeseRanch(tendersExtraCheeseRanchRecord);
+        }
+
+        // Mozzarella Sticks
+        const isMozzarellaSticksProductForEdit =
+          product.id === 'app4' || product.id === 'wing4' || product.id === 'capp3' || product.name.toLowerCase().includes('mozzarella sticks');
+        if (isMozzarellaSticksProductForEdit) {
+          const sticksQty = resolveQtyOptionId(
+            mozzarellaSticksQuantityOptions.map((o) => o.id),
+            (sel) => {
+              const gid = String(sel?.groupId || '').toLowerCase();
+              const gt = String(sel?.groupTitle || '').toLowerCase();
+              const label = String(sel?.label || '').toLowerCase();
+              return gid.includes('mozzarella_sticks_quantity') || gt === 'quantity' || label.includes('mozzarella sticks') || label.includes('pcs');
+            }
+          );
+          if (sticksQty) setSelectedMozzarellaSticksQuantity(sticksQty);
+
+          const sticksInstructionIds = allSelIds.filter((id) => mozzarellaSticksInstructionsOptions.some((o) => o.id === id));
+          if (sticksInstructionIds.length > 0) setSelectedMozzarellaSticksInstructions(Array.from(new Set(sticksInstructionIds)));
+
+          const sticksSpecialInstructionIds = allSelIds.filter((id) => mozzarellaSticksSpecialInstructionsOptions.some((o) => o.id === id));
+          if (sticksSpecialInstructionIds.length > 0) setSelectedMozzarellaSticksSpecialInstructions(Array.from(new Set(sticksSpecialInstructionIds)));
+        }
+
+        // Arancini
+        const isAranciniProductForEdit =
+          product.id === 'app8' || product.id === 'capp4' || product.name.toLowerCase().includes('arancini');
+        if (isAranciniProductForEdit) {
+          const qtyOptions = product.id === 'app8' ? aranciniRegularQuantityOptions : aranciniQuantityOptions;
+          const aranciniQty = resolveQtyOptionId(
+            qtyOptions.map((o) => o.id),
+            (sel) => {
+              const gid = String(sel?.groupId || '').toLowerCase();
+              const gt = String(sel?.groupTitle || '').toLowerCase();
+              const label = String(sel?.label || '').toLowerCase();
+              return gid.includes('arancini_quantity') || gid.includes('arancini_regular_quantity') || gt === 'quantity' || label.includes('arancini') || label.includes('pcs') || label.includes('pc');
+            }
+          );
+          if (aranciniQty) {
+            if (product.id === 'app8') setSelectedAranciniRegularQuantity(aranciniQty);
+            else setSelectedAranciniQuantity(aranciniQty);
+          }
+
+          const aranciniInstructionIds = allSelIds.filter((id) => aranciniSpecialInstructionsOptions.some((o) => o.id === id));
+          if (aranciniInstructionIds.length > 0) {
+            if (product.id === 'app8') setSelectedAranciniRegularInstructions(Array.from(new Set(aranciniInstructionIds)));
+            else setSelectedAranciniInstructions(Array.from(new Set(aranciniInstructionIds)));
+          }
+        }
+
+        // Hot/Cold Hoagie Extra Sides (restore visual selected state + quantities)
+        const hoagieExtraSideIdsRaw = editSelections
+          .filter((sel: any) => {
+            const gt = String(sel?.groupTitle || '').toLowerCase();
+            const gid = String(sel?.groupId || '').toLowerCase();
+            const sid = String(sel?.id || '').trim();
+            return (gt.includes('add extra sides') || gt === 'extra sides' || gid.includes('extra_sides')) && !!sid && hotHoagieExtraSides.some((x: any) => String(x.id) === sid);
+          })
+          .map((sel: any) => String(sel?.id || '').trim());
+
+        if (hoagieExtraSideIdsRaw.length > 0) {
+          const counts = hoagieExtraSideIdsRaw.reduce((acc, id) => {
+            acc[id] = (acc[id] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>);
+
+          if (product.category === 'hot-hoagies') {
+            setSelectedHotHoagieSides(hoagieExtraSideIdsRaw);
+            setExtraSideQuantities((prev) => {
+              const next: Record<string, number> = {};
+              Object.entries(prev || {}).forEach(([k, v]) => {
+                if (!k.startsWith('hot-hoagie:')) next[k] = v;
+              });
+              Object.entries(counts).forEach(([sideId, qty]) => {
+                next[makeExtraSideKey('hot-hoagie', sideId)] = qty;
+              });
+              return next;
+            });
+          } else if (product.category === 'cold-hoagies') {
+            setSelectedColdHoagieExtraSides(hoagieExtraSideIdsRaw);
+            setExtraSideQuantities((prev) => {
+              const next: Record<string, number> = {};
+              Object.entries(prev || {}).forEach(([k, v]) => {
+                if (!k.startsWith('cold-hoagie:')) next[k] = v;
+              });
+              Object.entries(counts).forEach(([sideId, qty]) => {
+                next[makeExtraSideKey('cold-hoagie', sideId)] = qty;
+              });
+              return next;
+            });
+          }
+        }
+      }
       
       // Restore customizations
       if (editingCartItem.customizations) {
@@ -7249,7 +7475,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
         description: 'Customized extra side',
         price: `$${linePrice.toFixed(2)}`,
         image: side.image || '',
-        category: 'appetizers',
+        // Use a dedicated category so cart rendering does not collapse these
+        // custom side selections under appetizer-tail formatting.
+        category: 'extra-sides',
       };
 
       onAddToCart(sideProduct, 1, customizations, selections);

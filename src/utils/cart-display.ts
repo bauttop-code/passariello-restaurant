@@ -314,6 +314,10 @@ export const buildCartDisplayTitle = (item: CartItem): string => {
       }
       size = null;
   }
+  // Wings already normalize to "X Wings"; avoid duplicating with size labels like "20 pcs".
+  if (size && isWingsItem(item)) {
+      size = null;
+  }
   // ------------------------------------
 
   if (size) {
@@ -4221,6 +4225,7 @@ const getDesiredOrder = (item: CartItem): { mode: 'full' | 'tail'; sections: str
   if (category === 'catering-party-trays') return { mode: 'full', sections: ['Special Instructions', 'Party Trays', 'Included and Available Upon Request', 'Beverages'] };
   if (category === 'catering-desserts') return { mode: 'full', sections: ['Whole Cakes', 'Party Trays', 'Dessert', 'Beverages'] };
   if (category === 'catering-beverages') return { mode: 'full', sections: ['Dessert'] };
+  if (category === 'extra-sides') return { mode: 'full', sections: ['Choose Sauce', 'Special Instructions', 'Extra Toppings', 'Dessert', 'Beverages'] };
   if (category === 'appetizers') return { mode: 'tail', sections: ['Dessert', 'Beverages'] };
   if (category === 'catering-appetizers') return { mode: 'tail', sections: ['Included and Available Upon Request', 'Chafing Kit', 'Whole Cakes', 'Party Trays', 'Dessert', 'Beverages'] };
   return null;

@@ -1,6 +1,6 @@
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { useState, useEffect } from 'react';
-import { MapPin, Calendar, Lock, CreditCard, Info, X, Edit } from 'lucide-react';
+import { MapPin, Calendar, Lock, CreditCard, Info, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select';
-import { buildCartDisplayTitle } from '../utils/cart-display';
+import { buildCartDisplayTitle, buildCartDisplayLines } from '../utils/cart-display';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -25,12 +25,10 @@ import { buildCartDisplayTitle } from '../utils/cart-display';
  * Payment methods supported by the application
  * - 'card': Credit/Debit Card (internal processing)
  * - 'cash': Cash on delivery/pickup (internal processing)
- * - 'paypal': PayPal (external redirect)
  * - 'gpay': Google Pay (external redirect)
  * - 'applepay': Apple Pay (external redirect)
- * - 'venmo': Venmo (external redirect)
  */
-type PaymentMethod = 'card' | 'cash' | 'paypal' | 'gpay' | 'applepay' | 'venmo';
+type PaymentMethod = 'card' | 'cash' | 'gpay' | 'applepay';
 
 /**
  * Response from the payment checkout session creation
@@ -123,7 +121,6 @@ async function createCheckoutSession(
   
   // Mock redirect URLs (in production, these would come from your payment provider)
   const mockRedirectUrls: Record<PaymentMethod, string> = {
-    paypal: `https://www.sandbox.paypal.com/checkoutnow?token=${sessionId}`,
     gpay: `https://checkout.stripe.com/pay/${sessionId}`,
     applepay: `https://checkout.stripe.com/pay/${sessionId}`,
     card: '', // Not used for redirect
@@ -204,6 +201,9 @@ interface CheckoutPageProps {
   onEditLocation?: () => void;
   onEditSchedule?: () => void;
   onSignInClick?: () => void;
+  onEditItem?: (itemId: string) => void;
+  onDuplicateItem?: (itemId: string) => void;
+  onRemoveItem?: (itemId: string) => void;
 }
 
 export function CheckoutPage({
@@ -216,6 +216,9 @@ export function CheckoutPage({
   onEditLocation,
   onEditSchedule,
   onSignInClick,
+  onEditItem,
+  onDuplicateItem,
+  onRemoveItem,
 }: CheckoutPageProps) {
   const [includeSilverware, setIncludeSilverware] = useState<'no' | 'yes'>('no');
   const [specialInstructions, setSpecialInstructions] = useState('');
@@ -236,7 +239,9 @@ export function CheckoutPage({
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [subscribeNewsletter, setSubscribeNewsletter] = useState(false);
-  const [showOrderDetails, setShowOrderDetails] = useState(false);
+  // Keep checkout details visible by default so item breakdown remains available
+  // even after closing side panels elsewhere in the app.
+  const [showOrderDetails, setShowOrderDetails] = useState(true);
   const [addGratuity, setAddGratuity] = useState(true);
   const [gratuityPercent, setGratuityPercent] = useState(15);
   const [customGratuity, setCustomGratuity] = useState('');
@@ -375,17 +380,6 @@ export function CheckoutPage({
    */
   const getPaymentButtonConfig = () => {
     switch (paymentMethod) {
-      case 'paypal':
-        return {
-          text: 'PayPal',
-          handler: handleRedirectPayment,
-          logo: (
-            <ImageWithFallback               src="https://drive.google.com/thumbnail?id=1Ono2XZkIYYH1s7P4epA0g_8uJBRXcTBB&sz=w400" 
-              alt="PayPal" 
-              className="h-6 object-contain"
-            />
-          ),
-        };
       case 'gpay':
         return {
           text: 'Google Pay',
@@ -404,17 +398,6 @@ export function CheckoutPage({
           logo: (
             <ImageWithFallback               src="https://drive.google.com/thumbnail?id=14q2IkPdp9dE87_8w8hO9GfEwiB5NnRub&sz=w400" 
               alt="Apple Pay" 
-              className="h-6 object-contain"
-            />
-          ),
-        };
-      case 'venmo':
-        return {
-          text: 'Venmo',
-          handler: handleRedirectPayment,
-          logo: (
-            <ImageWithFallback               src="https://drive.google.com/thumbnail?id=15RBrddWrWTOQdYkag7r0pu8wug38jqko&sz=w400" 
-              alt="Venmo" 
               className="h-6 object-contain"
             />
           ),
@@ -444,7 +427,7 @@ export function CheckoutPage({
           />
           
           {/* Drawer */}
-          <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-[201] overflow-y-auto">
+          <div className="fixed right-0 top-0 h-full w-full sm:max-w-md bg-white shadow-2xl z-[201] overflow-y-auto">
             {/* Header */}
             <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
               <h2 className="text-2xl font-semibold">Order Details</h2>
@@ -459,12 +442,12 @@ export function CheckoutPage({
             </div>
 
             {/* Items List */}
-            <div className="p-6 space-y-6">
-              {items.map((item, index) => (
-                <div key={item.id}>
-                  <div className="flex gap-4">
+            <div className="p-6 space-y-4">
+              {items.map((item) => (
+                <div key={item.id} className="pb-4 border-b border-gray-200">
+                  <div className="flex gap-3 mb-3">
                     {/* Image */}
-                    <div className="w-24 h-24 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden">
+                    <div className="w-28 h-28 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                       {item.image && (
                         <ImageWithFallback
                           src={item.image}
@@ -475,50 +458,70 @@ export function CheckoutPage({
                     </div>
 
                     {/* Item Info */}
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h3 className="font-extrabold text-lg text-[#404041]" style={{ fontFamily: "'Ancizar Sans', sans-serif" }}>{item.name}</h3>
-                          <div className="inline-block px-2 py-0.5 mt-1 rounded" style={{ backgroundColor: 'rgba(139, 0, 0, 0.3)' }}>
-                            <span className="text-sm font-medium text-gray-900">Quantity: {item.quantity}</span>
-                          </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-extrabold text-lg text-[#404041]" style={{ fontFamily: "'Ancizar Sans', sans-serif" }}>
+                            {(() => {
+                              try {
+                                return buildCartDisplayTitle(item as any);
+                              } catch (err) {
+                                console.error('[CheckoutPage] Title render error:', err, item);
+                                return item.name || 'Item';
+                              }
+                            })()}
+                          </h3>
                         </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-[#A72020] border-[#A72020] hover:bg-[#A72020] hover:text-white"
-                        >
-                          <Edit className="w-4 h-4 mr-1" />
-                          Edit
-                        </Button>
+                        <span className="font-semibold text-[#A72020] whitespace-nowrap">
+                          ${(item.price * item.quantity).toFixed(2)}
+                        </span>
                       </div>
-                      
-                      <p className="font-semibold text-lg text-[#A72020]">
-                        ${(item.price * item.quantity).toFixed(2)}
-                      </p>
 
-                      {/* Customizations */}
-                      {item.customizations && item.customizations.length > 0 && (
-                        <div className="mt-4 space-y-3">
-                          {item.customizations.map((customization, idx) => (
-                            <div key={idx} className="bg-gray-50 p-3 rounded-lg">
-                              <p className="font-medium text-sm text-gray-700 mb-1">
-                                {customization.category}
-                              </p>
-                              <ul className="text-sm text-gray-600 space-y-0.5">
-                                {customization.items.map((custItem, custIdx) => (
-                                  <li key={custIdx} className="pl-2">• {custItem}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                      {/* Same detail formatting rules as the regular cart */}
+                      <div className="mt-2 space-y-1 text-[11px] leading-snug text-gray-700">
+                        {(() => {
+                          let lines: string[] = [];
+                          try {
+                            lines = buildCartDisplayLines(item as any);
+                          } catch (err) {
+                            console.error('[CheckoutPage] Lines render error:', err, item);
+                            lines = [];
+                          }
+
+                          return lines.map((line, idx) => (
+                            // Keep same wing/appetizer cleanup behavior as cart sidebar.
+                            (item.name?.toLowerCase().includes('mozzarella') && line.toLowerCase().includes('ranch')) ? null : (
+                              <div key={idx} className="text-gray-700">
+                                {line}
+                              </div>
+                            )
+                          ));
+                        })()}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Separator between items */}
-                  {index < items.length - 1 && <Separator className="mt-6" />}
+                  {/* Action Buttons - same style as regular cart */}
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => onRemoveItem?.(item.id)}
+                      className="text-sm text-[#A72020] font-semibold hover:text-[#8b1919] uppercase"
+                    >
+                      REMOVE
+                    </button>
+                    <button
+                      onClick={() => onEditItem?.(item.id)}
+                      className="text-sm text-[#A72020] font-semibold hover:text-[#8b1919] uppercase"
+                    >
+                      EDIT
+                    </button>
+                    <button
+                      onClick={() => onDuplicateItem?.(item.id)}
+                      className="text-sm text-[#A72020] font-semibold hover:text-[#8b1919] uppercase"
+                    >
+                      DUPLICATE
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -833,25 +836,6 @@ export function CheckoutPage({
                           </div>
                         </div>
 
-                        {/* PayPal */}
-                        <div 
-                          onClick={() => setPaymentMethod('paypal')}
-                          className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${
-                            paymentMethod === 'paypal' ? 'border-[#A72020] bg-orange-50' : 'border-gray-300 hover:border-gray-400'
-                          }`}
-                        >
-                          <div className="flex items-center justify-start space-x-3">
-                            <RadioGroupItem value="paypal" id="payment-paypal" className="flex-shrink-0" />
-                            <Label htmlFor="payment-paypal" className="cursor-pointer font-medium flex items-center gap-2">
-                              <ImageWithFallback                                 src="https://drive.google.com/thumbnail?id=1Ono2XZkIYYH1s7P4epA0g_8uJBRXcTBB&sz=w400" 
-                                alt="PayPal" 
-                                className="w-6 h-6 object-contain flex-shrink-0"
-                              />
-                              <span>PayPal</span>
-                            </Label>
-                          </div>
-                        </div>
-
                         {/* Google Pay */}
                         <div 
                           onClick={() => setPaymentMethod('gpay')}
@@ -890,40 +874,8 @@ export function CheckoutPage({
                           </div>
                         </div>
 
-                        {/* Venmo */}
-                        <div 
-                          onClick={() => setPaymentMethod('venmo')}
-                          className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${
-                            paymentMethod === 'venmo' ? 'border-[#A72020] bg-orange-50' : 'border-gray-300 hover:border-gray-400'
-                          }`}
-                        >
-                          <div className="flex items-center justify-start space-x-3">
-                            <RadioGroupItem value="venmo" id="payment-venmo" className="flex-shrink-0" />
-                            <Label htmlFor="payment-venmo" className="cursor-pointer font-medium flex items-center gap-2">
-                              <ImageWithFallback                                 src="https://drive.google.com/thumbnail?id=15RBrddWrWTOQdYkag7r0pu8wug38jqko&sz=w400" 
-                                alt="Venmo" 
-                                className="w-5 h-5 object-contain flex-shrink-0"
-                              />
-                              <span>Venmo</span>
-                            </Label>
-                          </div>
-                        </div>
                       </div>
                     </RadioGroup>
-
-                    {/* PayPal Info Message */}
-                    {paymentMethod === 'paypal' && (
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <div className="flex items-start gap-3">
-                          <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                          <div>
-                            <p className="text-sm text-gray-700">
-                              We will be using your PayPal account information to contact you for your order. You'll be redirected to PayPal to complete your payment securely.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
 
                     {/* Google Pay Info Message */}
                     {paymentMethod === 'gpay' && (
@@ -947,20 +899,6 @@ export function CheckoutPage({
                           <div>
                             <p className="text-sm text-gray-700">
                               You'll be redirected to complete payment securely with Apple Pay.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Venmo Info Message */}
-                    {paymentMethod === 'venmo' && (
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <div className="flex items-start gap-3">
-                          <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                          <div>
-                            <p className="text-sm text-gray-700">
-                              You'll be redirected to complete payment securely with Venmo.
                             </p>
                           </div>
                         </div>
@@ -1356,7 +1294,7 @@ export function CheckoutPage({
               {/* Place Order Button */}
               <Button
                 className={`w-full text-white py-6 text-lg flex items-center justify-center gap-3 ${
-                  paymentMethod === 'paypal' || paymentMethod === 'gpay' || paymentMethod === 'applepay' || paymentMethod === 'venmo'
+                  paymentMethod === 'gpay' || paymentMethod === 'applepay'
                     ? 'bg-black hover:bg-gray-800'
                     : 'bg-[#A72020] hover:bg-[#8B1A1A]'
                 }`}

@@ -4347,6 +4347,9 @@ export default function App() {
           setOpenCart(true);
         }}
         onSignInClick={() => setViewMode('login')}
+        onEditItem={handleEditCartItem}
+        onDuplicateItem={handleDuplicateCartItem}
+        onRemoveItem={handleRemoveCartItem}
       />
     );
   }
