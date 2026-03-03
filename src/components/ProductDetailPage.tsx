@@ -3934,14 +3934,14 @@ const sideToppingItems = [
 
 // Extra Sides for cheesesteaks
 const extraSidesItems = [
-  { id: 'es1', name: 'Add Wings (10)', price: 16.99, image: 'https://drive.google.com/thumbnail?id=1ujoCteMfDts1Tt-7WRf5dc6DYjbg_yoy&sz=w1000' },
-  { id: 'es2', name: 'Add French Fries', price: 6.99, image: 'https://drive.google.com/thumbnail?id=1xz1mbhHg-7TJeZA0R-bgI8HqO1x8fEmP&sz=w1000?v=2' },
-  { id: 'es3', name: 'Add Cheese FF', price: 8.49, image: 'https://drive.google.com/thumbnail?id=1SMkT74Ru2ZtYe62tK3slyVlx1GbLqhq2&sz=w1000' },
-  { id: 'es4', name: 'Add Passariello Fries', price: 11.49, image: 'https://drive.google.com/thumbnail?id=1yEvT2uA7-8vynMXmCDhF55hi-4msjdzp&sz=w1000' },
-  { id: 'es5', name: 'Add Mozzarella Sticks', price: 9.49, image: 'https://drive.google.com/thumbnail?id=1YysXjcJI-WRuuMOiCKasAEMYkyP-eEPS&sz=w1000' },
-  { id: 'es6', name: 'Add Onion Rings', price: 7.99, image: 'https://drive.google.com/thumbnail?id=1YmMbZudkfZVNhXnkb9Yor9PMACEErYH9&sz=w1000' },
-  { id: 'es7', name: 'Add Broccoli Cheddar Bites', price: 9.99, image: 'https://drive.google.com/thumbnail?id=1YQwDMyCE_VQZUMvTAb9OGhVbQElts9y1&sz=w1000' },
-  { id: 'es8', name: 'Add Mac & Cheese Bites', price: 12.49, image: 'https://drive.google.com/thumbnail?id=1fBJdkpy8gqwTmdvrQoPevQ7Ypsrbb2CX&sz=w1000' },
+  { id: 'es1', name: 'Wings (10)', price: 16.99, image: 'https://drive.google.com/thumbnail?id=1ujoCteMfDts1Tt-7WRf5dc6DYjbg_yoy&sz=w1000' },
+  { id: 'es2', name: 'French Fries', price: 6.99, image: 'https://drive.google.com/thumbnail?id=1xz1mbhHg-7TJeZA0R-bgI8HqO1x8fEmP&sz=w1000?v=2' },
+  { id: 'es3', name: 'Cheese FF', price: 8.49, image: 'https://drive.google.com/thumbnail?id=1SMkT74Ru2ZtYe62tK3slyVlx1GbLqhq2&sz=w1000' },
+  { id: 'es4', name: 'Passariello Fries', price: 11.49, image: 'https://drive.google.com/thumbnail?id=1yEvT2uA7-8vynMXmCDhF55hi-4msjdzp&sz=w1000' },
+  { id: 'es5', name: 'Mozzarella Sticks', price: 9.49, image: 'https://drive.google.com/thumbnail?id=1YysXjcJI-WRuuMOiCKasAEMYkyP-eEPS&sz=w1000' },
+  { id: 'es6', name: 'Onion Rings', price: 7.99, image: 'https://drive.google.com/thumbnail?id=1YmMbZudkfZVNhXnkb9Yor9PMACEErYH9&sz=w1000' },
+  { id: 'es7', name: 'Broccoli Cheddar Bites', price: 9.99, image: 'https://drive.google.com/thumbnail?id=1YQwDMyCE_VQZUMvTAb9OGhVbQElts9y1&sz=w1000' },
+  { id: 'es8', name: 'Mac & Cheese Bites', price: 12.49, image: 'https://drive.google.com/thumbnail?id=1fBJdkpy8gqwTmdvrQoPevQ7Ypsrbb2CX&sz=w1000' },
 ];
 
 // Add Toppings for regular cheesesteaks
@@ -7191,10 +7191,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
   };
 
   const normalizeSideLabel = (name: string) => {
-    if (name.toLowerCase().includes('wings') && !name.toLowerCase().startsWith('add ')) {
-      return `Add ${name}`;
-    }
-    return name;
+    return String(name || '').replace(/^add\s+/i, '').trim();
   };
 
   const stripExtraSidesFromParent = (customizations: CartItemCustomization[], filteredSelections: CartSelection[]) => {
