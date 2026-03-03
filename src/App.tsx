@@ -4274,9 +4274,41 @@ export default function App() {
     // Find the cart item first to get the productId
     const cartItem = cartItems.find(i => i.id === itemId);
     if (!cartItem) return;
-    
-    // Then find the product by productId
-    const product = products.find(p => p.id === cartItem.productId);
+
+    const resolveExtraSideProduct = () => {
+      const normalizedName = String(cartItem.name || '')
+        .toLowerCase()
+        .replace(/^\d+\s+/, '')
+        .replace(/^add\s+/, '')
+        .trim();
+
+      const candidates: string[] = [];
+      if (normalizedName.includes('wings')) candidates.push('w1', 'app18', 'capp1');
+      if (normalizedName.includes('french fries')) candidates.push('app9');
+      if (normalizedName.includes('cheese ff')) candidates.push('app10');
+      if (normalizedName.includes('passariello fries')) candidates.push('app11');
+      if (normalizedName.includes('mozzarella sticks')) candidates.push('app4', 'wing4', 'capp3');
+      if (normalizedName.includes('onion rings')) candidates.push('app5');
+      if (normalizedName.includes('broccoli cheddar bites')) candidates.push('app7');
+      if (normalizedName.includes('mac & cheese bites')) candidates.push('app13');
+
+      for (const id of candidates) {
+        const found = products.find((p) => p.id === id);
+        if (found) return found;
+      }
+      return null;
+    };
+
+    // First try direct lookup by productId, then fallback for synthetic extra-side items.
+    let product = products.find(p => p.id === cartItem.productId);
+    if (!product) {
+      const pid = String(cartItem.productId || '').toLowerCase();
+      const isExtraSideSynthetic = pid.startsWith('extra-side-') || String(cartItem.category || '').toLowerCase() === 'extra-sides';
+      if (isExtraSideSynthetic) {
+        product = resolveExtraSideProduct();
+      }
+    }
+
     if (product) {
       setScrollPosition(window.scrollY);
       setSelectedProduct(product);
