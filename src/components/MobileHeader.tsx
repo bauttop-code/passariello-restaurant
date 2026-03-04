@@ -78,6 +78,7 @@ const regularCategories: Category[] = [
   { id: 'create-salad', name: 'Create Your Own Salad' },
   { id: 'salads-soups', name: 'Specialty Salad & Soup' },
   { id: 'kids', name: "KID'S MENU" },
+  { id: 'dippings', name: 'Dippings' },
   { id: 'desserts', name: 'Dessert' },
   { id: 'beverages', name: 'Beverage' },
 ];

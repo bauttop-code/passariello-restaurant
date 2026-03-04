@@ -2220,6 +2220,47 @@ const products: Product[] = [
     image: 'https://drive.google.com/thumbnail?id=1dJv9IQB4oI22VT1Odktxcfpw-4ktW4dr&sz=w1000',
     category: 'kids',
   },
+  // Dippings
+  {
+    id: 'dip1',
+    name: 'Buttermilk Ranch',
+    description: 'Creamy buttermilk ranch dipping sauce.',
+    price: '$0.99',
+    image: 'https://drive.google.com/thumbnail?id=1gg-seSYp4hX9UT15c7A9ZrGTM1TJ5yyn&sz=w1000',
+    category: 'dippings',
+  },
+  {
+    id: 'dip2',
+    name: 'Honey Mustard',
+    description: 'Sweet and tangy honey mustard dipping sauce.',
+    price: '$0.99',
+    image: 'https://drive.google.com/thumbnail?id=1sV3UZuL6-qCasnXuPPD-AkEB3mJxMbWz&sz=w1000',
+    category: 'dippings',
+  },
+  {
+    id: 'dip3',
+    name: 'Bleu Cheese',
+    description: 'Classic bleu cheese dipping sauce.',
+    price: '$0.99',
+    image: 'https://drive.google.com/thumbnail?id=1l7hbAOb2nRDIZhvXO-PiCHf11TT6ETHa&sz=w1000',
+    category: 'dippings',
+  },
+  {
+    id: 'dip4',
+    name: "Mike's Hot Honey",
+    description: "Mike's hot honey dipping cup.",
+    price: '$0.99',
+    image: 'https://drive.google.com/thumbnail?id=1yGcjRyQUN69HbimNMhQrwelfnmreHQVt&sz=w1000',
+    category: 'dippings',
+  },
+  {
+    id: 'dip5',
+    name: "Mike's Extra Hot Honey",
+    description: "Mike's extra hot honey dipping cup.",
+    price: '$0.99',
+    image: 'https://drive.google.com/thumbnail?id=1QVqzo165ww-zucP-8xRqPpTw4HToih-Q&sz=w1000',
+    category: 'dippings',
+  },
   // Desserts
   {
     id: 'd1',
@@ -4124,27 +4165,68 @@ export default function App() {
         cat === 'desserts' || cat === 'catering-desserts' || cat === 'pizzelle' || cat === 'gelati';
       const isBeverageCategory = (cat: string) =>
         cat === 'beverages' || cat === 'catering-beverages';
+      const isDippingCategory = (cat: string) =>
+        cat === 'dippings';
 
       const dessertCandidates = products.filter(p => isDessertCategory(String(p.category || '').toLowerCase()));
       const beverageCandidates = products.filter(p => isBeverageCategory(String(p.category || '').toLowerCase()));
+      const dippingCandidates = products.filter(p => isDippingCategory(String(p.category || '').toLowerCase()));
       const dessertNameSet = new Set(dessertCandidates.map(p => normalizeName(String(p.name || ''))));
       const beverageNameSet = new Set(beverageCandidates.map(p => normalizeName(String(p.name || ''))));
+      const dippingNameSet = new Set(dippingCandidates.map(p => normalizeName(String(p.name || ''))));
       const isBaseCatering = String(product.category || '').toLowerCase().startsWith('catering-');
       const beverageLabelPattern = /\b(20oz|2l|soda|pepsi|starry|dew|ginger ale|root beer|iced tea|water|sparkling|juice|chocolate milk)\b/i;
       const dessertLabelPattern = /\b(cake|cookie|brownie|cannoli|tiramisu|cheesecake|lava|pie|gelato|pizzelle|mascarpone)\b/i;
+      const dippingLabelPattern = /\b(ranch|mustard|bleu cheese|mikes hot honey|mike s hot honey|extra hot honey)\b/i;
       const addonLabelsFromCustomizations = new Set<string>();
+      const addonSelectionsFromCustomizations: CartSelection[] = [];
 
       originalCustomizations.forEach(c => {
         const category = String(c?.category || '').toLowerCase();
-        if (!category.includes('dessert') && !category.includes('beverage')) return;
+        const categoryIsAddon =
+          category.includes('dessert') ||
+          category.includes('beverage') ||
+          category.includes('dipping');
+        if (!categoryIsAddon) return;
         const items = Array.isArray(c?.items) ? c.items : [];
         items.forEach((raw: string) => {
-          const cleaned = cleanSelectionLabel(String(raw || ''));
+          const source = String(raw || '');
+          const qtyMatch = source.match(/\s+x(\d+)$/i);
+          const qty = qtyMatch ? Number.parseInt(qtyMatch[1], 10) || 1 : 1;
+          const cleaned = cleanSelectionLabel(source);
           if (cleaned) addonLabelsFromCustomizations.add(normalizeName(cleaned));
+
+          const normalized = normalizeName(cleaned);
+          let type: CartSelection['type'] | null = null;
+          let groupId = 'addons';
+          let groupTitle = 'Add Ons';
+          if (category.includes('dessert') || dessertNameSet.has(normalized) || dessertLabelPattern.test(cleaned)) {
+            type = 'dessert';
+            groupId = 'desserts';
+            groupTitle = 'Would You Like a Dessert?';
+          } else if (category.includes('beverage') || beverageNameSet.has(normalized) || beverageLabelPattern.test(cleaned)) {
+            type = 'beverage';
+            groupId = 'beverages';
+            groupTitle = 'Would You Like a Beverage?';
+          } else if (category.includes('dipping') || dippingNameSet.has(normalized) || dippingLabelPattern.test(cleaned)) {
+            type = 'other';
+            groupId = 'dippings';
+            groupTitle = 'Add Dippings (Optional)';
+          }
+
+          if (type) {
+            addonSelectionsFromCustomizations.push({
+              id: cleaned,
+              label: `${cleaned} x${qty}`,
+              type,
+              groupId,
+              groupTitle
+            });
+          }
         });
       });
 
-      const classifyAddonSelection = (sel: CartSelection): 'dessert' | 'beverage' | null => {
+      const classifyAddonSelection = (sel: CartSelection): 'dessert' | 'beverage' | 'dipping' | null => {
         const type = String(sel.type || '').toLowerCase();
         const groupTitle = String(sel.groupTitle || '').toLowerCase();
         const groupId = String(sel.groupId || '').toLowerCase();
@@ -4171,6 +4253,16 @@ export default function App() {
           return 'beverage';
         }
 
+        if (
+          type === 'dipping' ||
+          groupTitle.includes('dipping') ||
+          groupId.includes('dipping') ||
+          dippingNameSet.has(labelNorm) ||
+          dippingLabelPattern.test(rawLabel)
+        ) {
+          return 'dipping';
+        }
+
         return null;
       };
 
@@ -4195,7 +4287,7 @@ export default function App() {
 
       const parentCustomizations = (customizations || []).filter(c => {
         const category = String(c.category || '').toLowerCase();
-        return !category.includes('dessert') && !category.includes('beverage');
+        return !category.includes('dessert') && !category.includes('beverage') && !category.includes('dipping');
       }).map(c => {
         const items = Array.isArray(c.items) ? c.items : [];
         const filteredItems = items.filter((raw: string) => {
@@ -4203,7 +4295,8 @@ export default function App() {
           const normalized = normalizeName(label);
           const looksDessert = dessertNameSet.has(normalized) || dessertLabelPattern.test(label);
           const looksBeverage = beverageNameSet.has(normalized) || beverageLabelPattern.test(label);
-          return !looksDessert && !looksBeverage;
+          const looksDipping = dippingNameSet.has(normalized) || dippingLabelPattern.test(label);
+          return !looksDessert && !looksBeverage && !looksDipping;
         });
         return { ...c, items: filteredItems };
       }).filter(c => Array.isArray(c.items) ? c.items.length > 0 : true);
@@ -4214,13 +4307,18 @@ export default function App() {
         const addonClass = classifyAddonSelection(sel);
         const isDessert = addonClass === 'dessert';
         const isBeverage = addonClass === 'beverage';
+        const isDipping = addonClass === 'dipping';
 
-        if (!isDessert && !isBeverage) return null;
+        if (!isDessert && !isBeverage && !isDipping) return null;
 
         let addonProductId = '';
         let qty = 1;
 
-        const addonCandidatesBase = isDessert ? dessertCandidates : beverageCandidates;
+        const addonCandidatesBase = isDessert
+          ? dessertCandidates
+          : isBeverage
+            ? beverageCandidates
+            : dippingCandidates;
         const addonCandidates = addonCandidatesBase.slice().sort((a, b) => {
           const aCat = String(a.category || '').toLowerCase();
           const bCat = String(b.category || '').toLowerCase();
@@ -4261,7 +4359,7 @@ export default function App() {
 
         // Supports: dessert-<id>-qty-<n>, beverage-<id>-qty-<n>, <id>-qty-<n>
         if (!addonProductId) {
-          const prefixedMatch = rawId.match(/^(?:dessert|beverage)-(.+)-qty-(\d+)$/i);
+          const prefixedMatch = rawId.match(/^(?:dessert|beverage|dipping)-(.+)-qty-(\d+)$/i);
           const genericMatch = rawId.match(/^(.+)-qty-(\d+)$/i);
 
           let parsedId = '';
@@ -4288,6 +4386,51 @@ export default function App() {
       const parseMoney = (raw: unknown): number => {
         if (typeof raw === 'number') return raw;
         return Number.parseFloat(String(raw ?? '').replace(/[^0-9.]/g, '')) || 0;
+      };
+
+      const normalizeCustomizationsForKey = (list?: CartItemCustomization[]) => {
+        const source = Array.isArray(list) ? list : [];
+        return source
+          .map((c) => ({
+            category: String(c?.category || '').trim().toLowerCase(),
+            items: (Array.isArray(c?.items) ? c.items : [])
+              .map((v) => String(v || '').trim().toLowerCase())
+              .sort(),
+          }))
+          .sort((a, b) => a.category.localeCompare(b.category));
+      };
+
+      const normalizeSelectionsForKey = (list?: CartSelection[]) => {
+        const source = Array.isArray(list) ? list : [];
+        return source
+          .map((s) => ({
+            id: String(s?.id || '').trim().toLowerCase(),
+            label: String(s?.label || '').trim().toLowerCase(),
+            type: String(s?.type || '').trim().toLowerCase(),
+            groupId: String(s?.groupId || '').trim().toLowerCase(),
+            groupTitle: String(s?.groupTitle || '').trim().toLowerCase(),
+            distribution: String(s?.distribution || '').trim().toLowerCase(),
+            beverageCategory: String(s?.beverageCategory || '').trim().toLowerCase(),
+            removedIngredients: Array.isArray(s?.removedIngredients)
+              ? s.removedIngredients.map((v) => String(v || '').trim().toLowerCase()).sort()
+              : [],
+          }))
+          .sort((a, b) =>
+            `${a.type}|${a.groupId}|${a.id}|${a.label}`.localeCompare(
+              `${b.type}|${b.groupId}|${b.id}|${b.label}`
+            )
+          );
+      };
+
+      const buildCartItemMergeKey = (item: CartItem) => {
+        const priceKey = Number(parseMoney(item.price).toFixed(2));
+        return JSON.stringify({
+          productId: String(item.productId || '').toLowerCase(),
+          category: String(item.category || '').toLowerCase(),
+          price: priceKey,
+          customizations: normalizeCustomizationsForKey(item.customizations),
+          selections: normalizeSelectionsForKey(item.selections),
+        });
       };
 
       const addOrMergeSimpleItem = (
@@ -4321,6 +4464,102 @@ export default function App() {
         });
       };
 
+      const addOrMergeSyntheticDipping = (
+        items: CartItem[],
+        dippingName: string,
+        dippingQty: number,
+        dippingPrice: number
+      ) => {
+        const normalized = normalizeName(dippingName);
+        const existingIndex = items.findIndex(i =>
+          String(i.category || '').toLowerCase() === 'dippings' &&
+          normalizeName(String(i.name || '')) === normalized &&
+          (!i.customizations || i.customizations.length === 0) &&
+          (!i.selections || i.selections.length === 0)
+        );
+
+        if (existingIndex >= 0) {
+          const current = items[existingIndex];
+          items[existingIndex] = { ...current, quantity: current.quantity + dippingQty };
+          return;
+        }
+
+        const matchedImage = dippingCandidates.find(c => normalizeName(String(c.name || '')) === normalized)?.image;
+        items.push({
+          id: `synthetic-dipping-${Date.now()}-${Math.random()}`,
+          productId: `synthetic-dipping-${normalized.replace(/\s+/g, '-')}`,
+          name: dippingName,
+          price: dippingPrice,
+          quantity: dippingQty,
+          image: matchedImage || '',
+          customizations: [],
+          selections: [],
+          category: 'dippings'
+        });
+      };
+
+      const parseDippingFallback = (sel: CartSelection): { name: string; qty: number; price: number } | null => {
+        if (classifyAddonSelection(sel) !== 'dipping') return null;
+        const rawLabel = String(sel.label || '').trim();
+        if (!rawLabel) return null;
+
+        let qty = 1;
+        const suffixQty = rawLabel.match(/\s+x(\d+)$/i);
+        const prefixQty = rawLabel.match(/^\((\d+)\)\s*/);
+        if (suffixQty) qty = Number.parseInt(suffixQty[1], 10) || 1;
+        else if (prefixQty) qty = Number.parseInt(prefixQty[1], 10) || 1;
+
+        let name = cleanSelectionLabel(rawLabel).replace(/^\(\d+\)\s*/, '').trim();
+        if (!name) name = rawLabel;
+        const price = typeof (sel as any)?.price === 'number' ? Number((sel as any).price) : 0;
+        return { name, qty: Math.max(1, qty), price: Number.isFinite(price) ? price : 0 };
+      };
+
+      const applyStandaloneAddons = (items: CartItem[]) => {
+        const allAddonSelections = [...extractedAddonSelections, ...addonSelectionsFromCustomizations];
+        if (allAddonSelections.length === 0) return;
+
+        const addonQtyByProductId = new Map<string, number>();
+        const syntheticDippings = new Map<string, { name: string; qty: number; price: number }>();
+
+        allAddonSelections.forEach(sel => {
+          const parsed = parseAddonFromSelection(sel);
+          if (parsed) {
+            const prevQty = addonQtyByProductId.get(parsed.addonProductId) || 0;
+            addonQtyByProductId.set(parsed.addonProductId, Math.max(prevQty, parsed.qty));
+            return;
+          }
+
+          const fallback = parseDippingFallback(sel);
+          if (!fallback) return;
+          const key = normalizeName(fallback.name);
+          const prev = syntheticDippings.get(key);
+          if (!prev) {
+            syntheticDippings.set(key, fallback);
+            return;
+          }
+          syntheticDippings.set(key, {
+            name: prev.name,
+            qty: Math.max(prev.qty, fallback.qty),
+            price: Math.max(prev.price, fallback.price)
+          });
+        });
+
+        addonQtyByProductId.forEach((qtyToAdd, addonProductId) => {
+          const addonProduct = products.find(p => p.id === addonProductId);
+          if (!addonProduct) return;
+          const addonPrice = parseMoney((addonProduct as any)?.price);
+          const addonCategory = String(addonProduct.category || '').toLowerCase();
+          if (normalizeName(String(addonProduct.name || '')) === 'no thank you') return;
+          if (addonPrice <= 0 && addonCategory !== 'dippings') return;
+          addOrMergeSimpleItem(items, addonProduct, qtyToAdd);
+        });
+
+        syntheticDippings.forEach(({ name, qty, price }) => {
+          addOrMergeSyntheticDipping(items, name, qty, price);
+        });
+      };
+
       // If editing, update the specific item
       if (isEditMode && editingItemId) {
         const updated = prev.map(item => 
@@ -4328,30 +4567,12 @@ export default function App() {
             ? { ...item, quantity, customizations: parentCustomizations, selections: parentSelections }
             : item
         );
-
-        // Desserts/beverages are stored as separate cart items and merged by product.
-        if (extractedAddonSelections.length > 0) {
-          const addonQtyByProductId = new Map<string, number>();
-          extractedAddonSelections.forEach(sel => {
-            const parsed = parseAddonFromSelection(sel);
-            if (!parsed) return;
-            const prevQty = addonQtyByProductId.get(parsed.addonProductId) || 0;
-            addonQtyByProductId.set(parsed.addonProductId, Math.max(prevQty, parsed.qty));
-          });
-
-          addonQtyByProductId.forEach((qtyToAdd, addonProductId) => {
-            const addonProduct = products.find(p => p.id === addonProductId);
-            if (!addonProduct) return;
-            const addonPrice = parseMoney((addonProduct as any)?.price);
-            if (addonPrice <= 0 || normalizeName(String(addonProduct.name || '')) === 'no thank you') return;
-            addOrMergeSimpleItem(updated, addonProduct, qtyToAdd);
-          });
-        }
+        applyStandaloneAddons(updated);
 
         return updated;
       }
       
-      // Always add as new item with unique ID (don't merge duplicates)
+      // Merge exact same item configuration (product + options) by increasing quantity.
       const uniqueId = `${product.id}-${Date.now()}-${Math.random()}`;
       const rawPrice = (product as any)?.price;
       const normalizedPrice =
@@ -4377,26 +4598,14 @@ export default function App() {
         selectionsStored: newItem.selections?.length || 0
       });
       
-      const nextCartItems = [...prev, newItem];
-
-      // Desserts/beverages are stored as separate cart items and merged by product.
-      if (extractedAddonSelections.length > 0) {
-        const addonQtyByProductId = new Map<string, number>();
-        extractedAddonSelections.forEach(sel => {
-          const parsed = parseAddonFromSelection(sel);
-          if (!parsed) return;
-          const prevQty = addonQtyByProductId.get(parsed.addonProductId) || 0;
-          addonQtyByProductId.set(parsed.addonProductId, Math.max(prevQty, parsed.qty));
-        });
-
-        addonQtyByProductId.forEach((qtyToAdd, addonProductId) => {
-          const addonProduct = products.find(p => p.id === addonProductId);
-          if (!addonProduct) return;
-          const addonPrice = parseMoney((addonProduct as any)?.price);
-          if (addonPrice <= 0 || normalizeName(String(addonProduct.name || '')) === 'no thank you') return;
-          addOrMergeSimpleItem(nextCartItems, addonProduct, qtyToAdd);
-        });
-      }
+      const newItemKey = buildCartItemMergeKey(newItem);
+      const existingIndex = prev.findIndex(item => buildCartItemMergeKey(item) === newItemKey);
+      const nextCartItems = existingIndex >= 0
+        ? prev.map((item, idx) =>
+            idx === existingIndex ? { ...item, quantity: item.quantity + quantity } : item
+          )
+        : [...prev, newItem];
+      applyStandaloneAddons(nextCartItems);
       
       console.log('[DEBUG] handleAddToCart → cartItems before set', {
         addedProductId: product.id,
@@ -4532,6 +4741,15 @@ export default function App() {
     const cartItem = cartItems.find(i => i.id === itemId);
     if (!cartItem) return;
 
+    const normalizeName = (value: string) =>
+      String(value || '')
+        .toLowerCase()
+        .replace(/^\d+\s+/, '')
+        .replace(/^add\s+/i, '')
+        .replace(/['’]/g, '')
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim();
+
     const resolveExtraSideProduct = () => {
       const normalizedName = String(cartItem.name || '')
         .toLowerCase()
@@ -4556,13 +4774,56 @@ export default function App() {
       return null;
     };
 
-    // First try direct lookup by productId, then fallback for synthetic extra-side items.
-    let product = products.find(p => p.id === cartItem.productId);
+    const resolveByNameAndCategory = () => {
+      const nameNorm = normalizeName(String(cartItem.name || ''));
+      const cartCategory = String(cartItem.category || '').toLowerCase();
+
+      const candidates = products.filter((p) => {
+        const pCat = String(p.category || '').toLowerCase();
+        if (cartCategory.includes('beverage')) return pCat.includes('beverage');
+        if (cartCategory.includes('dessert') || cartCategory === 'pizzelle' || cartCategory === 'gelati') {
+          return pCat.includes('dessert') || pCat === 'pizzelle' || pCat === 'gelati';
+        }
+        if (cartCategory.includes('dipping')) return pCat.includes('dipping');
+        return true;
+      });
+
+      const exact = candidates.find((p) => normalizeName(String(p.name || '')) === nameNorm);
+      if (exact) return exact;
+
+      const fuzzy = candidates.find((p) => {
+        const pNorm = normalizeName(String(p.name || ''));
+        return nameNorm.includes(pNorm) || pNorm.includes(nameNorm);
+      });
+      if (fuzzy) return fuzzy;
+
+      return null;
+    };
+
+    const isStandaloneAddonItem = (() => {
+      const cat = String(cartItem.category || '').toLowerCase();
+      return (
+        cat.includes('beverage') ||
+        cat.includes('dessert') ||
+        cat.includes('dipping') ||
+        cat === 'pizzelle' ||
+        cat === 'gelati'
+      );
+    })();
+
+    // For standalone dessert/beverage items, trust visible name/category first.
+    // This avoids routing to a wrong product when legacy IDs are inconsistent.
+    let product = isStandaloneAddonItem ? resolveByNameAndCategory() : products.find(p => p.id === cartItem.productId);
+    if (!product) {
+      product = products.find(p => p.id === cartItem.productId);
+    }
     if (!product) {
       const pid = String(cartItem.productId || '').toLowerCase();
       const isExtraSideSynthetic = pid.startsWith('extra-side-') || String(cartItem.category || '').toLowerCase() === 'extra-sides';
       if (isExtraSideSynthetic) {
         product = resolveExtraSideProduct();
+      } else {
+        product = resolveByNameAndCategory();
       }
     }
 
@@ -4570,6 +4831,8 @@ export default function App() {
       setScrollPosition(window.scrollY);
       setSelectedProduct(product);
       setEditingCartItem(cartItem); // Pass the full cart item to ProductDetailPage
+      const mappedCategory = product.category === 'pizzelle' || product.category === 'gelati' ? 'desserts' : product.category;
+      if (mappedCategory) setActiveCategory(mappedCategory);
       setViewMode('detail');
       setIsEditMode(true);
       setEditingItemId(itemId);
@@ -5460,6 +5723,20 @@ export default function App() {
               <h2 className="mb-2 sm:mb-3 font-normal text-[26px] sm:text-[32px] text-[#404041] text-left font-['Tinos']">Kid's Menu</h2>
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6 sm:gap-4 px-0.5 sm:px-0">
                 {products.filter(p => p.category === 'kids').map((product) => (
+                  <ProductCard key={product.id} product={product} onCustomize={handleCustomize} onDirectOpen={handleDirectOpen} locationInfo={locationInfo} onChangeLocation={handleLocationClick} deliveryMode={deliveryMode} deliveryAddress={deliveryAddress} />
+                ))}
+              </div>
+            </div>
+
+            {/* Dippings */}
+            <div 
+              ref={(el) => (sectionRefs.current['dippings'] = el)}
+              data-category="dippings"
+              className="px-2 sm:px-4 lg:px-8 py-2 max-w-[1800px] mx-auto"
+            >
+              <h2 className="mb-2 sm:mb-3 font-normal text-[26px] sm:text-[32px] text-[#404041] text-left font-['Tinos']">Dippings</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6 sm:gap-4 px-0.5 sm:px-0">
+                {products.filter(p => p.category === 'dippings').map((product) => (
                   <ProductCard key={product.id} product={product} onCustomize={handleCustomize} onDirectOpen={handleDirectOpen} locationInfo={locationInfo} onChangeLocation={handleLocationClick} deliveryMode={deliveryMode} deliveryAddress={deliveryAddress} />
                 ))}
               </div>

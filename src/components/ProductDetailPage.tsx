@@ -4771,6 +4771,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
   const [isSoupOpen, setIsSoupOpen] = useState(true);
   const [isIncludedRequestOpen, setIsIncludedRequestOpen] = useState(true);
   const [isCafingKitOpen, setIsCafingKitOpen] = useState(true);
+  const [isDippingsOpen, setIsDippingsOpen] = useState(true);
   const [isDessertOpen, setIsDessertOpen] = useState(true);
   const [isBeverageOpen, setIsBeverageOpen] = useState(true);
   const [isSideToppingsOpen, setIsSideToppingsOpen] = useState(true);
@@ -6637,6 +6638,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
         product.category === 'create-pasta' ||
         product.category === 'kids' ||
         product.category === 'minucci-pizzas' ||
+        product.category === 'dippings' ||
         product.category === 'desserts' ||
         product.category === 'pizzelle' ||
         product.category === 'gelati' ||
@@ -9082,13 +9084,13 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     
     // Complementary items from different categories
     const complementaryCategories: { [key: string]: string[] } = {
-      'pizzas': ['appetizers', 'salads', 'desserts', 'beverages'],
+      'pizzas': ['appetizers', 'salads', 'dippings', 'desserts', 'beverages'],
       'appetizers': ['pizzas', 'wings', 'sides'],
-      'entrees': ['salads', 'sides', 'desserts'],
+      'entrees': ['salads', 'sides', 'dippings', 'desserts'],
       'cheesesteaks': ['sides', 'beverages', 'appetizers'],
       'wings': ['sides', 'beverages', 'appetizers'],
       'salads': ['entrees', 'sides', 'beverages'],
-      'seafood': ['salads', 'sides', 'desserts'],
+      'seafood': ['salads', 'sides', 'dippings', 'desserts'],
       'wraps': ['sides', 'salads', 'beverages'],
       'hot-hoagies': ['sides', 'salads', 'beverages'],
       'cold-hoagies': ['sides', 'salads', 'beverages'],
@@ -9097,12 +9099,13 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       'burgers': ['sides', 'beverages', 'appetizers'],
       'sides': ['pizzas', 'burgers', 'wings'],
       'soups': ['salads', 'sides', 'beverages'],
-      'kids': ['sides', 'beverages', 'desserts'],
+      'kids': ['sides', 'beverages', 'dippings', 'desserts'],
+      'dippings': ['beverages', 'desserts'],
       'desserts': ['beverages'],
-      'beverages': ['desserts', 'appetizers', 'sides'],
+      'beverages': ['dippings', 'desserts', 'appetizers', 'sides'],
     };
     
-    const categories = complementaryCategories[product.category] || ['pizzas', 'appetizers', 'desserts'];
+    const categories = complementaryCategories[product.category] || ['pizzas', 'appetizers', 'dippings', 'desserts'];
     const complementaryItems = allProducts
       .filter(p => categories.includes(p.category))
       .slice(0, 1);
@@ -9227,12 +9230,16 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
 
   const showIncludedRequestSection = isIncludedRequestCategory(product.category);
   const showChafingKitSection = isChafingCategory(product.category);
-  const dessertStepNumber = showIncludedRequestSection
-    ? (showChafingKitSection ? '4' : '3')
-    : '2';
-  const beverageStepNumber = showIncludedRequestSection
-    ? (showChafingKitSection ? '5' : '4')
-    : '3';
+  const showDippingsSection = product.category === 'dippings';
+  const showDessertsSection = product.category !== 'catering-beverages' && product.category !== 'beverages' && product.category !== 'dippings';
+  const baseOptionalStep = showIncludedRequestSection ? (showChafingKitSection ? 4 : 3) : 2;
+  const dippingsStepNumber = String(baseOptionalStep);
+  const dessertStepNumber = String(baseOptionalStep + (showDippingsSection ? 1 : 0));
+  const beverageStepNumber = String(
+    baseOptionalStep +
+      (showDippingsSection ? 1 : 0) +
+      (showDessertsSection ? 1 : 0)
+  );
   const includedStepNumber = '2';
   const chafingStepNumber = '3';
 
@@ -9310,6 +9317,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     'create-salad': 'Create Your Own Salad',
                     'salads-soups': 'Specialty Salad & Soup',
                     'kids': "Kid's Menu",
+                    'dippings': 'Dippings',
                     'desserts': 'Desserts / Pizzelle / Gelati',
                     'beverages': 'Beverage',
                     'catering': 'Catering',
@@ -9507,10 +9515,10 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
               )}
 
               {/* Size Selection - Mobile */}
-              {((!product.name.includes('Sicilian') && !product.name.includes('Pan Pizza') && !product.name.includes('Gluten Free') && product.category !== 'brooklyn-pizza' && product.category !== 'cheesesteaks' && product.category !== 'wings' && product.category !== 'hot-hoagies' && product.category !== 'cold-hoagies' && product.category !== 'by-the-slice' && product.category !== 'burgers' && product.category !== 'brioche' && product.category !== 'paninis' && product.category !== 'wraps' && product.category !== 'appetizers' && product.category !== 'traditional-dinners' && product.category !== 'pasta' && product.category !== 'baked-pasta' && product.category !== 'create-salad' && product.category !== 'salads' && product.category !== 'soups' && product.category !== 'kids' && product.category !== 'beverages' && product.category !== 'desserts' && product.category !== 'catering-desserts' && product.category !== 'pizzelle' && product.category !== 'gelati' && product.id !== 'cp-1' && product.id !== 'k1' && product.id !== 'stromboli-8' && product.id !== 'cptray1' && product.id !== 'cptray2' && product.id !== 'cptray3' && product.id !== 'cptray4' && product.id !== 'cptray5' && product.id !== 'cptray6') || product.category === 'catering-salad-soups' || product.id === 'cyo-minucci') && (
+              {((!product.name.includes('Sicilian') && !product.name.includes('Pan Pizza') && !product.name.includes('Gluten Free') && product.category !== 'brooklyn-pizza' && product.category !== 'cheesesteaks' && product.category !== 'wings' && product.category !== 'hot-hoagies' && product.category !== 'cold-hoagies' && product.category !== 'by-the-slice' && product.category !== 'burgers' && product.category !== 'brioche' && product.category !== 'paninis' && product.category !== 'wraps' && product.category !== 'appetizers' && product.category !== 'traditional-dinners' && product.category !== 'pasta' && product.category !== 'baked-pasta' && product.category !== 'create-salad' && product.category !== 'salads' && product.category !== 'soups' && product.category !== 'kids' && product.category !== 'beverages' && product.category !== 'desserts' && product.category !== 'dippings' && product.category !== 'catering-desserts' && product.category !== 'pizzelle' && product.category !== 'gelati' && product.id !== 'cp-1' && product.id !== 'k1' && product.id !== 'stromboli-8' && product.id !== 'cptray1' && product.id !== 'cptray2' && product.id !== 'cptray3' && product.id !== 'cptray4' && product.id !== 'cptray5' && product.id !== 'cptray6') || product.category === 'catering-salad-soups' || product.id === 'cyo-minucci') && (
                 <div className="mb-6">
                   {/* Size selection label - hide for Whole Cakes, Beverages, Hoagies Wraps, Sides, Seafood, Appetizers, Catering Appetizers, Minucci Pizzas, and Thick Crust Specialty Pizzas */}
-                  {product.category !== 'catering-whole-cakes' && product.category !== 'catering-beverages' && product.category !== 'catering-hoagies-wraps' && product.category !== 'catering-appetizers' && product.category !== 'sides' && product.category !== 'seafood' && product.category !== 'appetizers' && product.category !== 'desserts' && product.category !== 'catering-desserts' && product.category !== 'minucci-pizzas' && !['sp-4', 'sp-5', 'sp-6', 'sp-9', 'cyo-sicilian-pesto', 'sp-17'].includes(product.id) && (
+                  {product.category !== 'catering-whole-cakes' && product.category !== 'catering-beverages' && product.category !== 'catering-hoagies-wraps' && product.category !== 'catering-appetizers' && product.category !== 'sides' && product.category !== 'seafood' && product.category !== 'appetizers' && product.category !== 'desserts' && product.category !== 'dippings' && product.category !== 'catering-desserts' && product.category !== 'minucci-pizzas' && !['sp-4', 'sp-5', 'sp-6', 'sp-9', 'cyo-sicilian-pesto', 'sp-17'].includes(product.id) && (
                     <p className="text-gray-600 mb-3">{product.id === 'cyo-minucci' ? 'Select your pricing option' : 'Select your preferred size'}</p>
                   )}
                   
@@ -9541,7 +9549,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   )}
                   
                   {/* Hide size selection for Brioche, Minucci, Seafood, Whole Cakes, Beverages, Hoagies Wraps, Sides, Catering Appetizers, and Thick Crust Specialty Pizzas */}
-                  {!product.id.startsWith('brioche-') && product.id !== 'cyo-minucci' && product.category !== 'minucci-pizzas' && product.category !== 'seafood' && product.category !== 'catering-whole-cakes' && product.category !== 'catering-beverages' && product.category !== 'catering-hoagies-wraps' && product.category !== 'catering-appetizers' && product.category !== 'sides' && product.category !== 'desserts' && product.category !== 'catering-desserts' && !['sp-4', 'sp-5', 'sp-6', 'sp-9', 'cyo-sicilian-pesto', 'sp-17'].includes(product.id) && (
+                  {!product.id.startsWith('brioche-') && product.id !== 'cyo-minucci' && product.category !== 'minucci-pizzas' && product.category !== 'seafood' && product.category !== 'catering-whole-cakes' && product.category !== 'catering-beverages' && product.category !== 'catering-hoagies-wraps' && product.category !== 'catering-appetizers' && product.category !== 'sides' && product.category !== 'desserts' && product.category !== 'dippings' && product.category !== 'catering-desserts' && !['sp-4', 'sp-5', 'sp-6', 'sp-9', 'cyo-sicilian-pesto', 'sp-17'].includes(product.id) && (
                     <div className="flex gap-3">
                       <button
                         onClick={() => setSelectedSize('medium')}
@@ -10047,10 +10055,10 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
               )}
 
               {/* Size Selection - Hidden for Sicilian, Pan Pizza, Gluten Free, Brooklyn, Cheesesteaks, Hoagies, Slices, Burgers, Brioche, Paninis, Wraps, Appetizers, Traditional Dinners, Pasta, Baked Pasta, Salads, Soups, Build Your Own Pasta, Create Your Own Kids Pasta, Kids, Dessert and Beverages - Except Catering Salad/Soups and Minucci (has custom buttons) */}
-              {((!product.name.includes('Sicilian') && !product.name.includes('Pan Pizza') && !product.name.includes('Gluten Free') && product.category !== 'brooklyn-pizza' && product.category !== 'cheesesteaks' && product.category !== 'wings' && product.category !== 'hot-hoagies' && product.category !== 'cold-hoagies' && product.category !== 'by-the-slice' && product.category !== 'burgers' && product.category !== 'brioche' && product.category !== 'paninis' && product.category !== 'wraps' && product.category !== 'appetizers' && product.category !== 'traditional-dinners' && product.category !== 'pasta' && product.category !== 'baked-pasta' && product.category !== 'create-salad' && product.category !== 'salads' && product.category !== 'soups' && product.category !== 'kids' && product.category !== 'beverages' && product.category !== 'desserts' && product.category !== 'catering-desserts' && product.category !== 'pizzelle' && product.category !== 'gelati' && product.id !== 'cp-1' && product.id !== 'k1' && product.id !== 'stromboli-8' && product.id !== 'cptray1' && product.id !== 'cptray2' && product.id !== 'cptray3' && product.id !== 'cptray4' && product.id !== 'cptray5' && product.id !== 'cptray6') || product.category === 'catering-salad-soups' || product.id === 'cyo-minucci') && (
+              {((!product.name.includes('Sicilian') && !product.name.includes('Pan Pizza') && !product.name.includes('Gluten Free') && product.category !== 'brooklyn-pizza' && product.category !== 'cheesesteaks' && product.category !== 'wings' && product.category !== 'hot-hoagies' && product.category !== 'cold-hoagies' && product.category !== 'by-the-slice' && product.category !== 'burgers' && product.category !== 'brioche' && product.category !== 'paninis' && product.category !== 'wraps' && product.category !== 'appetizers' && product.category !== 'traditional-dinners' && product.category !== 'pasta' && product.category !== 'baked-pasta' && product.category !== 'create-salad' && product.category !== 'salads' && product.category !== 'soups' && product.category !== 'kids' && product.category !== 'beverages' && product.category !== 'desserts' && product.category !== 'dippings' && product.category !== 'catering-desserts' && product.category !== 'pizzelle' && product.category !== 'gelati' && product.id !== 'cp-1' && product.id !== 'k1' && product.id !== 'stromboli-8' && product.id !== 'cptray1' && product.id !== 'cptray2' && product.id !== 'cptray3' && product.id !== 'cptray4' && product.id !== 'cptray5' && product.id !== 'cptray6') || product.category === 'catering-salad-soups' || product.id === 'cyo-minucci') && (
                 <div className="mt-3 mb-4 xl:mb-5">
                   {/* Size selection label - hide for Whole Cakes, Beverages, Hoagies Wraps, Sides, Seafood, Appetizers, Catering Appetizers, Minucci Pizzas, and Thick Crust Specialty Pizzas */}
-                  {product.category !== 'catering-whole-cakes' && product.category !== 'catering-beverages' && product.category !== 'catering-hoagies-wraps' && product.category !== 'catering-appetizers' && product.category !== 'sides' && product.category !== 'seafood' && product.category !== 'appetizers' && product.category !== 'desserts' && product.category !== 'catering-desserts' && product.category !== 'minucci-pizzas' && !['sp-4', 'sp-5', 'sp-6', 'sp-9', 'cyo-sicilian-pesto', 'sp-17'].includes(product.id) && (
+                  {product.category !== 'catering-whole-cakes' && product.category !== 'catering-beverages' && product.category !== 'catering-hoagies-wraps' && product.category !== 'catering-appetizers' && product.category !== 'sides' && product.category !== 'seafood' && product.category !== 'appetizers' && product.category !== 'desserts' && product.category !== 'dippings' && product.category !== 'catering-desserts' && product.category !== 'minucci-pizzas' && !['sp-4', 'sp-5', 'sp-6', 'sp-9', 'cyo-sicilian-pesto', 'sp-17'].includes(product.id) && (
                     <p className="text-gray-600 mb-2">{product.id === 'cyo-minucci' ? 'Select your pricing option' : 'Select your preferred size'}</p>
                   )}
                   
@@ -10081,7 +10089,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   )}
                   
                   {/* Hide size selection for Brioche, Minucci, Seafood, Whole Cakes, Beverages, Hoagies Wraps, Sides, Catering Appetizers, and Thick Crust Specialty Pizzas */}
-                  {!product.id.startsWith('brioche-') && product.id !== 'cyo-minucci' && product.category !== 'minucci-pizzas' && product.category !== 'seafood' && product.category !== 'catering-whole-cakes' && product.category !== 'catering-beverages' && product.category !== 'catering-hoagies-wraps' && product.category !== 'catering-appetizers' && product.category !== 'sides' && product.category !== 'desserts' && product.category !== 'catering-desserts' && !['sp-4', 'sp-5', 'sp-6', 'sp-9', 'cyo-sicilian-pesto', 'sp-17'].includes(product.id) && (
+                  {!product.id.startsWith('brioche-') && product.id !== 'cyo-minucci' && product.category !== 'minucci-pizzas' && product.category !== 'seafood' && product.category !== 'catering-whole-cakes' && product.category !== 'catering-beverages' && product.category !== 'catering-hoagies-wraps' && product.category !== 'catering-appetizers' && product.category !== 'sides' && product.category !== 'desserts' && product.category !== 'dippings' && product.category !== 'catering-desserts' && !['sp-4', 'sp-5', 'sp-6', 'sp-9', 'cyo-sicilian-pesto', 'sp-17'].includes(product.id) && (
                     <div className="flex gap-3">
                       <button
                         onClick={() => setSelectedSize('medium')}
@@ -25909,8 +25917,84 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
             </Collapsible>
           )}
 
+          {/* Add Dippings */}
+          {showDippingsSection && (
+          <Collapsible open={isDippingsOpen} onOpenChange={setIsDippingsOpen}>
+            <CollapsibleTrigger asChild>
+              <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>{`${dippingsStepNumber}. Would You Like To Add Dippings?`}</span>
+                </div>
+                {isDippingsOpen ? (
+                  <ChevronUp className="w-6 h-6" />
+                ) : (
+                  <ChevronDown className="w-6 h-6" />
+                )}
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="relative border border-t-0 rounded-b-lg p-5">
+              <div 
+                className="absolute inset-0 pointer-events-none opacity-30 rounded-b-lg"
+                style={{ 
+                  backgroundImage: `url(${backgroundTexture})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }}
+              />
+              <div className="relative z-10">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  {pizzaDippingsOptions.map((item) => {
+                    const quantity = selectedPizzaDippings[item.id] || 0;
+                    const isActive = activeDippingItem === item.id;
+                    return (
+                      <AddonCard
+                        key={item.id}
+                        item={item}
+                        quantity={quantity}
+                        isActive={isActive}
+                        onSelect={() => {
+                          if (quantity === 0) {
+                            setSelectedPizzaDippings({
+                              ...selectedPizzaDippings,
+                              [item.id]: 1
+                            });
+                            setActiveDippingItem(item.id);
+                          } else if (!isActive) {
+                            setActiveDippingItem(item.id);
+                          } else {
+                            const newQuantities = { ...selectedPizzaDippings };
+                            delete newQuantities[item.id];
+                            setSelectedPizzaDippings(newQuantities);
+                            setActiveDippingItem(null);
+                          }
+                        }}
+                        onIncrement={() =>
+                          setSelectedPizzaDippings({
+                            ...selectedPizzaDippings,
+                            [item.id]: quantity + 1
+                          })
+                        }
+                        onDecrement={() => {
+                          const newQuantities = { ...selectedPizzaDippings };
+                          if (quantity <= 1) {
+                            delete newQuantities[item.id];
+                            setActiveDippingItem(null);
+                          } else {
+                            newQuantities[item.id] = quantity - 1;
+                          }
+                          setSelectedPizzaDippings(newQuantities);
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+          )}
+
           {/* Add Desserts */}
-          {product.category !== 'catering-beverages' && product.category !== 'beverages' && (
+          {showDessertsSection && (
           <Collapsible open={isDessertOpen} onOpenChange={setIsDessertOpen}>
             <CollapsibleTrigger asChild>
               <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
@@ -26085,7 +26169,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
           )}
 
           {/* Add Beverages */}
-          {product.category !== 'beverages' && (
+          {product.category !== 'dippings' && (
           <Collapsible open={isBeverageOpen} onOpenChange={setIsBeverageOpen}>
             <CollapsibleTrigger asChild>
               <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
@@ -26167,7 +26251,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
               </div>
             </CollapsibleContent>
           </Collapsible>
-        )}
+          )}
 
         {/* Suggested Items - Now inside left column */}
         <div className="py-8 lg:py-12 bg-white">
@@ -26404,10 +26488,10 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
 
             {/* Size Selection - Desktop */}
             <div className="hidden lg:block">
-              {((!product.name.includes('Sicilian') && !product.name.includes('Pan Pizza') && !product.name.includes('Gluten Free') && product.category !== 'brooklyn-pizza' && product.category !== 'cheesesteaks' && product.category !== 'wings' && product.category !== 'hot-hoagies' && product.category !== 'cold-hoagies' && product.category !== 'by-the-slice' && product.category !== 'burgers' && product.category !== 'brioche' && product.category !== 'paninis' && product.category !== 'wraps' && product.category !== 'appetizers' && product.category !== 'traditional-dinners' && product.category !== 'pasta' && product.category !== 'baked-pasta' && product.category !== 'create-salad' && product.category !== 'salads' && product.category !== 'soups' && product.category !== 'kids' && product.category !== 'beverages' && product.category !== 'desserts' && product.category !== 'catering-desserts' && product.category !== 'pizzelle' && product.category !== 'gelati' && product.id !== 'cp-1' && product.id !== 'k1' && product.id !== 'stromboli-8' && product.id !== 'cptray1' && product.id !== 'cptray2' && product.id !== 'cptray3' && product.id !== 'cptray4' && product.id !== 'cptray5' && product.id !== 'cptray6') || product.category === 'catering-salad-soups' || product.id === 'cyo-minucci') && (
+              {((!product.name.includes('Sicilian') && !product.name.includes('Pan Pizza') && !product.name.includes('Gluten Free') && product.category !== 'brooklyn-pizza' && product.category !== 'cheesesteaks' && product.category !== 'wings' && product.category !== 'hot-hoagies' && product.category !== 'cold-hoagies' && product.category !== 'by-the-slice' && product.category !== 'burgers' && product.category !== 'brioche' && product.category !== 'paninis' && product.category !== 'wraps' && product.category !== 'appetizers' && product.category !== 'traditional-dinners' && product.category !== 'pasta' && product.category !== 'baked-pasta' && product.category !== 'create-salad' && product.category !== 'salads' && product.category !== 'soups' && product.category !== 'kids' && product.category !== 'beverages' && product.category !== 'desserts' && product.category !== 'dippings' && product.category !== 'catering-desserts' && product.category !== 'pizzelle' && product.category !== 'gelati' && product.id !== 'cp-1' && product.id !== 'k1' && product.id !== 'stromboli-8' && product.id !== 'cptray1' && product.id !== 'cptray2' && product.id !== 'cptray3' && product.id !== 'cptray4' && product.id !== 'cptray5' && product.id !== 'cptray6') || product.category === 'catering-salad-soups' || product.id === 'cyo-minucci') && (
                 <div className="mb-2">
                   {/* Size selection label - hide for Whole Cakes, Beverages, Hoagies Wraps, Sides, Seafood, Appetizers, Catering Appetizers, Minucci Pizzas, and Thick Crust Specialty Pizzas */}
-                  {product.category !== 'catering-whole-cakes' && product.category !== 'catering-beverages' && product.category !== 'catering-hoagies-wraps' && product.category !== 'catering-appetizers' && product.category !== 'sides' && product.category !== 'seafood' && product.category !== 'appetizers' && product.category !== 'desserts' && product.category !== 'catering-desserts' && product.category !== 'minucci-pizzas' && !['sp-4', 'sp-5', 'sp-6', 'sp-9', 'cyo-sicilian-pesto', 'sp-17'].includes(product.id) && (
+                  {product.category !== 'catering-whole-cakes' && product.category !== 'catering-beverages' && product.category !== 'catering-hoagies-wraps' && product.category !== 'catering-appetizers' && product.category !== 'sides' && product.category !== 'seafood' && product.category !== 'appetizers' && product.category !== 'desserts' && product.category !== 'dippings' && product.category !== 'catering-desserts' && product.category !== 'minucci-pizzas' && !['sp-4', 'sp-5', 'sp-6', 'sp-9', 'cyo-sicilian-pesto', 'sp-17'].includes(product.id) && (
                     <p className="text-gray-600 mb-2">{product.id === 'cyo-minucci' ? 'Select your pricing option' : 'Select your preferred size'}</p>
                   )}
                   
@@ -26438,7 +26522,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   )}
                   
                   {/* Hide size selection for Brioche, Minucci, Seafood, Whole Cakes, Beverages, Hoagies Wraps, Sides, Catering Appetizers, and Thick Crust Specialty Pizzas */}
-                  {!product.id.startsWith('brioche-') && product.id !== 'cyo-minucci' && product.category !== 'minucci-pizzas' && product.category !== 'seafood' && product.category !== 'catering-whole-cakes' && product.category !== 'catering-beverages' && product.category !== 'catering-hoagies-wraps' && product.category !== 'catering-appetizers' && product.category !== 'sides' && product.category !== 'desserts' && product.category !== 'catering-desserts' && !['sp-4', 'sp-5', 'sp-6', 'sp-9', 'cyo-sicilian-pesto', 'sp-17'].includes(product.id) && (
+                  {!product.id.startsWith('brioche-') && product.id !== 'cyo-minucci' && product.category !== 'minucci-pizzas' && product.category !== 'seafood' && product.category !== 'catering-whole-cakes' && product.category !== 'catering-beverages' && product.category !== 'catering-hoagies-wraps' && product.category !== 'catering-appetizers' && product.category !== 'sides' && product.category !== 'desserts' && product.category !== 'dippings' && product.category !== 'catering-desserts' && !['sp-4', 'sp-5', 'sp-6', 'sp-9', 'cyo-sicilian-pesto', 'sp-17'].includes(product.id) && (
                     <div className="flex gap-2">
                       <button
                         onClick={() => setSelectedSize('medium')}
