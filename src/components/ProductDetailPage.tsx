@@ -30771,62 +30771,6 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   });
                 }
                 
-                // Chicken Tenders Extra Sauce (Record<string, string>)
-                Object.entries(selectedChickenTendersExtraSauce).forEach(([sauceId, size]) => {
-                  if (!size) return;
-                  const option = chickenTendersExtraSauceOptions.find(o => o.id === sauceId);
-                  if (option) {
-                    selections.push({
-                      id: `${sauceId}-${size}`,
-                      label: `${option.name} (${size})`,
-                      type: 'extra_topping',
-                      groupTitle: 'Extra Sauce'
-                    });
-                  }
-                });
-                
-                // Wings Extra Sauce (Record<string, string>)
-                Object.entries(selectedWingsExtraSauce).forEach(([sauceId, size]) => {
-                  if (!size) return;
-                  const option = wingsExtraSauceOptions.find(o => o.id === sauceId);
-                  if (option) {
-                    selections.push({
-                      id: `${sauceId}-${size}`,
-                      label: `${option.name} (${size})`,
-                      type: 'extra_topping',
-                      groupTitle: 'Extra Sauce'
-                    });
-                  }
-                });
-
-                 // Chicken Tenders Extra Cheese/Ranch (Record<string, string>)
-                Object.entries(selectedChickenTendersExtraCheeseRanch).forEach(([itemId, size]) => {
-                  if (!size) return;
-                  const option = chickenTendersExtraCheeseRanchOptions.find(o => o.id === itemId);
-                  if (option) {
-                    selections.push({
-                      id: `${itemId}-${size}`,
-                      label: `${option.name} (${size})`,
-                      type: 'extra_topping',
-                      groupTitle: 'Extra Dipping Sauce'
-                    });
-                  }
-                });
-
-                 // Wings Extra Cheese/Ranch (Record<string, string>)
-                Object.entries(selectedWingsExtraCheeseRanch).forEach(([itemId, size]) => {
-                  if (!size) return;
-                  const option = wingsExtraCheeseRanchOptions.find(o => o.id === itemId);
-                  if (option) {
-                    selections.push({
-                      id: `${itemId}-${size}`,
-                      label: `${option.name} (${size})`,
-                      type: 'extra_topping',
-                      groupTitle: 'Extra Dipping Sauce'
-                    });
-                  }
-                });
-                
                 // ============================================================
                 // DEBUG LOGGING - PHASE 2: CART ITEM SELECTIONS
                 // ============================================================
