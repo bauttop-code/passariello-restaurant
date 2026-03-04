@@ -4208,7 +4208,7 @@ export default function App() {
             type = 'beverage';
             groupId = 'beverages';
             groupTitle = 'Would You Like a Beverage?';
-          } else if (category.includes('dipping') || dippingNameSet.has(normalized) || dippingLabelPattern.test(cleaned)) {
+          } else if (category.includes('add dippings') || category === 'dippings') {
             type = 'other';
             groupId = 'dippings';
             groupTitle = 'Add Dippings (Optional)';
@@ -4233,6 +4233,15 @@ export default function App() {
         const labelNorm = normalizeName(cleanSelectionLabel(String(sel.label || '')));
         const rawLabel = cleanSelectionLabel(String(sel.label || ''));
 
+        // Never treat included sauce lines from wings/chicken flows as standalone add-ons.
+        if (
+          groupId.includes('included_sauce') ||
+          groupId.includes('included') ||
+          groupTitle.includes('included')
+        ) {
+          return null;
+        }
+
         if (
           type === 'dessert' ||
           groupTitle.includes('dessert') ||
@@ -4255,10 +4264,9 @@ export default function App() {
 
         if (
           type === 'dipping' ||
-          groupTitle.includes('dipping') ||
-          groupId.includes('dipping') ||
-          dippingNameSet.has(labelNorm) ||
-          dippingLabelPattern.test(rawLabel)
+          groupId.includes('pizza_dippings') ||
+          groupTitle.includes('add dippings') ||
+          (groupId === 'dippings' && (dippingNameSet.has(labelNorm) || dippingLabelPattern.test(rawLabel)))
         ) {
           return 'dipping';
         }
