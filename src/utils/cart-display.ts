@@ -4092,6 +4092,11 @@ const withCustomizationFallback = (item: CartItem, lines: string[]): string[] =>
   if (!item.customizations || item.customizations.length === 0) return lines;
 
   const existing = new Set(lines.map((line) => line.trim().toLowerCase()));
+  const isChickenTenders =
+    item.id === 'app6' ||
+    item.id === 'wing3' ||
+    item.id === 'capp2' ||
+    String(item.name || '').toLowerCase().includes('chicken tenders');
   const extraLines: string[] = [];
 
   item.customizations.forEach((cust: any) => {
@@ -4106,6 +4111,18 @@ const withCustomizationFallback = (item: CartItem, lines: string[]): string[] =>
       const text = String(raw || '').trim();
       if (!text) return;
       if (/^\d+\s+(chicken\s+tenders|mozzarella\s+sticks|arancini(\s+rice\s+ball)?)\b/i.test(text)) return;
+
+      // Chicken Tenders: avoid adding duplicate sauce fallback when the same sauce
+      // is already rendered as the included line with size, e.g. "BBQ Sauce (2oz)".
+      if (isChickenTenders && category.includes('sauce')) {
+        const sauceKey = text.toLowerCase();
+        const hasEquivalentSauce = lines.some((line) => {
+          const normalized = String(line || '').trim().toLowerCase();
+          return normalized === sauceKey || normalized.startsWith(`${sauceKey} (`);
+        });
+        if (hasEquivalentSauce) return;
+      }
+
       const key = text.toLowerCase();
       if (existing.has(key)) return;
       existing.add(key);
