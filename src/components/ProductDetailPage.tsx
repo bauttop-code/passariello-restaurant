@@ -30614,6 +30614,22 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                    }
                 }
 
+                // Chicken Tenders Substitute Sauce (Manual registration)
+                if (selectedChickenTendersSauce) {
+                  const opt = chickenTendersSauceOptions.find(o => o.id === selectedChickenTendersSauce) ||
+                              wingsSauceOptions.find(o => o.id === selectedChickenTendersSauce);
+                  if (opt && !selections.some(s => s.id === selectedChickenTendersSauce)) {
+                    selections.push({
+                      id: selectedChickenTendersSauce,
+                      label: opt.name,
+                      type: 'sauce',
+                      groupId: 'wings_sauce',
+                      groupTitle: 'Substitute Your Sauce',
+                      productId: product.id
+                    });
+                  }
+                }
+
                 registerSelectionsFromIds(selectedWingsSpecialInstructions, {
                   debugKey: "selectedWingsSpecialInstructions",
                   fallbackType: "special_instruction",
@@ -33367,6 +33383,24 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       category: 'Sauce',
                       items: [sauceName]
                     });
+                  }
+
+                  // Add Chicken Tenders Substitute Sauce (OPTIONAL)
+                  if (selectedChickenTendersSauce && selectedChickenTendersSauce !== selectedWingsSauce) {
+                    const sauceName = getItemName(selectedChickenTendersSauce);
+                    customizations.push({
+                      category: 'Sauce',
+                      items: [sauceName]
+                    });
+                    if (!selections.some(s => s.id === selectedChickenTendersSauce)) {
+                      selections.push({
+                        id: selectedChickenTendersSauce,
+                        label: sauceName,
+                        type: 'sauce',
+                        groupId: 'wings_sauce',
+                        groupTitle: 'Substitute Your Sauce'
+                      });
+                    }
                   }
                   
                   // Add Wings Special Instructions (OPTIONAL)
