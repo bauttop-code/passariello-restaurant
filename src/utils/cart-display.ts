@@ -4112,6 +4112,16 @@ const withCustomizationFallback = (item: CartItem, lines: string[]): string[] =>
       if (!text) return;
       if (/^\d+\s+(chicken\s+tenders|mozzarella\s+sticks|arancini(\s+rice\s+ball)?)\b/i.test(text)) return;
 
+      // Global dedupe: if the same label already exists with an explicit size
+      // suffix (e.g. "Extra Bleu Cheese (4oz)"), skip the bare fallback line
+      // (e.g. "Extra Bleu Cheese").
+      const bareKey = text.toLowerCase();
+      const hasExplicitSizedVariant = lines.some((line) => {
+        const normalized = String(line || '').trim().toLowerCase();
+        return normalized.startsWith(`${bareKey} (`);
+      });
+      if (hasExplicitSizedVariant) return;
+
       // Chicken Tenders: avoid adding duplicate sauce fallback when the same sauce
       // is already rendered as the included line with size, e.g. "BBQ Sauce (2oz)".
       if (isChickenTenders && category.includes('sauce')) {
