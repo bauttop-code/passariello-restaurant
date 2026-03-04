@@ -430,8 +430,8 @@ const buildWingsDisplayLines = (item: CartItem, rawLines: { text: string; origin
     // 2. Identify Included Flavor (Look for explicit selection or Default)
     // We look for a line marked as included to determine flavor (Ranch vs Bleu Cheese)
     // If found, we extract flavor and consume that line (so it doesn't duplicate).
-    // If not found, we Default to "Ranch Sauce".
-    let includedFlavor = "Ranch Sauce";
+    // If not found, default to Bleu Cheese (store default for wings).
+    let includedFlavor = "Bleu Cheese";
     let includedSelId: string | null = null;
 
     const explicitIncludedLine = rawLines.find(l => 
