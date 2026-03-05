@@ -4154,6 +4154,15 @@ export default function App() {
           .replace(/['’]/g, '')
           .replace(/[^a-z0-9]+/g, ' ')
           .trim();
+      const normalizeAddonLookupName = (value: string) =>
+        normalizeName(
+          String(value || '')
+            .replace(/\(\s*\d+\s*(pcs?|pieces?)\s*\)/gi, '')
+            .replace(/\(\s*serves?\s*\d+\s*\)/gi, '')
+            .replace(/\s+x\d+$/i, '')
+            .replace(/^add\s+/i, '')
+            .trim()
+        );
 
       const cleanSelectionLabel = (value: string) =>
         String(value || '')
@@ -4181,15 +4190,15 @@ export default function App() {
       const dippingNameSet = new Set(dippingCandidates.map(p => normalizeName(String(p.name || ''))));
       const standaloneByName = new Map<string, 'dessert' | 'beverage' | 'dipping'>();
       dessertCandidates.forEach((p) => {
-        const key = normalizeName(String(p.name || ''));
+        const key = normalizeAddonLookupName(String(p.name || ''));
         if (key) standaloneByName.set(key, 'dessert');
       });
       beverageCandidates.forEach((p) => {
-        const key = normalizeName(String(p.name || ''));
+        const key = normalizeAddonLookupName(String(p.name || ''));
         if (key && !standaloneByName.has(key)) standaloneByName.set(key, 'beverage');
       });
       dippingCandidates.forEach((p) => {
-        const key = normalizeName(String(p.name || ''));
+        const key = normalizeAddonLookupName(String(p.name || ''));
         if (key && !standaloneByName.has(key)) standaloneByName.set(key, 'dipping');
       });
       const isBaseCatering = String(product.category || '').toLowerCase().startsWith('catering-');
@@ -4264,7 +4273,7 @@ export default function App() {
           .replace(/-qty-\d+$/i, '');
         const idMatchedProduct = products.find((p) => p.id === resolvedId);
         const idMatchedCategory = String(idMatchedProduct?.category || '').toLowerCase();
-        const labelMatchClass = standaloneByName.get(normalizeName(rawLabel)) || null;
+        const labelMatchClass = standaloneByName.get(normalizeAddonLookupName(rawLabel)) || null;
 
         // Never treat included sauce lines from wings/chicken flows as standalone add-ons.
         if (
@@ -4358,7 +4367,7 @@ export default function App() {
         return { ...c, items: filteredItems };
       }).filter(c => Array.isArray(c.items) ? c.items.length > 0 : true);
 
-      const parseAddonFromSelection = (sel: CartSelection): { addonProductId: string; qty: number } | null => {
+      const parseAddonFromSelection = (sel: CartSelection): { addonProductId: string; qty: number; displayLabel?: string } | null => {
         const rawId = String(sel.id || '');
         const rawLabel = String(sel.label || '').trim();
         const addonClass = classifyAddonSelection(sel);
@@ -4369,6 +4378,7 @@ export default function App() {
         if (!isDessert && !isBeverage && !isDipping) return null;
 
         let addonProductId = '';
+        let addonDisplayLabel = '';
         let qty = 1;
 
         const addonCandidatesBase = isDessert
@@ -4393,18 +4403,19 @@ export default function App() {
           }
 
           const cleanLabel = cleanSelectionLabel(rawLabel);
+          addonDisplayLabel = cleanLabel;
 
-          const normalizedLabel = normalizeName(cleanLabel);
+          const normalizedLabel = normalizeAddonLookupName(cleanLabel);
 
           const exactByName = addonCandidates.find(
-            p => normalizeName(String(p.name || '')) === normalizedLabel
+            p => normalizeAddonLookupName(String(p.name || '')) === normalizedLabel
           );
 
           if (exactByName) {
             addonProductId = exactByName.id;
           } else {
             const fuzzyByName = addonCandidates.find(p => {
-              const normalizedProduct = normalizeName(String(p.name || ''));
+              const normalizedProduct = normalizeAddonLookupName(String(p.name || ''));
               return (
                 normalizedLabel.includes(normalizedProduct) ||
                 normalizedProduct.includes(normalizedLabel)
@@ -4437,7 +4448,7 @@ export default function App() {
         }
 
         if (!addonProductId) return null;
-        return { addonProductId, qty: Math.max(1, qty) };
+        return { addonProductId, qty: Math.max(1, qty), displayLabel: addonDisplayLabel || undefined };
       };
 
       const parseMoney = (raw: unknown): number => {
@@ -4493,10 +4504,13 @@ export default function App() {
       const addOrMergeSimpleItem = (
         items: CartItem[],
         addonProduct: Product,
-        addonQty: number
+        addonQty: number,
+        displayLabel?: string
       ) => {
+        const addonName = String(displayLabel || addonProduct.name || '').trim() || addonProduct.name;
         const existingIndex = items.findIndex(i =>
           i.productId === addonProduct.id &&
+          String(i.name || '').trim().toLowerCase() === addonName.toLowerCase() &&
           String(i.category || '').toLowerCase() === String(addonProduct.category || '').toLowerCase() &&
           (!i.customizations || i.customizations.length === 0) &&
           (!i.selections || i.selections.length === 0)
@@ -4511,7 +4525,7 @@ export default function App() {
         items.push({
           id: `${addonProduct.id}-${Date.now()}-${Math.random()}`,
           productId: addonProduct.id,
-          name: addonProduct.name,
+          name: addonName,
           price: parseMoney((addonProduct as any)?.price),
           quantity: addonQty,
           image: addonProduct.image,
@@ -4574,14 +4588,18 @@ export default function App() {
 
       const buildStandaloneAddonMaps = () => {
         const allAddonSelections = [...extractedAddonSelections, ...addonSelectionsFromCustomizations];
-        const addonQtyByProductId = new Map<string, number>();
+        const addonQtyByProductId = new Map<string, { qty: number; displayLabel?: string }>();
         const syntheticDippings = new Map<string, { name: string; qty: number; price: number }>();
 
         allAddonSelections.forEach(sel => {
           const parsed = parseAddonFromSelection(sel);
           if (parsed) {
-            const prevQty = addonQtyByProductId.get(parsed.addonProductId) || 0;
-            addonQtyByProductId.set(parsed.addonProductId, Math.max(prevQty, parsed.qty));
+            const prev = addonQtyByProductId.get(parsed.addonProductId);
+            const nextQty = Math.max(prev?.qty || 0, parsed.qty);
+            addonQtyByProductId.set(parsed.addonProductId, {
+              qty: nextQty,
+              displayLabel: parsed.displayLabel || prev?.displayLabel
+            });
             return;
           }
 
@@ -4627,14 +4645,14 @@ export default function App() {
         const { addonQtyByProductId, syntheticDippings } = buildStandaloneAddonMaps();
         if (addonQtyByProductId.size === 0 && syntheticDippings.size === 0) return;
 
-        addonQtyByProductId.forEach((qtyToAdd, addonProductId) => {
+        addonQtyByProductId.forEach((meta, addonProductId) => {
           const addonProduct = products.find(p => p.id === addonProductId);
           if (!addonProduct) return;
           const addonPrice = parseMoney((addonProduct as any)?.price);
           const addonCategory = String(addonProduct.category || '').toLowerCase();
           if (normalizeName(String(addonProduct.name || '')) === 'no thank you') return;
           if (addonPrice <= 0 && addonCategory !== 'dippings') return;
-          addOrMergeSimpleItem(items, addonProduct, qtyToAdd);
+          addOrMergeSimpleItem(items, addonProduct, meta.qty, meta.displayLabel);
         });
 
         syntheticDippings.forEach(({ name, qty, price }) => {
