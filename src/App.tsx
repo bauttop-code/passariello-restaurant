@@ -4205,7 +4205,6 @@ export default function App() {
           const cleaned = cleanSelectionLabel(source);
           if (cleaned) addonLabelsFromCustomizations.add(normalizeName(cleaned));
 
-          const normalized = normalizeName(cleaned);
           let type: CartSelection['type'] | null = null;
           let groupId = 'addons';
           let groupTitle = 'Add Ons';
@@ -4214,14 +4213,12 @@ export default function App() {
             category.includes('whole cake') ||
             category.includes('whole cakes') ||
             category.includes('party tray') ||
-            category.includes('party trays') ||
-            dessertNameSet.has(normalized) ||
-            dessertLabelPattern.test(cleaned)
+            category.includes('party trays')
           ) {
             type = 'dessert';
             groupId = 'desserts';
             groupTitle = 'Would You Like a Dessert?';
-          } else if (category.includes('beverage') || beverageNameSet.has(normalized) || beverageLabelPattern.test(cleaned)) {
+          } else if (category.includes('beverage')) {
             type = 'beverage';
             groupId = 'beverages';
             groupTitle = 'Would You Like a Beverage?';
@@ -4247,8 +4244,6 @@ export default function App() {
         const type = String(sel.type || '').toLowerCase();
         const groupTitle = String(sel.groupTitle || '').toLowerCase();
         const groupId = String(sel.groupId || '').toLowerCase();
-        const labelNorm = normalizeName(cleanSelectionLabel(String(sel.label || '')));
-        const rawLabel = cleanSelectionLabel(String(sel.label || ''));
 
         // Never treat included sauce lines from wings/chicken flows as standalone add-ons.
         if (
@@ -4268,9 +4263,7 @@ export default function App() {
           groupTitle.includes('party tray') ||
           groupTitle.includes('party trays') ||
           groupId.includes('whole_cakes') ||
-          groupId.includes('party_trays') ||
-          dessertNameSet.has(labelNorm) ||
-          dessertLabelPattern.test(rawLabel)
+          groupId.includes('party_trays')
         ) {
           return 'dessert';
         }
@@ -4278,9 +4271,7 @@ export default function App() {
         if (
           type === 'beverage' ||
           groupTitle.includes('beverage') ||
-          groupId.includes('beverage') ||
-          beverageNameSet.has(labelNorm) ||
-          beverageLabelPattern.test(rawLabel)
+          groupId.includes('beverage')
         ) {
           return 'beverage';
         }
@@ -4289,7 +4280,7 @@ export default function App() {
           type === 'dipping' ||
           groupId.includes('pizza_dippings') ||
           groupTitle.includes('add dippings') ||
-          (groupId === 'dippings' && (dippingNameSet.has(labelNorm) || dippingLabelPattern.test(rawLabel)))
+          groupId === 'dippings'
         ) {
           return 'dipping';
         }
