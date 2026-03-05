@@ -4620,8 +4620,10 @@ export default function App() {
         typeof rawPrice === 'number'
           ? rawPrice
           : Number.parseFloat(String(rawPrice ?? '').replace(/[^0-9.]/g, '')) || 0;
-      const standaloneAddonUnitTotal = calculateStandaloneAddonUnitTotal();
-      const adjustedParentUnitPrice = Number(Math.max(0, normalizedPrice - standaloneAddonUnitTotal).toFixed(2));
+      // Parent item price should already represent only the base product price.
+      // Standalone addons (desserts/beverages/dippings/whole cakes/party trays) are
+      // added as separate cart rows, so we must not subtract again here.
+      const adjustedParentUnitPrice = Number(normalizedPrice.toFixed(2));
 
       // If editing, update the specific item
       if (isEditMode && editingItemId) {
