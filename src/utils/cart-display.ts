@@ -4346,6 +4346,14 @@ const remapSectionForItem = (item: CartItem, section: string | null, text?: stri
     if (section === 'Special Instructions' && line.includes('dressing')) return 'Dressing Instructions';
   }
 
+  if (category === 'extra-sides') {
+    // Extra-side wings use generic "Sauce" group titles; map them to the
+    // configured "Choose Sauce" slot so order stays consistent.
+    if (section === 'Sauce' || section === 'Choose your Sauce' || section === 'Choose a Sauce') {
+      return 'Choose Sauce';
+    }
+  }
+
   if (category === 'salads') {
     if (section === 'Choose Your Toppings') return 'Extra Toppings';
     if (section === 'Dressing Instructions') return 'Dressing preference';
