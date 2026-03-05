@@ -8625,8 +8625,14 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     }, 0) : 0;
     
     // Desserts, beverages and pizza dippings are now added as standalone cart items.
-    // Keep them out of base product unit price to avoid double counting / underflow fixes.
+    // Keep them out of base product unit price used for cart persistence.
     return (basePrice + toppingsPrice + cafingKitPrice + extraSaucePrice + sideToppingsPrice + extraSidesPrice + addToppingsPrice + liteToppingsPrice + noToppingsCheesesteakPrice + burgerAddPrice + burgerExtraPrice + burgerLitePrice + burgerSidePrice + briocheAddCheesePrice + briocheExtraCheesePrice + briocheNoPrice + briocheSidePrice + paniniExtraCheesePrice + paniniSidesPrice + wrapAddToppingsPrice + wrapExtraCheesePrice + wrapLitePrice + wrapNoPrice + wrapSidePrice + wrapChipsPrice + kidsPastaTypePrice + kidsPastaToppingsPrice + buildPastaTypePrice + buildPastaSaucePrice + buildPastaToppingsPrice + buildPastaSoupPrice + pastaTypePrice + pastaAdditionsPrice + hoagiePlatterOptionsPrice + hoagiePlatterSideToppingsPrice + wrapPlatterOptionsPrice + wrapPlatterSideToppingsPrice + hotSandwichPlatterOptionsPrice + hotSandwichPlatterSideToppingsPrice + hotHoagieSidesPrice + hotHoagieExtrasPrice + hotHoagieCheesePrice + coldHoagieCheesePrice + coldHoagieToppingsPrice + coldHoagieExtrasPrice + coldHoagieLitePrice + coldHoagieNoPrice + coldHoagieSidesPrice + coldHoagieExtraSidesPrice + chipsPrice + saladExtraDressingPrice + saladExtraToppingsPrice + cheesesteakCheesePrice + friesInstructionsPrice + garlicStickInstructionsPrice + garlicBreadInstructionsPrice + garlicBreadMozzarellaInstructionsPrice + mozzarellaSticksInstructionsPrice + onionRingsInstructionsPrice + macAndCheeseBitesInstructionsPrice + broccoliCheddarBitesInstructionsPrice + passarielloFriesInstructionsPrice + cheddarSteakFriesInstructionsPrice + wingsSpecialInstructionsPrice + wingsExtraSaucePrice + wingsExtraCheeseRanchPrice + chickenTendersSpecialInstructionsPrice + chickenTendersExtraSaucePrice + chickenTendersExtraCheeseRanchPrice + mozzarellaSticksSpecialInstructionsPrice + traditionalDinnersSidesPrice + traditionalDinnersSoupsSaladsPrice + extraBreadPrice + kidsPastaMeatballTypePrice + kidsPastaMeatballToppingsPrice + kidsBakedExtraPrice + kidsBakedLitePrice + kidsBakedNoPrice + seafoodPastaTypePrice + calamariPastaTypePrice + musselsPastaTypePrice + seafoodComboPastaTypePrice + shrimpMarinaraPastaTypePrice + pizzaSteakExtrasPrice + extraSideSaucesPrice).toFixed(2);
+  };
+
+  const calculateStandaloneAddonUnitPrice = () => {
+    // Visual-only total for the Add to Cart CTA.
+    // These addons are still persisted as independent cart rows.
+    return (dessertsPrice + beveragesPrice + pizzaDippingsPrice).toFixed(2);
   };
 
   // Helper to strip size selections
@@ -8643,7 +8649,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
   };
 
   const calculateTotal = () => {
-    const mainItemTotal = parseFloat(calculateUnitPrice()) * quantity;
+    const baseUnit = parseFloat(calculateUnitPrice());
+    const standaloneAddonUnit = parseFloat(calculateStandaloneAddonUnitPrice());
+    const mainItemTotal = (baseUnit + standaloneAddonUnit) * quantity;
     const pairingsTotal = Object.entries(savedPairingConfigs).reduce((sum, [itemId, cfg]) => {
       const qty = pairingQuantities[itemId] || 0;
       return sum + (cfg.unitPrice || 0) * qty;
