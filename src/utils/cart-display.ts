@@ -4528,6 +4528,29 @@ const applyCategoryOrdering = (item: CartItem, lines: string[]): string[] => {
       normalized.includes('mikes extra hot honey')
     );
   };
+  const isStandaloneAddonItemCategory = new Set([
+    'desserts',
+    'pizzelle',
+    'gelati',
+    'beverages',
+    'dippings',
+    'catering-desserts',
+    'catering-whole-cakes',
+    'catering-party-trays',
+    'catering-beverages',
+  ]);
+  const hideAddonSectionsInPrimaryItem = !isStandaloneAddonItemCategory.has(category);
+  const isStandaloneAddonSection = (section: string | null): boolean => {
+    const s = String(section || '').trim();
+    return (
+      s === 'Dessert' ||
+      s === 'Desserts' ||
+      s === 'Beverage' ||
+      s === 'Beverages' ||
+      s === 'Whole Cakes' ||
+      s === 'Party Trays'
+    );
+  };
 
   lines.forEach((line) => {
     let text = String(line || '').trim();
@@ -4548,6 +4571,11 @@ const applyCategoryOrdering = (item: CartItem, lines: string[]): string[] => {
     }
     section = remapSectionForItem(item, section, text);
     if (section && suppressSections.has(section)) {
+      return;
+    }
+    // Desserts/Beverages/Whole Cakes/Party Trays are now standalone cart rows.
+    // Never render them inside the primary product summary lines.
+    if (hideAddonSectionsInPrimaryItem && isStandaloneAddonSection(section)) {
       return;
     }
     // Dippings are now handled as standalone cart items, so they should not
