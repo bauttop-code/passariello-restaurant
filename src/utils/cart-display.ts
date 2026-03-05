@@ -4173,7 +4173,7 @@ const normalizeSectionName = (raw: string): string | null => {
   if (s.includes('dressing preference')) return 'Dressing preference';
   if (s.includes('dressing instruction') || s.includes('dressing instructions')) return 'Dressing Instructions';
   if (s.includes('extra dressing')) return 'Extra Dressing';
-  if (s.includes('choose your dipping')) return 'Choose Your Dipping Sauce';
+  if (s.includes('choose your dipping') || s.includes('choose dipping')) return 'Choose Your Dipping Sauce';
   if (s.includes('choose your sauce')) return 'Choose your Sauce';
   if (s.includes('choose a sauce')) return 'Choose a Sauce';
   if (s.includes('sauce') && !s.includes('extra sauce')) return 'Sauce';
@@ -4576,7 +4576,11 @@ const applyCategoryOrdering = (item: CartItem, lines: string[]): string[] => {
     }
     // Dippings are now handled as standalone cart items, so they should not
     // be rendered inside base product lines.
-    if (category !== 'dippings' && (section === 'Dippings' || section === 'Choose Your Dipping Sauce')) {
+    if (
+      category !== 'dippings' &&
+      category !== 'stromboli-calzone' &&
+      (section === 'Dippings' || section === 'Choose Your Dipping Sauce')
+    ) {
       return;
     }
     if (
