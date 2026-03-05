@@ -28894,6 +28894,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 // Add extra sides/sauces
                 if (selectedExtraSauce.length > 0) {
                   const isBakedPastaItem = product.category === 'baked-pasta' || (product.category === 'pasta' && product.name.toLowerCase().includes('baked'));
+                  const isStromboliCalzoneItem = product.category === 'stromboli-calzone';
+                  const isBuffaloChickenStromboli = isStromboliCalzoneItem && product.name === 'Buffalo Chicken Stromboli';
                   const bakedAddIds = new Set((bakedPastaAddToppings || []).map((x) => x.id));
                   const bakedSoupIds = new Set((bakedPastaSoupOrSalad || []).map((x) => x.id));
 
@@ -28932,20 +28934,23 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   } else {
                     const names = selectedExtraSauce.map(id => getItemName(id));
                     customizations.push({
-                      category: 'Extra Sauce',
+                      category: isBuffaloChickenStromboli ? 'Choose Your Dipping Sauce' : 'Extra Sauce',
                       items: names
                     });
-                    // NEW STRUCTURED - Add to selections with group info
+                    // NEW STRUCTURED - Stromboli must retain explicit sauce metadata.
                     selectedExtraSauce.forEach(toppingId => {
                       const name = getItemName(toppingId);
                       if (name) {
-                        const groupInfo = getToppingGroupInfo(toppingId);
                         selections.push({
                           id: toppingId,
                           label: name,
-                          type: 'topping',
-                          groupId: groupInfo.groupId,
-                          groupTitle: groupInfo.groupTitle
+                          type: isStromboliCalzoneItem ? 'sauce' : 'topping',
+                          groupId: isBuffaloChickenStromboli
+                            ? 'buffalo_chicken_stromboli_dipping'
+                            : (isStromboliCalzoneItem ? 'stromboli_extra_sauce' : getToppingGroupInfo(toppingId)?.groupId),
+                          groupTitle: isBuffaloChickenStromboli
+                            ? 'Choose Dipping'
+                            : (isStromboliCalzoneItem ? 'Extra Sauce (Optional)' : getToppingGroupInfo(toppingId)?.groupTitle)
                         });
                       }
                     });
@@ -33725,6 +33730,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   // Add extra sides/sauces
                   if (selectedExtraSauce.length > 0) {
                     const isBakedPastaItem = product.category === 'baked-pasta' || (product.category === 'pasta' && product.name.toLowerCase().includes('baked'));
+                    const isStromboliCalzoneItem = product.category === 'stromboli-calzone';
+                    const isBuffaloChickenStromboli = isStromboliCalzoneItem && product.name === 'Buffalo Chicken Stromboli';
                     const bakedAddIds = new Set((bakedPastaAddToppings || []).map((x) => x.id));
                     const bakedSoupIds = new Set((bakedPastaSoupOrSalad || []).map((x) => x.id));
 
@@ -33763,20 +33770,23 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     } else {
                       const names = selectedExtraSauce.map(id => getItemName(id));
                       customizations.push({
-                        category: 'Extra Sauce',
+                        category: isBuffaloChickenStromboli ? 'Choose Your Dipping Sauce' : 'Extra Sauce',
                         items: names
                       });
-                      // NEW STRUCTURED - Add to selections with group info
+                      // NEW STRUCTURED - Stromboli must retain explicit sauce metadata.
                       selectedExtraSauce.forEach(toppingId => {
                         const name = getItemName(toppingId);
                         if (name) {
-                          const groupInfo = getToppingGroupInfo(toppingId);
                           selections.push({
                             id: toppingId,
                             label: name,
-                            type: 'topping',
-                            groupId: groupInfo.groupId,
-                            groupTitle: groupInfo.groupTitle
+                            type: isStromboliCalzoneItem ? 'sauce' : 'topping',
+                            groupId: isBuffaloChickenStromboli
+                              ? 'buffalo_chicken_stromboli_dipping'
+                              : (isStromboliCalzoneItem ? 'stromboli_extra_sauce' : getToppingGroupInfo(toppingId)?.groupId),
+                            groupTitle: isBuffaloChickenStromboli
+                              ? 'Choose Dipping'
+                              : (isStromboliCalzoneItem ? 'Extra Sauce (Optional)' : getToppingGroupInfo(toppingId)?.groupTitle)
                           });
                         }
                       });
