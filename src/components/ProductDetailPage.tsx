@@ -8625,14 +8625,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     }, 0) : 0;
     
     // Desserts, beverages and pizza dippings are now added as standalone cart items.
-    // Keep them out of base product unit price used for cart persistence.
+    // Keep them out of base product unit price to avoid double counting / underflow fixes.
     return (basePrice + toppingsPrice + cafingKitPrice + extraSaucePrice + sideToppingsPrice + extraSidesPrice + addToppingsPrice + liteToppingsPrice + noToppingsCheesesteakPrice + burgerAddPrice + burgerExtraPrice + burgerLitePrice + burgerSidePrice + briocheAddCheesePrice + briocheExtraCheesePrice + briocheNoPrice + briocheSidePrice + paniniExtraCheesePrice + paniniSidesPrice + wrapAddToppingsPrice + wrapExtraCheesePrice + wrapLitePrice + wrapNoPrice + wrapSidePrice + wrapChipsPrice + kidsPastaTypePrice + kidsPastaToppingsPrice + buildPastaTypePrice + buildPastaSaucePrice + buildPastaToppingsPrice + buildPastaSoupPrice + pastaTypePrice + pastaAdditionsPrice + hoagiePlatterOptionsPrice + hoagiePlatterSideToppingsPrice + wrapPlatterOptionsPrice + wrapPlatterSideToppingsPrice + hotSandwichPlatterOptionsPrice + hotSandwichPlatterSideToppingsPrice + hotHoagieSidesPrice + hotHoagieExtrasPrice + hotHoagieCheesePrice + coldHoagieCheesePrice + coldHoagieToppingsPrice + coldHoagieExtrasPrice + coldHoagieLitePrice + coldHoagieNoPrice + coldHoagieSidesPrice + coldHoagieExtraSidesPrice + chipsPrice + saladExtraDressingPrice + saladExtraToppingsPrice + cheesesteakCheesePrice + friesInstructionsPrice + garlicStickInstructionsPrice + garlicBreadInstructionsPrice + garlicBreadMozzarellaInstructionsPrice + mozzarellaSticksInstructionsPrice + onionRingsInstructionsPrice + macAndCheeseBitesInstructionsPrice + broccoliCheddarBitesInstructionsPrice + passarielloFriesInstructionsPrice + cheddarSteakFriesInstructionsPrice + wingsSpecialInstructionsPrice + wingsExtraSaucePrice + wingsExtraCheeseRanchPrice + chickenTendersSpecialInstructionsPrice + chickenTendersExtraSaucePrice + chickenTendersExtraCheeseRanchPrice + mozzarellaSticksSpecialInstructionsPrice + traditionalDinnersSidesPrice + traditionalDinnersSoupsSaladsPrice + extraBreadPrice + kidsPastaMeatballTypePrice + kidsPastaMeatballToppingsPrice + kidsBakedExtraPrice + kidsBakedLitePrice + kidsBakedNoPrice + seafoodPastaTypePrice + calamariPastaTypePrice + musselsPastaTypePrice + seafoodComboPastaTypePrice + shrimpMarinaraPastaTypePrice + pizzaSteakExtrasPrice + extraSideSaucesPrice).toFixed(2);
-  };
-
-  const calculateStandaloneAddonUnitPrice = () => {
-    // Visual-only total for the Add to Cart CTA.
-    // These addons are still persisted as independent cart rows.
-    return (dessertsPrice + beveragesPrice + pizzaDippingsPrice).toFixed(2);
   };
 
   // Helper to strip size selections
@@ -8649,9 +8643,39 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
   };
 
   const calculateTotal = () => {
-    const baseUnit = parseFloat(calculateUnitPrice());
-    const standaloneAddonUnit = parseFloat(calculateStandaloneAddonUnitPrice());
-    const mainItemTotal = (baseUnit + standaloneAddonUnit) * quantity;
+    const standaloneDessertsTotal = Object.entries(selectedDesserts || {}).reduce((sum, [id, qty]) => {
+      const nQty = Number(qty) || 0;
+      if (nQty <= 0) return sum;
+      const dessert = dessertItems.find((d) => d.id === id);
+      const wholeCake = wholeCakesItems.find((d) => d.id === id);
+      const partyTray = partyCakesItems.find((d) => d.id === id);
+      const catalog = allProducts?.find((p) => p.id === id);
+      const rawPrice = (dessert as any)?.price ?? (wholeCake as any)?.price ?? (partyTray as any)?.price ?? (catalog as any)?.price ?? 0;
+      const unit = typeof rawPrice === 'number' ? rawPrice : Number.parseFloat(String(rawPrice).replace(/[^0-9.]/g, '')) || 0;
+      return sum + unit * nQty;
+    }, 0);
+
+    const standaloneBeveragesTotal = Object.entries(selectedBeverages || {}).reduce((sum, [id, qty]) => {
+      const nQty = Number(qty) || 0;
+      if (nQty <= 0) return sum;
+      const beverage = beverageItems.find((b) => b.id === id);
+      const catalog = allProducts?.find((p) => p.id === id);
+      const rawPrice = (beverage as any)?.price ?? (catalog as any)?.price ?? 0;
+      const unit = typeof rawPrice === 'number' ? rawPrice : Number.parseFloat(String(rawPrice).replace(/[^0-9.]/g, '')) || 0;
+      return sum + unit * nQty;
+    }, 0);
+
+    const standalonePizzaDippingsTotal = Object.entries(selectedPizzaDippings || {}).reduce((sum, [id, qty]) => {
+      const nQty = Number(qty) || 0;
+      if (nQty <= 0) return sum;
+      const dip = pizzaDippingsOptions.find((d) => d.id === id);
+      return sum + (dip?.price || 0) * nQty;
+    }, 0);
+
+    const visualStandaloneAddonsTotal =
+      standaloneDessertsTotal + standaloneBeveragesTotal + standalonePizzaDippingsTotal;
+
+    const mainItemTotal = (parseFloat(calculateUnitPrice()) + visualStandaloneAddonsTotal) * quantity;
     const pairingsTotal = Object.entries(savedPairingConfigs).reduce((sum, [itemId, cfg]) => {
       const qty = pairingQuantities[itemId] || 0;
       return sum + (cfg.unitPrice || 0) * qty;
