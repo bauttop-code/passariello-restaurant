@@ -4554,10 +4554,8 @@ export default function App() {
         return { name, qty: Math.max(1, qty), price: Number.isFinite(price) ? price : 0 };
       };
 
-      const applyStandaloneAddons = (items: CartItem[]) => {
+      const buildStandaloneAddonMaps = () => {
         const allAddonSelections = [...extractedAddonSelections, ...addonSelectionsFromCustomizations];
-        if (allAddonSelections.length === 0) return;
-
         const addonQtyByProductId = new Map<string, number>();
         const syntheticDippings = new Map<string, { name: string; qty: number; price: number }>();
 
@@ -4584,6 +4582,33 @@ export default function App() {
           });
         });
 
+        return { addonQtyByProductId, syntheticDippings };
+      };
+
+      const calculateStandaloneAddonUnitTotal = (): number => {
+        const { addonQtyByProductId, syntheticDippings } = buildStandaloneAddonMaps();
+        let total = 0;
+
+        addonQtyByProductId.forEach((qtyToAdd, addonProductId) => {
+          const addonProduct = products.find(p => p.id === addonProductId);
+          if (!addonProduct) return;
+          const addonPrice = parseMoney((addonProduct as any)?.price);
+          if (addonPrice <= 0) return;
+          total += addonPrice * qtyToAdd;
+        });
+
+        syntheticDippings.forEach(({ qty, price }) => {
+          if (price <= 0) return;
+          total += price * qty;
+        });
+
+        return Number(total.toFixed(2));
+      };
+
+      const applyStandaloneAddons = (items: CartItem[]) => {
+        const { addonQtyByProductId, syntheticDippings } = buildStandaloneAddonMaps();
+        if (addonQtyByProductId.size === 0 && syntheticDippings.size === 0) return;
+
         addonQtyByProductId.forEach((qtyToAdd, addonProductId) => {
           const addonProduct = products.find(p => p.id === addonProductId);
           if (!addonProduct) return;
@@ -4599,11 +4624,19 @@ export default function App() {
         });
       };
 
+      const rawPrice = (product as any)?.price;
+      const normalizedPrice =
+        typeof rawPrice === 'number'
+          ? rawPrice
+          : Number.parseFloat(String(rawPrice ?? '').replace(/[^0-9.]/g, '')) || 0;
+      const standaloneAddonUnitTotal = calculateStandaloneAddonUnitTotal();
+      const adjustedParentUnitPrice = Number(Math.max(0, normalizedPrice - standaloneAddonUnitTotal).toFixed(2));
+
       // If editing, update the specific item
       if (isEditMode && editingItemId) {
         const updated = prev.map(item => 
           item.id === editingItemId 
-            ? { ...item, quantity, customizations: parentCustomizations, selections: parentSelections }
+            ? { ...item, quantity, price: adjustedParentUnitPrice, customizations: parentCustomizations, selections: parentSelections }
             : item
         );
         applyStandaloneAddons(updated);
@@ -4613,17 +4646,12 @@ export default function App() {
       
       // Merge exact same item configuration (product + options) by increasing quantity.
       const uniqueId = `${product.id}-${Date.now()}-${Math.random()}`;
-      const rawPrice = (product as any)?.price;
-      const normalizedPrice =
-        typeof rawPrice === 'number'
-          ? rawPrice
-          : Number.parseFloat(String(rawPrice ?? '').replace(/[^0-9.]/g, '')) || 0;
 
       const newItem: CartItem = {
         id: uniqueId,
         productId: product.id,
         name: product.name,
-        price: normalizedPrice,
+        price: adjustedParentUnitPrice,
         quantity: quantity,
         image: product.image,
         customizations: parentCustomizations,
