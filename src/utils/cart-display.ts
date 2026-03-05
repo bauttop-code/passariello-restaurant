@@ -4508,9 +4508,42 @@ const applyCategoryOrdering = (item: CartItem, lines: string[]): string[] => {
     if (!arr.includes(t)) arr.push(t);
   };
 
+  const isPizzaCategory =
+    category === 'pizzas' ||
+    category === 'specialty-pizza' ||
+    category === 'brooklyn-pizza' ||
+    category === 'minucci-pizzas' ||
+    category === 'by-the-slice';
+
+  const isStandaloneDippingLabel = (value: string): boolean => {
+    const t = String(value || '').toLowerCase().trim();
+    if (!t) return false;
+    return (
+      t === 'buttermilk ranch' ||
+      t === 'honey mustard' ||
+      t === 'bleu cheese' ||
+      t === 'blue cheese' ||
+      t === "mike's hot honey" ||
+      t === "mike's extra hot honey" ||
+      t.startsWith('buttermilk ranch x') ||
+      t.startsWith('honey mustard x') ||
+      t.startsWith('bleu cheese x') ||
+      t.startsWith('blue cheese x') ||
+      t.startsWith("mike's hot honey x") ||
+      t.startsWith("mike's extra hot honey x")
+    );
+  };
+
   lines.forEach((line) => {
     let text = String(line || '').trim();
     if (!text) return;
+
+    // Pizza rule: dippings are standalone cart items and must not be shown
+    // inside pizza item detail lines.
+    if (isPizzaCategory && isStandaloneDippingLabel(text)) {
+      return;
+    }
+
     const key = toLookupKey(text);
     let section = sectionByKey.get(key) || null;
     if (!section) {
