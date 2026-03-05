@@ -4620,10 +4620,41 @@ export default function App() {
         typeof rawPrice === 'number'
           ? rawPrice
           : Number.parseFloat(String(rawPrice ?? '').replace(/[^0-9.]/g, '')) || 0;
+      const parsePriceRange = (raw: unknown): number[] =>
+        String(raw || '')
+          .split(' - ')
+          .map((p) => Number.parseFloat(String(p || '').replace(/[^0-9.]/g, '')))
+          .filter((n) => Number.isFinite(n) && n > 0);
+      const resolveSizeHint = (): 'medium' | 'large' | null => {
+        const values: string[] = [];
+        parentSelections.forEach((s) => {
+          values.push(String(s?.label || ''));
+          values.push(String(s?.groupTitle || ''));
+        });
+        parentCustomizations.forEach((c) => {
+          values.push(String(c?.category || ''));
+          (Array.isArray(c?.items) ? c.items : []).forEach((v) => values.push(String(v || '')));
+        });
+        const blob = values.join(' | ').toLowerCase();
+        if (blob.includes('large') || blob.includes('serves 20')) return 'large';
+        if (blob.includes('medium') || blob.includes('serves 10')) return 'medium';
+        return null;
+      };
+      const resolveFallbackRangePrice = (): number => {
+        const catalogProduct = products.find((p) => p.id === product.id);
+        const rangePrices = parsePriceRange((product as any)?.priceRange || (catalogProduct as any)?.priceRange);
+        if (rangePrices.length === 0) return 0;
+        const sizeHint = resolveSizeHint();
+        if (sizeHint === 'large') return rangePrices[1] || rangePrices[0] || 0;
+        if (sizeHint === 'medium') return rangePrices[0] || 0;
+        return rangePrices[0] || 0;
+      };
+      const safeNormalizedPrice =
+        normalizedPrice > 0 ? normalizedPrice : resolveFallbackRangePrice();
       // Parent item price should already represent only the base product price.
       // Standalone addons (desserts/beverages/dippings/whole cakes/party trays) are
       // added as separate cart rows, so we must not subtract again here.
-      const adjustedParentUnitPrice = Number(normalizedPrice.toFixed(2));
+      const adjustedParentUnitPrice = Number(safeNormalizedPrice.toFixed(2));
 
       // If editing, update the specific item
       if (isEditMode && editingItemId) {
