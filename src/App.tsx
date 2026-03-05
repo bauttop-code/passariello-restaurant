@@ -4179,6 +4179,19 @@ export default function App() {
       const dessertNameSet = new Set(dessertCandidates.map(p => normalizeName(String(p.name || ''))));
       const beverageNameSet = new Set(beverageCandidates.map(p => normalizeName(String(p.name || ''))));
       const dippingNameSet = new Set(dippingCandidates.map(p => normalizeName(String(p.name || ''))));
+      const standaloneByName = new Map<string, 'dessert' | 'beverage' | 'dipping'>();
+      dessertCandidates.forEach((p) => {
+        const key = normalizeName(String(p.name || ''));
+        if (key) standaloneByName.set(key, 'dessert');
+      });
+      beverageCandidates.forEach((p) => {
+        const key = normalizeName(String(p.name || ''));
+        if (key && !standaloneByName.has(key)) standaloneByName.set(key, 'beverage');
+      });
+      dippingCandidates.forEach((p) => {
+        const key = normalizeName(String(p.name || ''));
+        if (key && !standaloneByName.has(key)) standaloneByName.set(key, 'dipping');
+      });
       const isBaseCatering = String(product.category || '').toLowerCase().startsWith('catering-');
       const beverageLabelPattern = /\b(20oz|2l|soda|pepsi|starry|dew|ginger ale|root beer|iced tea|water|sparkling|juice|chocolate milk)\b/i;
       const dessertLabelPattern = /\b(cake|cookie|brownie|cannoli|tiramisu|cheesecake|lava|pie|gelato|pizzelle|mascarpone)\b/i;
@@ -4245,11 +4258,13 @@ export default function App() {
         const groupTitle = String(sel.groupTitle || '').toLowerCase();
         const groupId = String(sel.groupId || '').toLowerCase();
         const rawId = String(sel.id || '').trim();
+        const rawLabel = cleanSelectionLabel(String(sel.label || ''));
         const resolvedId = rawId
           .replace(/^(dessert|beverage|dipping)-/i, '')
           .replace(/-qty-\d+$/i, '');
         const idMatchedProduct = products.find((p) => p.id === resolvedId);
         const idMatchedCategory = String(idMatchedProduct?.category || '').toLowerCase();
+        const labelMatchClass = standaloneByName.get(normalizeName(rawLabel)) || null;
 
         // Never treat included sauce lines from wings/chicken flows as standalone add-ons.
         if (
@@ -4261,6 +4276,7 @@ export default function App() {
         }
 
         if (
+          labelMatchClass === 'dessert' ||
           isDessertCategory(idMatchedCategory) ||
           type === 'dessert' ||
           groupTitle.includes('dessert') ||
@@ -4276,6 +4292,7 @@ export default function App() {
         }
 
         if (
+          labelMatchClass === 'beverage' ||
           isBeverageCategory(idMatchedCategory) ||
           type === 'beverage' ||
           groupTitle.includes('beverage') ||
@@ -4285,6 +4302,7 @@ export default function App() {
         }
 
         if (
+          labelMatchClass === 'dipping' ||
           isDippingCategory(idMatchedCategory) ||
           type === 'dipping' ||
           groupId.includes('pizza_dippings') ||
