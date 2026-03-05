@@ -4518,19 +4518,14 @@ const applyCategoryOrdering = (item: CartItem, lines: string[]): string[] => {
   const isStandaloneDippingLabel = (value: string): boolean => {
     const t = String(value || '').toLowerCase().trim();
     if (!t) return false;
+    const normalized = t.replace(/[’']/g, '');
     return (
-      t === 'buttermilk ranch' ||
-      t === 'honey mustard' ||
-      t === 'bleu cheese' ||
-      t === 'blue cheese' ||
-      t === "mike's hot honey" ||
-      t === "mike's extra hot honey" ||
-      t.startsWith('buttermilk ranch x') ||
-      t.startsWith('honey mustard x') ||
-      t.startsWith('bleu cheese x') ||
-      t.startsWith('blue cheese x') ||
-      t.startsWith("mike's hot honey x") ||
-      t.startsWith("mike's extra hot honey x")
+      normalized.includes('buttermilk ranch') ||
+      normalized.includes('honey mustard') ||
+      normalized.includes('bleu cheese') ||
+      normalized.includes('blue cheese') ||
+      normalized.includes('mikes hot honey') ||
+      normalized.includes('mikes extra hot honey')
     );
   };
 
