@@ -3191,15 +3191,11 @@ const buildStromboliCalzoneLines = (item: CartItem, rawLines: { text: string; or
   const finalLines = isTurnoverCalzonePepperoniRoll
     ? [
         ...additionalToppingsLines,
-        ...extraSauceLines,
-        ...dessertLines,
-        ...beverageLines
+        ...extraSauceLines
       ]
     : [
         ...dippingsLines,
-        ...additionalToppingsLines,
-        ...dessertLines,
-        ...beverageLines
+        ...additionalToppingsLines
       ];
 
   console.log("[STROMBOLI_REPORT_DEBUG]", { 

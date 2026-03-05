@@ -4284,6 +4284,20 @@ export default function App() {
           return null;
         }
 
+        // Stromboli/Calzone dipping and extra-sauce choices are part of the base item
+        // and must not be extracted as standalone dippings.
+        if (
+          String(product?.category || '').toLowerCase() === 'stromboli-calzone' &&
+          (
+            groupId.includes('buffalo_chicken_stromboli_dipping') ||
+            groupId.includes('stromboli_extra_sauce') ||
+            groupTitle.includes('choose dipping') ||
+            groupTitle.includes('extra sauce')
+          )
+        ) {
+          return null;
+        }
+
         if (
           labelMatchClass === 'dessert' ||
           isDessertCategory(idMatchedCategory) ||
