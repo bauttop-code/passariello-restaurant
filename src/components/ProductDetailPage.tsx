@@ -28932,14 +28932,16 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       });
                     }
                   } else {
-                    const names = selectedExtraSauce.map(id => getItemName(id));
+                    const names = selectedExtraSauce.map((id) => (
+                      extraSauceOptions.find((opt) => opt.id === id)?.name || getItemName(id)
+                    ));
                     customizations.push({
                       category: isBuffaloChickenStromboli ? 'Choose Your Dipping Sauce' : 'Extra Sauce',
                       items: names
                     });
                     // NEW STRUCTURED - Stromboli must retain explicit sauce metadata.
                     selectedExtraSauce.forEach(toppingId => {
-                      const name = getItemName(toppingId);
+                      const name = extraSauceOptions.find((opt) => opt.id === toppingId)?.name || getItemName(toppingId);
                       if (name) {
                         selections.push({
                           id: toppingId,
@@ -33768,14 +33770,16 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         });
                       }
                     } else {
-                      const names = selectedExtraSauce.map(id => getItemName(id));
+                      const names = selectedExtraSauce.map((id) => (
+                        extraSauceOptions.find((opt) => opt.id === id)?.name || getItemName(id)
+                      ));
                       customizations.push({
                         category: isBuffaloChickenStromboli ? 'Choose Your Dipping Sauce' : 'Extra Sauce',
                         items: names
                       });
                       // NEW STRUCTURED - Stromboli must retain explicit sauce metadata.
                       selectedExtraSauce.forEach(toppingId => {
-                        const name = getItemName(toppingId);
+                        const name = extraSauceOptions.find((opt) => opt.id === toppingId)?.name || getItemName(toppingId);
                         if (name) {
                           selections.push({
                             id: toppingId,
