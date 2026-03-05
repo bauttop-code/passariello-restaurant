@@ -434,12 +434,14 @@ const buildWingsDisplayLines = (item: CartItem, rawLines: { text: string; origin
     let includedFlavor = "Bleu Cheese";
     let includedSelId: string | null = null;
 
-    const explicitIncludedLine = rawLines.find(l => 
-        l.originalSel?.type === 'included' || 
-        l.originalSel?.groupId?.includes('included') || 
-        l.originalSel?.groupTitle?.toLowerCase().includes('included') ||
-        l.originalSel?.groupTitle?.toLowerCase().includes('comes with')
-    );
+    const explicitIncludedLine = rawLines.find((l) => {
+        const sel = l.originalSel;
+        if (!sel) return false;
+        const gid = String(sel.groupId || '').toLowerCase();
+        const sid = String(sel.id || '').toLowerCase();
+        // Only trust the explicit synthetic included-sauce selection injected by product detail.
+        return sel.type === 'included' || gid === 'included_sauce' || sid.startsWith('included-sauce-');
+    });
 
     if (explicitIncludedLine) {
         let text = explicitIncludedLine.text;
