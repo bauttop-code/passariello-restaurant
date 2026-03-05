@@ -4244,6 +4244,12 @@ export default function App() {
         const type = String(sel.type || '').toLowerCase();
         const groupTitle = String(sel.groupTitle || '').toLowerCase();
         const groupId = String(sel.groupId || '').toLowerCase();
+        const rawId = String(sel.id || '').trim();
+        const resolvedId = rawId
+          .replace(/^(dessert|beverage|dipping)-/i, '')
+          .replace(/-qty-\d+$/i, '');
+        const idMatchedProduct = products.find((p) => p.id === resolvedId);
+        const idMatchedCategory = String(idMatchedProduct?.category || '').toLowerCase();
 
         // Never treat included sauce lines from wings/chicken flows as standalone add-ons.
         if (
@@ -4255,6 +4261,7 @@ export default function App() {
         }
 
         if (
+          isDessertCategory(idMatchedCategory) ||
           type === 'dessert' ||
           groupTitle.includes('dessert') ||
           groupId.includes('dessert') ||
@@ -4269,6 +4276,7 @@ export default function App() {
         }
 
         if (
+          isBeverageCategory(idMatchedCategory) ||
           type === 'beverage' ||
           groupTitle.includes('beverage') ||
           groupId.includes('beverage')
@@ -4277,6 +4285,7 @@ export default function App() {
         }
 
         if (
+          isDippingCategory(idMatchedCategory) ||
           type === 'dipping' ||
           groupId.includes('pizza_dippings') ||
           groupTitle.includes('add dippings') ||
