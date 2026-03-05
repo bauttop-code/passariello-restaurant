@@ -4523,6 +4523,11 @@ const applyCategoryOrdering = (item: CartItem, lines: string[]): string[] => {
     if (section && suppressSections.has(section)) {
       return;
     }
+    // Dippings are now handled as standalone cart items, so they should not
+    // be rendered inside base product lines.
+    if (category !== 'dippings' && (section === 'Dippings' || section === 'Choose Your Dipping Sauce')) {
+      return;
+    }
     if (
       category === 'catering-hoagies-wraps' &&
       String(item.name || '').toLowerCase().includes('hoagie platter') &&
