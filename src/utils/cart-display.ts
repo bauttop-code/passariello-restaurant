@@ -638,8 +638,7 @@ const buildWingsDisplayLines = (item: CartItem, rawLines: { text: string; origin
         ...finalChooseSauce,
         ...finalSpecial,
         ...includedBucket,
-        ...finalExtraSauce,
-        ...finalDippings
+        ...finalExtraSauce
     ];
 
     if (debugCart) {
