@@ -7217,7 +7217,10 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       const gtitle = String(s.groupTitle || '').toLowerCase();
       const sid = String(s.id || '').toLowerCase();
       const label = String(s.label || '').toLowerCase();
-      if (sid.startsWith('es') || sid.startsWith('hh-side-')) return false;
+      const isStromboliExtraSauce =
+        gid.includes('stromboli_extra_sauce') ||
+        (gtitle.includes('extra sauce') && sid.startsWith('es'));
+      if (!isStromboliExtraSauce && (sid.startsWith('es') || sid.startsWith('hh-side-'))) return false;
       if (gid.includes('extra_sides') || gid.includes('hot_hoagie_sides') || gid.includes('cold_hoagie_extra_sides')) return false;
       if (gtitle.includes('would you like to add extra sides') || gtitle === 'sides' || gtitle === 'extra sides') return false;
       if (extraSideNames.has(label)) return false;
