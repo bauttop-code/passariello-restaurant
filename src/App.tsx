@@ -4162,7 +4162,12 @@ export default function App() {
           .trim();
 
       const isDessertCategory = (cat: string) =>
-        cat === 'desserts' || cat === 'catering-desserts' || cat === 'pizzelle' || cat === 'gelati';
+        cat === 'desserts' ||
+        cat === 'catering-desserts' ||
+        cat === 'catering-whole-cakes' ||
+        cat === 'catering-party-trays' ||
+        cat === 'pizzelle' ||
+        cat === 'gelati';
       const isBeverageCategory = (cat: string) =>
         cat === 'beverages' || cat === 'catering-beverages';
       const isDippingCategory = (cat: string) =>
@@ -4186,7 +4191,11 @@ export default function App() {
         const categoryIsAddon =
           category.includes('dessert') ||
           category.includes('beverage') ||
-          category.includes('dipping');
+          category.includes('dipping') ||
+          category.includes('whole cake') ||
+          category.includes('whole cakes') ||
+          category.includes('party tray') ||
+          category.includes('party trays');
         if (!categoryIsAddon) return;
         const items = Array.isArray(c?.items) ? c.items : [];
         items.forEach((raw: string) => {
@@ -4200,7 +4209,15 @@ export default function App() {
           let type: CartSelection['type'] | null = null;
           let groupId = 'addons';
           let groupTitle = 'Add Ons';
-          if (category.includes('dessert') || dessertNameSet.has(normalized) || dessertLabelPattern.test(cleaned)) {
+          if (
+            category.includes('dessert') ||
+            category.includes('whole cake') ||
+            category.includes('whole cakes') ||
+            category.includes('party tray') ||
+            category.includes('party trays') ||
+            dessertNameSet.has(normalized) ||
+            dessertLabelPattern.test(cleaned)
+          ) {
             type = 'dessert';
             groupId = 'desserts';
             groupTitle = 'Would You Like a Dessert?';
@@ -4246,6 +4263,12 @@ export default function App() {
           type === 'dessert' ||
           groupTitle.includes('dessert') ||
           groupId.includes('dessert') ||
+          groupTitle.includes('whole cake') ||
+          groupTitle.includes('whole cakes') ||
+          groupTitle.includes('party tray') ||
+          groupTitle.includes('party trays') ||
+          groupId.includes('whole_cakes') ||
+          groupId.includes('party_trays') ||
           dessertNameSet.has(labelNorm) ||
           dessertLabelPattern.test(rawLabel)
         ) {
@@ -4295,7 +4318,15 @@ export default function App() {
 
       const parentCustomizations = (customizations || []).filter(c => {
         const category = String(c.category || '').toLowerCase();
-        return !category.includes('dessert') && !category.includes('beverage') && !category.includes('dipping');
+        return (
+          !category.includes('dessert') &&
+          !category.includes('beverage') &&
+          !category.includes('dipping') &&
+          !category.includes('whole cake') &&
+          !category.includes('whole cakes') &&
+          !category.includes('party tray') &&
+          !category.includes('party trays')
+        );
       }).map(c => {
         const items = Array.isArray(c.items) ? c.items : [];
         const filteredItems = items.filter((raw: string) => {
