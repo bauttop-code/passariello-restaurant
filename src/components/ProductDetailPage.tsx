@@ -3916,6 +3916,15 @@ const partyCakesItems = [
   { id: 'cptray6b', name: 'Brownie Tray (20PCS)', price: 59.99, image: 'https://drive.google.com/thumbnail?id=1Lp9zx7u-P4dWdVwqv7TRiRmhnsEC-m8S&sz=w400' }
 ];
 
+const formatPartyTrayCardName = (name: string) => {
+  const raw = String(name || '').trim();
+  const match = raw.match(/\(\s*(\d+\s*PCS)\s*\)/i);
+  if (!match) return raw;
+  const pcs = String(match[1] || '').replace(/\s+/g, '').toUpperCase();
+  const base = raw.replace(/\(\s*\d+\s*PCS\s*\)/i, '').trim();
+  return `${pcs} ${base}`.trim();
+};
+
 const sideToppingItems = [
   { id: 'st6', name: 'Side Mayo', price: 0.00 },
   { id: 'st5', name: 'Side Ketchup', price: 0.00 },
@@ -26170,11 +26179,12 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       {partyCakesItems.map((item) => {
                         const quantity = selectedDesserts[item.id] || 0;
                         const isActive = activeDessertItem === item.id;
+                        const partyItem = { ...item, name: formatPartyTrayCardName(item.name) };
                         
                         return (
                           <AddonCard
                             key={item.id}
-                            item={item}
+                            item={partyItem}
                             quantity={quantity}
                             isActive={isActive}
                             onSelect={() => {
@@ -30439,6 +30449,35 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     isSide: true,
                   });
                 }
+
+                // Hot Sandwich Platter
+                if (selectedHotSandwichPlatterOptions && Object.keys(selectedHotSandwichPlatterOptions).length > 0) {
+                  registerHoagiePlatterSelections(selectedHotSandwichPlatterOptions, {
+                    groupId: "hot_sandwich_platter_options",
+                    groupTitle: "Build Your Platter",
+                  });
+                }
+                if (selectedHotSandwichPlatterCut) {
+                  const cutName = getItemName(selectedHotSandwichPlatterCut) ?? "Cut Options";
+                  const selectionId = `hot_sandwich_platter_cut:${selectedHotSandwichPlatterCut}`;
+                  if (!selections.some((s) => s.id === selectionId)) {
+                    selections.push({
+                      id: selectionId,
+                      label: cutName,
+                      type: "required_option",
+                      groupId: "hot_sandwich_platter_cut",
+                      groupTitle: "Cut Options",
+                      productId: product.id,
+                    });
+                  }
+                }
+                if (selectedHotSandwichPlatterSideToppings && Object.keys(selectedHotSandwichPlatterSideToppings).length > 0) {
+                  registerHoagiePlatterSelections(selectedHotSandwichPlatterSideToppings, {
+                    groupId: "hot_sandwich_platter_side_toppings",
+                    groupTitle: "Side Toppings",
+                    isSide: true,
+                  });
+                }
                 
                 // Burgers
                 registerSelectionsFromIds(selectedBurgerAdd, {
@@ -31341,11 +31380,6 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   selectedWrapPlatterOptions: { kind: "numberRecord", value: selectedWrapPlatterOptions },
                   selectedWrapPlatterWrapType: { kind: "singleString", value: selectedWrapPlatterWrapType },
                   selectedWrapPlatterSideToppings: { kind: "numberRecord", value: selectedWrapPlatterSideToppings },
-
-                  // Hot Sandwich Platter states
-                  selectedHotSandwichPlatterOptions: { kind: "numberRecord", value: selectedHotSandwichPlatterOptions },
-                  selectedHotSandwichPlatterCut: { kind: "singleString", value: selectedHotSandwichPlatterCut },
-                  selectedHotSandwichPlatterSideToppings: { kind: "numberRecord", value: selectedHotSandwichPlatterSideToppings },
 
                   // Seafood Tray states
                   selectedBabyClamPastaType: { kind: "singleString", value: selectedBabyClamPastaType },
@@ -34584,6 +34618,33 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   }
                   if (selectedWrapPlatterOptions && Object.keys(selectedWrapPlatterOptions).length > 0) registerWrapPlatterSelections(selectedWrapPlatterOptions, { groupId: "wrap_platter_options", groupTitle: "Wrap Platter • Wraps", debugKey: "selectedWrapPlatterOptions" });
                   if (selectedWrapPlatterSideToppings && Object.keys(selectedWrapPlatterSideToppings).length > 0) registerWrapPlatterSelections(selectedWrapPlatterSideToppings, { groupId: "wrap_platter_side_toppings", groupTitle: "Wrap Platter • Side Toppings", debugKey: "selectedWrapPlatterSideToppings", isSide: true });
+                  if (selectedHotSandwichPlatterOptions && Object.keys(selectedHotSandwichPlatterOptions).length > 0) {
+                    registerHoagiePlatterSelections(selectedHotSandwichPlatterOptions, {
+                      groupId: "hot_sandwich_platter_options",
+                      groupTitle: "Build Your Platter",
+                    });
+                  }
+                  if (selectedHotSandwichPlatterCut) {
+                    const cutName = getItemName(selectedHotSandwichPlatterCut) ?? "Cut Options";
+                    const selectionId = `hot_sandwich_platter_cut:${selectedHotSandwichPlatterCut}`;
+                    if (!selections.some((s) => s.id === selectionId)) {
+                      selections.push({
+                        id: selectionId,
+                        label: cutName,
+                        type: "required_option",
+                        groupId: "hot_sandwich_platter_cut",
+                        groupTitle: "Cut Options",
+                        productId: product.id,
+                      });
+                    }
+                  }
+                  if (selectedHotSandwichPlatterSideToppings && Object.keys(selectedHotSandwichPlatterSideToppings).length > 0) {
+                    registerHoagiePlatterSelections(selectedHotSandwichPlatterSideToppings, {
+                      groupId: "hot_sandwich_platter_side_toppings",
+                      groupTitle: "Side Toppings",
+                      isSide: true,
+                    });
+                  }
                   registerSelectionsFromIds(selectedChickenTendersSpecialInstructions, { debugKey: "selectedChickenTendersSpecialInstructions", fallbackType: "special_instruction", fallbackGroupId: "chicken_tenders_instructions", fallbackGroupTitle: "Chicken Tenders • Special Instructions" });
                   registerSelectionsFromIds(selectedWingsSpecialInstructions, { debugKey: "selectedWingsSpecialInstructions", fallbackType: "special_instruction", fallbackGroupId: "wings_instructions", fallbackGroupTitle: "Wings • Special Instructions" });
                   if (selectedPastaFagioliSubstitute) {
@@ -34859,11 +34920,6 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     selectedWrapPlatterOptions: { kind: "numberRecord", value: selectedWrapPlatterOptions },
                     selectedWrapPlatterWrapType: { kind: "singleString", value: selectedWrapPlatterWrapType },
                     selectedWrapPlatterSideToppings: { kind: "numberRecord", value: selectedWrapPlatterSideToppings },
-
-                    // Hot Sandwich Platter states
-                    selectedHotSandwichPlatterOptions: { kind: "numberRecord", value: selectedHotSandwichPlatterOptions },
-                    selectedHotSandwichPlatterCut: { kind: "singleString", value: selectedHotSandwichPlatterCut },
-                    selectedHotSandwichPlatterSideToppings: { kind: "numberRecord", value: selectedHotSandwichPlatterSideToppings },
 
                     // Seafood Tray states
                     selectedBabyClamPastaType: { kind: "singleString", value: selectedBabyClamPastaType },

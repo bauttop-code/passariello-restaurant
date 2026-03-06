@@ -4524,6 +4524,26 @@ const applyCategoryOrdering = (item: CartItem, lines: string[]): string[] => {
       normalized.includes('mikes extra hot honey')
     );
   };
+  const isStandaloneBeverageLabel = (value: string): boolean => {
+    const normalized = String(value || '')
+      .toLowerCase()
+      .replace(/[’']/g, '')
+      .trim();
+    if (!normalized) return false;
+    return (
+      normalized.includes('20oz') ||
+      normalized.includes('2l') ||
+      normalized.includes('pepsi') ||
+      normalized.includes('starry') ||
+      normalized.includes('mountain dew') ||
+      normalized.includes('ginger ale') ||
+      normalized.includes('root beer') ||
+      normalized.includes('iced tea') ||
+      normalized.includes('sparkling water') ||
+      normalized.includes('apple juice') ||
+      normalized.includes('chocolate milk')
+    );
+  };
   const isStandaloneAddonItemCategory = new Set([
     'desserts',
     'pizzelle',
@@ -4569,6 +4589,10 @@ const applyCategoryOrdering = (item: CartItem, lines: string[]): string[] => {
     if (section && suppressSections.has(section)) {
       return;
     }
+    // Beverages are standalone cart items and must never render under a primary line item.
+    if (hideAddonSectionsInPrimaryItem && isStandaloneBeverageLabel(text)) {
+      return;
+    }
     // Desserts/Beverages/Whole Cakes/Party Trays are now standalone cart rows.
     // Never render them inside the primary product summary lines.
     if (hideAddonSectionsInPrimaryItem && isStandaloneAddonSection(section)) {
@@ -4585,10 +4609,14 @@ const applyCategoryOrdering = (item: CartItem, lines: string[]): string[] => {
     }
     if (
       category === 'catering-hoagies-wraps' &&
-      String(item.name || '').toLowerCase().includes('hoagie platter') &&
-      section === 'Build Your Platter'
+      section === 'Build Your Platter' &&
+      (
+        String(item.name || '').toLowerCase().includes('hoagie platter') ||
+        String(item.name || '').toLowerCase().includes('wrap platter') ||
+        String(item.name || '').toLowerCase().includes('hot sandwich platter')
+      )
     ) {
-      // Hoagie Platter must report Build Your Platter entries with dynamic xN quantity.
+      // Catering platters must report Build Your Platter entries with dynamic xN quantity.
       const dynamicQty = Math.max(1, Number(item.quantity) || 1);
       if (!/\bx\d+\b/i.test(text)) text = `${text} x${dynamicQty}`;
     }
@@ -4624,8 +4652,15 @@ const applyCategoryOrdering = (item: CartItem, lines: string[]): string[] => {
   }
 
   const ordered = desired.sections.flatMap((sec) => getBucket(sec));
-  if (category === 'catering-hoagies-wraps' && String(item.name || '').toLowerCase().includes('hoagie platter')) {
-    // Hoagie Platter must follow strict explicit order only.
+  if (
+    category === 'catering-hoagies-wraps' &&
+    (
+      String(item.name || '').toLowerCase().includes('hoagie platter') ||
+      String(item.name || '').toLowerCase().includes('wrap platter') ||
+      String(item.name || '').toLowerCase().includes('hot sandwich platter')
+    )
+  ) {
+    // Catering platters must follow strict explicit order only.
     return ordered;
   }
   if (category === 'brioche') {

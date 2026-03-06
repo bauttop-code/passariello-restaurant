@@ -4170,6 +4170,15 @@ export default function App() {
           .replace(/^add\s+/i, '')
           .trim();
 
+      const normalizePartyTrayDisplayName = (value: string) => {
+        const raw = String(value || '').trim();
+        const pcsMatch = raw.match(/\(\s*(\d+\s*PCS)\s*\)/i);
+        if (!pcsMatch) return raw;
+        const pcs = String(pcsMatch[1] || '').replace(/\s+/g, '').toUpperCase();
+        const base = raw.replace(/\(\s*\d+\s*PCS\s*\)/i, '').trim();
+        return `${pcs} ${base}`.trim();
+      };
+
       const isDessertCategory = (cat: string) =>
         cat === 'desserts' ||
         cat === 'catering-desserts' ||
@@ -4317,6 +4326,7 @@ export default function App() {
         if (
           labelMatchClass === 'beverage' ||
           isBeverageCategory(idMatchedCategory) ||
+          beverageLabelPattern.test(rawLabel) ||
           type === 'beverage' ||
           groupTitle.includes('beverage') ||
           groupId.includes('beverage')
@@ -4462,6 +4472,10 @@ export default function App() {
         }
 
         if (!addonProductId) return null;
+        const resolvedAddonProduct = addonCandidates.find((p) => p.id === addonProductId);
+        if (String(resolvedAddonProduct?.category || '').toLowerCase() === 'catering-party-trays') {
+          addonDisplayLabel = normalizePartyTrayDisplayName(addonDisplayLabel || String(resolvedAddonProduct?.name || ''));
+        }
         return { addonProductId, qty: Math.max(1, qty), displayLabel: addonDisplayLabel || undefined };
       };
 
@@ -4521,7 +4535,11 @@ export default function App() {
         addonQty: number,
         displayLabel?: string
       ) => {
-        const addonName = String(displayLabel || addonProduct.name || '').trim() || addonProduct.name;
+        const rawAddonName = String(displayLabel || addonProduct.name || '').trim() || addonProduct.name;
+        const addonName =
+          String(addonProduct.category || '').toLowerCase() === 'catering-party-trays'
+            ? normalizePartyTrayDisplayName(rawAddonName)
+            : rawAddonName;
         const existingIndex = items.findIndex(i =>
           i.productId === addonProduct.id &&
           String(i.name || '').trim().toLowerCase() === addonName.toLowerCase() &&
