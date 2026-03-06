@@ -4352,14 +4352,38 @@ export default function App() {
         return classifyAddonSelection(sel) !== null;
       };
 
+      const hasExplicitAddonSignal = (sel: CartSelection): boolean => {
+        const type = String(sel?.type || '').toLowerCase();
+        const groupTitle = String(sel?.groupTitle || '').toLowerCase();
+        const groupId = String(sel?.groupId || '').toLowerCase();
+        const rawId = String(sel?.id || '').toLowerCase();
+        return (
+          type === 'dessert' ||
+          type === 'beverage' ||
+          type === 'dipping' ||
+          groupTitle.includes('dessert') ||
+          groupTitle.includes('beverage') ||
+          groupTitle.includes('add dippings') ||
+          groupId.includes('dessert') ||
+          groupId.includes('beverage') ||
+          groupId === 'dippings' ||
+          rawId.startsWith('dessert-') ||
+          rawId.startsWith('beverage-') ||
+          rawId.startsWith('dipping-') ||
+          /-qty-\d+$/i.test(rawId)
+        );
+      };
+
       const parentSelections = validatedSelections.filter(sel => {
         const isAddon = isAddonSelection(sel);
         if (isAddon) {
           const normalizedLabel = normalizeName(cleanSelectionLabel(String(sel.label || '')));
+          const explicitAddonSignal = hasExplicitAddonSignal(sel);
           // If customizations explicitly carry addon labels, trust that list to avoid stale/ghost addon selections.
           if (
             addonLabelsFromCustomizations.size === 0 ||
-            addonLabelsFromCustomizations.has(normalizedLabel)
+            addonLabelsFromCustomizations.has(normalizedLabel) ||
+            explicitAddonSignal
           ) {
             extractedAddonSelections.push(sel);
           }
@@ -4419,38 +4443,8 @@ export default function App() {
           return aIsCatering === isBaseCatering ? -1 : 1;
         });
 
-        // First resolve by label to avoid cross-file ID mismatches (notably beverages).
-        if (rawLabel) {
-          const qtyFromLabel = rawLabel.match(/\s+x(\d+)$/i);
-          if (qtyFromLabel) {
-            qty = Number.parseInt(qtyFromLabel[1], 10) || 1;
-          }
-
-          const cleanLabel = cleanSelectionLabel(rawLabel);
-          addonDisplayLabel = cleanLabel;
-
-          const normalizedLabel = normalizeAddonLookupName(cleanLabel);
-
-          const exactByName = addonCandidates.find(
-            p => normalizeAddonLookupName(String(p.name || '')) === normalizedLabel
-          );
-
-          if (exactByName) {
-            addonProductId = exactByName.id;
-          } else {
-            const fuzzyByName = addonCandidates.find(p => {
-              const normalizedProduct = normalizeAddonLookupName(String(p.name || ''));
-              return (
-                normalizedLabel.includes(normalizedProduct) ||
-                normalizedProduct.includes(normalizedLabel)
-              );
-            });
-            if (fuzzyByName) addonProductId = fuzzyByName.id;
-          }
-        }
-
-        // Supports: dessert-<id>-qty-<n>, beverage-<id>-qty-<n>, <id>-qty-<n>
-        if (!addonProductId) {
+        const parseIdPayload = () => {
+          // Supports: dessert-<id>-qty-<n>, beverage-<id>-qty-<n>, dipping-<id>-qty-<n>, <id>-qty-<n>, <id>
           const prefixedMatch = rawId.match(/^(?:dessert|beverage|dipping)-(.+)-qty-(\d+)$/i);
           const genericMatch = rawId.match(/^(.+)-qty-(\d+)$/i);
 
@@ -4464,10 +4458,58 @@ export default function App() {
           } else if (rawId) {
             parsedId = rawId;
           }
+          return parsedId;
+        };
 
-          if (parsedId) {
-            const byId = addonCandidates.find(p => p.id === parsedId);
-            if (byId) addonProductId = byId.id;
+        // Always prefer exact ID resolution first to avoid cross-category/name collisions
+        // that can produce wrong image/price in standalone addon cart rows.
+        const parsedId = parseIdPayload();
+        if (parsedId) {
+          const byId = addonCandidates.find(p => p.id === parsedId);
+          if (byId) {
+            addonProductId = byId.id;
+          }
+        }
+
+        // If ID resolution failed, resolve by label (legacy/older selections).
+        if (!addonProductId && rawLabel) {
+          const qtyFromLabel = rawLabel.match(/\s+x(\d+)$/i);
+          if (qtyFromLabel) {
+            qty = Number.parseInt(qtyFromLabel[1], 10) || 1;
+          }
+
+          const cleanLabel = cleanSelectionLabel(rawLabel);
+          addonDisplayLabel = cleanLabel;
+
+          const normalizedLabel = normalizeAddonLookupName(cleanLabel);
+          const strictNormalizedLabel = normalizeName(cleanLabel);
+
+          // For tray/cake labels, keep PCS in match first (10PCS/20PCS/etc) to avoid
+          // resolving to a different size variant.
+          const strictByName = addonCandidates.find(
+            p => normalizeName(String(p.name || '')) === strictNormalizedLabel
+          );
+          if (strictByName) {
+            addonProductId = strictByName.id;
+          }
+
+          const exactByName = addonProductId
+            ? null
+            : addonCandidates.find(
+                p => normalizeAddonLookupName(String(p.name || '')) === normalizedLabel
+              );
+
+          if (exactByName) {
+            addonProductId = exactByName.id;
+          } else {
+            const fuzzyByName = addonCandidates.find(p => {
+              const normalizedProduct = normalizeAddonLookupName(String(p.name || ''));
+              return (
+                normalizedLabel.includes(normalizedProduct) ||
+                normalizedProduct.includes(normalizedLabel)
+              );
+            });
+            if (fuzzyByName) addonProductId = fuzzyByName.id;
           }
         }
 
@@ -4529,6 +4571,43 @@ export default function App() {
         });
       };
 
+      const resolveAddonUnitPrice = (addonProduct: Product, displayLabel?: string): number => {
+        const base = parseMoney((addonProduct as any)?.price);
+        const range = parsePriceRange((addonProduct as any)?.priceRange);
+        if (range.length === 0) return base;
+
+        const label = String(displayLabel || addonProduct.name || '').toLowerCase();
+        const pcsMatch = label.match(/\b(\d+)\s*pcs\b/i);
+        const servesMatch = label.match(/\bserves\s*(\d+)\b/i);
+        const quantityHint = pcsMatch
+          ? Number.parseInt(pcsMatch[1], 10)
+          : servesMatch
+            ? Number.parseInt(servesMatch[1], 10)
+            : NaN;
+
+        // Map common catering size hints to range positions.
+        const indexByQty: Record<number, number> = {
+          10: 0,
+          20: 1,
+          30: 2,
+          40: 3,
+          50: 4,
+        };
+        if (Number.isFinite(quantityHint)) {
+          const idx = indexByQty[quantityHint];
+          if (idx !== undefined && idx < range.length) return range[idx];
+        }
+
+        if (/\bmedium\b/.test(label) && range[0] !== undefined) return range[0];
+        if (/\blarge\b/.test(label) && range[1] !== undefined) return range[1];
+
+        if (base > 0) {
+          const sameAsRange = range.find((v) => Math.abs(v - base) < 0.01);
+          if (sameAsRange !== undefined) return sameAsRange;
+        }
+        return range[0] ?? base;
+      };
+
       const addOrMergeSimpleItem = (
         items: CartItem[],
         addonProduct: Product,
@@ -4558,7 +4637,7 @@ export default function App() {
           id: `${addonProduct.id}-${Date.now()}-${Math.random()}`,
           productId: addonProduct.id,
           name: addonName,
-          price: parseMoney((addonProduct as any)?.price),
+          price: resolveAddonUnitPrice(addonProduct, displayLabel),
           quantity: addonQty,
           image: addonProduct.image,
           customizations: [],
@@ -4726,12 +4805,32 @@ export default function App() {
         if (sizeHint === 'medium') return rangePrices[0] || 0;
         return rangePrices[0] || 0;
       };
+      const catalogProduct = products.find((p) => p.id === product.id);
+      const catalogDirectPrice = parseMoney((catalogProduct as any)?.price);
+      const catalogRangePrice = resolveFallbackRangePrice();
+      const catalogBasePrice =
+        catalogRangePrice > 0 ? catalogRangePrice : (catalogDirectPrice > 0 ? catalogDirectPrice : 0);
+
       const safeNormalizedPrice =
-        normalizedPrice > 0 ? normalizedPrice : resolveFallbackRangePrice();
-      // Parent item price should already represent only the base product price.
-      // Standalone addons (desserts/beverages/dippings/whole cakes/party trays) are
-      // added as separate cart rows, so we must not subtract again here.
-      const adjustedParentUnitPrice = Number(safeNormalizedPrice.toFixed(2));
+        normalizedPrice > 0 ? normalizedPrice : (catalogBasePrice > 0 ? catalogBasePrice : 0);
+
+      const standaloneAddonUnitTotal = calculateStandaloneAddonUnitTotal();
+      let adjustedParentUnitPrice = safeNormalizedPrice;
+
+      // If incoming unit price already includes standalone addons, remove only those addons here.
+      // Keep paid non-standalone customizations inside parent price.
+      if (standaloneAddonUnitTotal > 0) {
+        const hasCatalogBase = catalogBasePrice > 0;
+        const incomingAboveCatalog = hasCatalogBase && safeNormalizedPrice > (catalogBasePrice + 0.01);
+        const canSubtractWithoutNegative = safeNormalizedPrice > (standaloneAddonUnitTotal + 0.01);
+
+        if ((incomingAboveCatalog || !hasCatalogBase) && canSubtractWithoutNegative) {
+          const candidate = safeNormalizedPrice - standaloneAddonUnitTotal;
+          adjustedParentUnitPrice = hasCatalogBase ? Math.max(catalogBasePrice, candidate) : candidate;
+        }
+      }
+
+      adjustedParentUnitPrice = Number(adjustedParentUnitPrice.toFixed(2));
 
       // If editing, update the specific item
       if (isEditMode && editingItemId) {

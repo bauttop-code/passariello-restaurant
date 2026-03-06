@@ -5069,7 +5069,12 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
         const requiredSideToppingsIds = new Set((cheesesteakSideToppingsRequired || []).map((x: any) => String(x.id)));
         const extraSidesIds = new Set((extraSidesItems || []).map((x: any) => String(x.id)));
         const dessertIdsSet = new Set((dessertItems || []).map((x: any) => String(x.id)));
-        const beverageIdsSet = new Set((beverageItems || []).map((x: any) => String(x.id)));
+        const beverageIdsSet = new Set([
+          ...((activeBeverageItems || []).map((x: any) => String(x.id))),
+          ...((regularBeverageCatalogItems || []).map((x: any) => String(x.id))),
+          ...((cateringBeverageCatalogItems || []).map((x: any) => String(x.id))),
+          ...((beverageItems || []).map((x: any) => String(x.id)))
+        ]);
 
         const collect = (predicate: (sel: any) => boolean): string[] =>
           uniqueIds(
@@ -5597,14 +5602,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 const cleanName = match ? match[1] : name;
                 const qty = match ? parseInt(match[2], 10) : 1;
 
-                // First check beverageItems (local definition)
-                let beverage = beverageItems.find(b => b.name === cleanName);
-                // Fallback to allProducts
-                if (!beverage) {
-                   const product = allProducts.find(p => p.name === cleanName);
-                   if (product) beverage = { id: product.id, name: product.name } as any;
-                }
-                
+                const beverage = resolveBeverageByName(cleanName);
                 return beverage ? { id: beverage.id, qty } : null;
               }).filter(Boolean) as { id: string; qty: number }[];
               
@@ -7027,6 +7025,73 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     });
   };
 
+  const regularBeverageCatalogItems = useMemo(() => {
+    const fromCatalog = (allProducts || []).filter(
+      (p) => String((p as any)?.category || '').toLowerCase() === 'beverages'
+    );
+    return fromCatalog.length > 0 ? fromCatalog : beverageItems;
+  }, [allProducts]);
+
+  const cateringBeverageCatalogItems = useMemo(() => {
+    return (allProducts || []).filter(
+      (p) => String((p as any)?.category || '').toLowerCase() === 'catering-beverages'
+    );
+  }, [allProducts]);
+
+  const isCateringProductContext = useMemo(
+    () => String(product?.category || '').toLowerCase().startsWith('catering-'),
+    [product?.category]
+  );
+
+  const activeBeverageItems = useMemo(() => {
+    if (isCateringProductContext && cateringBeverageCatalogItems.length > 0) {
+      return cateringBeverageCatalogItems;
+    }
+    return regularBeverageCatalogItems;
+  }, [isCateringProductContext, cateringBeverageCatalogItems, regularBeverageCatalogItems]);
+
+  const resolveBeverageById = (id: string): Product | undefined => {
+    if (!id) return undefined;
+    return (
+      activeBeverageItems.find((b) => b.id === id) ||
+      cateringBeverageCatalogItems.find((b) => b.id === id) ||
+      regularBeverageCatalogItems.find((b) => b.id === id) ||
+      beverageItems.find((b) => b.id === id) ||
+      allProducts?.find((p) => p.id === id)
+    );
+  };
+
+  const resolveBeverageByName = (rawName: string): Product | undefined => {
+    const cleanName = String(rawName || '').trim().toLowerCase();
+    if (!cleanName) return undefined;
+    const orderedPools: Product[][] = isCateringProductContext
+      ? [activeBeverageItems, cateringBeverageCatalogItems, regularBeverageCatalogItems, beverageItems]
+      : [activeBeverageItems, regularBeverageCatalogItems, beverageItems, cateringBeverageCatalogItems];
+
+    for (const pool of orderedPools) {
+      const hit = pool.find((p) => String(p?.name || '').trim().toLowerCase() === cleanName);
+      if (hit) return hit;
+    }
+
+    const fallback = (allProducts || []).filter((p) =>
+      String(p?.name || '').trim().toLowerCase() === cleanName &&
+      String(p?.category || '').toLowerCase().includes('beverage')
+    );
+    if (fallback.length === 0) return undefined;
+    if (isCateringProductContext) {
+      return fallback.find((p) => String(p?.category || '').toLowerCase() === 'catering-beverages') || fallback[0];
+    }
+    return fallback.find((p) => String(p?.category || '').toLowerCase() === 'beverages') || fallback[0];
+  };
+
+  const getBeverageSection = (item: Product): '20oz' | '2 Liter' | 'Water' | 'Kids' => {
+    const name = String(item?.name || '').toLowerCase();
+    if (name.includes('2l') || name.includes('2 liter')) return '2 Liter';
+    if (name.includes('water')) return 'Water';
+    if (name.includes("kid's") || name.includes('kids')) return 'Kids';
+    return '20oz';
+  };
+
   const handleSaladToppingToggle = (toppingId: string) => {
     setSelectedSaladToppings(prev => {
       const isSelected = prev.includes(toppingId);
@@ -7423,7 +7488,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       const labels: string[] = [];
       Object.entries(selectedBeverages).forEach(([id, qty]) => {
         if (!qty || qty <= 0) return;
-        const item = beverageItems.find((b) => b.id === id) || allProducts?.find((p) => p.id === id);
+        const item = resolveBeverageById(id) || allProducts?.find((p) => p.id === id);
         if (!item?.name) return;
         const label = qty > 1 ? `${item.name} x${qty}` : item.name;
         labels.push(label);
@@ -7970,7 +8035,12 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     const sideToppingsNameById = mapById([...(sideToppingItems || [])]);
     const extraSidesNameById = mapById(extraSidesItems);
     const dessertsNameById = mapById(dessertItems);
-    const beveragesNameById = mapById(beverageItems);
+    const beveragesNameById = mapById([
+      ...(activeBeverageItems || []),
+      ...(regularBeverageCatalogItems || []),
+      ...(cateringBeverageCatalogItems || []),
+      ...(beverageItems || [])
+    ]);
 
     const unique = new Map<string, any>();
     (Array.isArray(sels) ? sels : []).forEach((sel) => {
@@ -8182,8 +8252,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     }, 0);
     
     const beveragesPrice = Object.entries(selectedBeverages).reduce((total, [beverageId, qty]) => {
-      const beverage = beverageItems.find(b => b.id === beverageId);
-      const price = beverage ? parseFloat(beverage.price.replace('$', '')) : 0;
+      const beverage = resolveBeverageById(beverageId);
+      const rawPrice = (beverage as any)?.price ?? 0;
+      const price = typeof rawPrice === 'number'
+        ? rawPrice
+        : Number.parseFloat(String(rawPrice).replace(/[^0-9.]/g, '')) || 0;
       return total + (price * qty);
     }, 0);
 
@@ -8702,7 +8775,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     const standaloneBeveragesTotal = Object.entries(selectedBeverages || {}).reduce((sum, [id, qty]) => {
       const nQty = Number(qty) || 0;
       if (nQty <= 0) return sum;
-      const beverage = beverageItems.find((b) => b.id === id);
+      const beverage = resolveBeverageById(id);
       const catalog = allProducts?.find((p) => p.id === id);
       const rawPrice = (beverage as any)?.price ?? (catalog as any)?.price ?? 0;
       const unit = typeof rawPrice === 'number' ? rawPrice : Number.parseFloat(String(rawPrice).replace(/[^0-9.]/g, '')) || 0;
@@ -26275,19 +26348,15 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
               />
               <div className="relative z-10 space-y-6">
                 {(() => {
-                  const beverageSections = product.category === 'catering-beverages'
-                    ? [
-                        { title: '2 Liter', items: beverageItems.filter(item => item.id.startsWith('b2')) },
-                        { title: '20oz', items: beverageItems.filter(item => item.id.startsWith('b1')) },
-                        { title: 'Water', items: beverageItems.filter(item => item.id === 'b3' || item.id === 'b4') },
-                        { title: 'Kids', items: beverageItems.filter(item => item.id === 'b5' || item.id === 'b6') },
-                      ]
-                    : [
-                        { title: '20oz', items: beverageItems.filter(item => item.id.startsWith('b1')) },
-                        { title: '2 Liter', items: beverageItems.filter(item => item.id.startsWith('b2')) },
-                        { title: 'Water', items: beverageItems.filter(item => item.id === 'b3' || item.id === 'b4') },
-                        { title: 'Kids', items: beverageItems.filter(item => item.id === 'b5' || item.id === 'b6') },
-                      ];
+                  const sectionOrder = isCateringProductContext
+                    ? (['2 Liter', '20oz', 'Water', 'Kids'] as const)
+                    : (['20oz', '2 Liter', 'Water', 'Kids'] as const);
+                  const beverageSections = sectionOrder
+                    .map((title) => ({
+                      title,
+                      items: activeBeverageItems.filter((item) => getBeverageSection(item) === title),
+                    }))
+                    .filter((section) => section.items.length > 0);
 
                   return beverageSections.map((section) => (
                     <div key={section.title} className="space-y-6">
@@ -28111,7 +28180,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   groupTitle: 'Wrap Type',
                   type: 'wrap_type'
                 });
-                registerOptionsToLookup(selectionLookup, beverageItems, {
+                registerOptionsToLookup(selectionLookup, activeBeverageItems, {
                   groupId: 'beverages',
                   groupTitle: 'Beverages',
                   type: 'beverage'
@@ -28262,10 +28331,12 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 
                 // Helper function to get beverage category based on ID
                 const getBeverageCategory = (id: string): BeverageCategory => {
-                  if (id.startsWith('b1')) return '20oz';
-                  if (id.startsWith('b2')) return '2_liter';
-                  if (id.includes('water')) return 'water';
-                  if (id.includes('juice')) return 'juice';
+                  const beverage = resolveBeverageById(id);
+                  const name = String(beverage?.name || '').toLowerCase();
+                  if (name.includes('20oz')) return '20oz';
+                  if (name.includes('2l') || name.includes('2 liter')) return '2_liter';
+                  if (name.includes('water')) return 'water';
+                  if (name.includes('juice')) return 'juice';
                   return 'other';
                 };
 
@@ -29244,7 +29315,6 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
 
                 // Add selected desserts (RECORD version)
                 if (Object.keys(selectedDesserts).length > 0) {
-                  const dessertItemsList: string[] = [];
                   Object.entries(selectedDesserts).forEach(([dessertId, qty]) => {
                     if (qty > 0) {
                       const dessert = dessertItems.find(d => d.id === dessertId) || 
@@ -29256,7 +29326,6 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       if (name) {
                         const qtySuffix = qty > 1 ? ` x${qty}` : '';
                         const displayLabel = `${name}${qtySuffix}`;
-                        dessertItemsList.push(displayLabel);
                         selections.push({
                           id: `${dessertId}-qty-${qty}`,
                           label: displayLabel,
@@ -29265,27 +29334,18 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       }
                     }
                   });
-                  
-                  if (dessertItemsList.length > 0) {
-                    customizations.push({
-                      category: 'Desserts',
-                      items: dessertItemsList
-                    });
-                  }
                 }
                 
                 // Add selected beverages (RECORD version)
                 if (Object.keys(selectedBeverages).length > 0) {
-                  const beverageItemsList: string[] = [];
                   Object.entries(selectedBeverages).forEach(([beverageId, qty]) => {
                     if (qty > 0) {
-                      const beverage = beverageItems.find(b => b.id === beverageId) || allProducts?.find(p => p.id === beverageId);
+                      const beverage = resolveBeverageById(beverageId) || allProducts?.find(p => p.id === beverageId);
                       const name = beverage?.name;
                       
                       if (name) {
                         const qtySuffix = qty > 1 ? ` x${qty}` : '';
                         const displayLabel = `${name}${qtySuffix}`;
-                        beverageItemsList.push(displayLabel);
                         selections.push({
                           id: `${beverageId}-qty-${qty}`,
                           label: displayLabel,
@@ -29295,13 +29355,6 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       }
                     }
                   });
-                  
-                  if (beverageItemsList.length > 0) {
-                    customizations.push({
-                      category: 'Beverages',
-                      items: beverageItemsList
-                    });
-                  }
                 }
                 
                 // ============================================================
@@ -33091,7 +33144,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     groupTitle: 'Wrap Type',
                     type: 'wrap_type'
                   });
-                  registerOptionsToLookup(selectionLookupDesktop, beverageItems, {
+                  registerOptionsToLookup(selectionLookupDesktop, activeBeverageItems, {
                     groupId: 'beverages',
                     groupTitle: 'Beverages',
                     type: 'beverage'
@@ -33237,10 +33290,12 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   
                   // Helper function to get beverage category based on ID
                   const getBeverageCategory = (id: string): BeverageCategory => {
-                    if (id.startsWith('b1')) return '20oz';
-                    if (id.startsWith('b2')) return '2_liter';
-                    if (id.includes('water')) return 'water';
-                    if (id.includes('juice')) return 'juice';
+                    const beverage = resolveBeverageById(id);
+                    const name = String(beverage?.name || '').toLowerCase();
+                    if (name.includes('20oz')) return '20oz';
+                    if (name.includes('2l') || name.includes('2 liter')) return '2_liter';
+                    if (name.includes('water')) return 'water';
+                    if (name.includes('juice')) return 'juice';
                     return 'other';
                   };
                   
@@ -34100,7 +34155,6 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
 
                   // Add selected desserts (RECORD version)
                   if (Object.keys(selectedDesserts).length > 0) {
-                    const dessertItemsList: string[] = [];
                     Object.entries(selectedDesserts).forEach(([dessertId, qty]) => {
                       if (qty > 0) {
                         const dessert = dessertItems.find(d => d.id === dessertId) ||
@@ -34112,7 +34166,6 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         if (name) {
                           const qtySuffix = qty > 1 ? ` x${qty}` : '';
                           const displayLabel = `${name}${qtySuffix}`;
-                          dessertItemsList.push(displayLabel);
                           selections.push({
                             id: `${dessertId}-qty-${qty}`,
                             label: displayLabel,
@@ -34121,27 +34174,18 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         }
                       }
                     });
-                    
-                    if (dessertItemsList.length > 0) {
-                      customizations.push({
-                        category: 'Desserts',
-                        items: dessertItemsList
-                      });
-                    }
                   }
                   
                   // Add selected beverages (RECORD version)
                   if (Object.keys(selectedBeverages).length > 0) {
-                    const beverageItemsList: string[] = [];
                     Object.entries(selectedBeverages).forEach(([beverageId, qty]) => {
                       if (qty > 0) {
-                        const beverage = beverageItems.find(b => b.id === beverageId) || allProducts.find(p => p.id === beverageId);
+                        const beverage = resolveBeverageById(beverageId) || allProducts.find(p => p.id === beverageId);
                         const name = beverage?.name;
                         
                         if (name) {
                           const qtySuffix = qty > 1 ? ` x${qty}` : '';
                           const displayLabel = `${name}${qtySuffix}`;
-                          beverageItemsList.push(displayLabel);
                           selections.push({
                             id: `${beverageId}-qty-${qty}`,
                             label: displayLabel,
@@ -34151,13 +34195,6 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         }
                       }
                     });
-                    
-                    if (beverageItemsList.length > 0) {
-                      customizations.push({
-                        category: 'Beverages',
-                        items: beverageItemsList
-                      });
-                    }
                   }
                   
                   // Add ALL missing customizations
