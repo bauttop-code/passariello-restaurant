@@ -4699,15 +4699,18 @@ export default function App() {
 
       const buildStandaloneAddonMaps = () => {
         const allAddonSelections = [...extractedAddonSelections, ...addonSelectionsFromCustomizations];
-        const addonQtyByProductId = new Map<string, { qty: number; displayLabel?: string }>();
+        const addonQtyByVariantKey = new Map<string, { addonProductId: string; qty: number; displayLabel?: string }>();
         const syntheticDippings = new Map<string, { name: string; qty: number; price: number }>();
 
         allAddonSelections.forEach(sel => {
           const parsed = parseAddonFromSelection(sel);
           if (parsed) {
-            const prev = addonQtyByProductId.get(parsed.addonProductId);
+            const variantLabelKey = normalizeName(String(parsed.displayLabel || ''));
+            const variantKey = `${parsed.addonProductId}::${variantLabelKey}`;
+            const prev = addonQtyByVariantKey.get(variantKey);
             const nextQty = Math.max(prev?.qty || 0, parsed.qty);
-            addonQtyByProductId.set(parsed.addonProductId, {
+            addonQtyByVariantKey.set(variantKey, {
+              addonProductId: parsed.addonProductId,
               qty: nextQty,
               displayLabel: parsed.displayLabel || prev?.displayLabel
             });
@@ -4729,19 +4732,20 @@ export default function App() {
           });
         });
 
-        return { addonQtyByProductId, syntheticDippings };
+        return { addonQtyByVariantKey, syntheticDippings };
       };
 
       const calculateStandaloneAddonUnitTotal = (): number => {
-        const { addonQtyByProductId, syntheticDippings } = buildStandaloneAddonMaps();
+        const { addonQtyByVariantKey, syntheticDippings } = buildStandaloneAddonMaps();
         let total = 0;
 
-        addonQtyByProductId.forEach((qtyToAdd, addonProductId) => {
+        addonQtyByVariantKey.forEach((meta) => {
+          const addonProductId = meta.addonProductId;
           const addonProduct = products.find(p => p.id === addonProductId);
           if (!addonProduct) return;
-          const addonPrice = parseMoney((addonProduct as any)?.price);
+          const addonPrice = resolveAddonUnitPrice(addonProduct, meta.displayLabel);
           if (addonPrice <= 0) return;
-          total += addonPrice * qtyToAdd;
+          total += addonPrice * (meta.qty || 0);
         });
 
         syntheticDippings.forEach(({ qty, price }) => {
@@ -4753,10 +4757,11 @@ export default function App() {
       };
 
       const applyStandaloneAddons = (items: CartItem[]) => {
-        const { addonQtyByProductId, syntheticDippings } = buildStandaloneAddonMaps();
-        if (addonQtyByProductId.size === 0 && syntheticDippings.size === 0) return;
+        const { addonQtyByVariantKey, syntheticDippings } = buildStandaloneAddonMaps();
+        if (addonQtyByVariantKey.size === 0 && syntheticDippings.size === 0) return;
 
-        addonQtyByProductId.forEach((meta, addonProductId) => {
+        addonQtyByVariantKey.forEach((meta) => {
+          const addonProductId = meta.addonProductId;
           const addonProduct = products.find(p => p.id === addonProductId);
           if (!addonProduct) return;
           const addonPrice = parseMoney((addonProduct as any)?.price);

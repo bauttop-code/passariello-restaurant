@@ -5542,12 +5542,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 const match = name.match(/^(.*?)\s+x(\d+)$/i);
                 const cleanName = match ? match[1] : name;
                 const qty = match ? parseInt(match[2], 10) : 1;
-                
-                const dessert = dessertItems.find(d => d.name === cleanName) || 
-                               wholeCakesItems.find(c => c.name === cleanName) ||
-                               partyCakesItems.find(c => c.name === cleanName) ||
-                               allProducts.find(p => p.name === cleanName);
-                
+
+                const dessert = resolveDessertByName(cleanName) || allProducts.find(p => p.name === cleanName);
                 return dessert ? { id: dessert.id, qty } : null;
               }).filter(Boolean) as { id: string; qty: number }[];
               
@@ -6647,6 +6643,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
         product.category === 'minucci-pizzas' ||
         product.category === 'dippings' ||
         product.category === 'desserts' ||
+        product.category === 'catering-desserts' ||
         product.category === 'pizzelle' ||
         product.category === 'gelati' ||
         product.category === 'entrees' ||
@@ -7092,6 +7089,112 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     return '20oz';
   };
 
+  const regularDessertCatalogItems = useMemo(() => {
+    const fromCatalog = (allProducts || []).filter(
+      (p) => String((p as any)?.category || '').toLowerCase() === 'desserts'
+    );
+    return fromCatalog.length > 0 ? fromCatalog : dessertItems;
+  }, [allProducts]);
+
+  const cateringDessertCatalogItems = useMemo(() => {
+    return (allProducts || []).filter(
+      (p) => String((p as any)?.category || '').toLowerCase() === 'catering-desserts'
+    );
+  }, [allProducts]);
+
+  const cateringWholeCakesCatalogItems = useMemo(() => {
+    return (allProducts || []).filter(
+      (p) => String((p as any)?.category || '').toLowerCase() === 'catering-whole-cakes'
+    );
+  }, [allProducts]);
+
+  const cateringPartyTraysCatalogItems = useMemo(() => {
+    return (allProducts || []).filter(
+      (p) => String((p as any)?.category || '').toLowerCase() === 'catering-party-trays'
+    );
+  }, [allProducts]);
+
+  const activeIndividualDessertItems = useMemo(() => {
+    if (isCateringProductContext && cateringDessertCatalogItems.length > 0) {
+      return cateringDessertCatalogItems;
+    }
+    return regularDessertCatalogItems;
+  }, [isCateringProductContext, cateringDessertCatalogItems, regularDessertCatalogItems]);
+
+  const activeWholeCakeItems = useMemo(() => {
+    if (isCateringProductContext && cateringWholeCakesCatalogItems.length > 0) {
+      return cateringWholeCakesCatalogItems;
+    }
+    return wholeCakesItems as Product[];
+  }, [isCateringProductContext, cateringWholeCakesCatalogItems]);
+
+  const activePartyTrayItems = useMemo(() => {
+    if (isCateringProductContext) {
+      // Keep explicit size variants (10PCS/20PCS and 20PCS/40PCS) in the add-on selector.
+      return partyCakesItems as Product[];
+    }
+    return partyCakesItems as Product[];
+  }, [isCateringProductContext]);
+
+  const resolveDessertById = (id: string): Product | undefined => {
+    if (!id) return undefined;
+    return (
+      activeIndividualDessertItems.find((d) => d.id === id) ||
+      activeWholeCakeItems.find((d) => d.id === id) ||
+      activePartyTrayItems.find((d) => d.id === id) ||
+      cateringDessertCatalogItems.find((d) => d.id === id) ||
+      cateringWholeCakesCatalogItems.find((d) => d.id === id) ||
+      cateringPartyTraysCatalogItems.find((d) => d.id === id) ||
+      regularDessertCatalogItems.find((d) => d.id === id) ||
+      (wholeCakesItems as Product[]).find((d) => d.id === id) ||
+      (partyCakesItems as Product[]).find((d) => d.id === id) ||
+      allProducts?.find((p) => p.id === id)
+    );
+  };
+
+  const resolveDessertByName = (rawName: string): Product | undefined => {
+    const cleanName = String(rawName || '').trim().toLowerCase();
+    if (!cleanName) return undefined;
+    const orderedPools: Product[][] = isCateringProductContext
+      ? [
+          activeIndividualDessertItems,
+          activeWholeCakeItems,
+          activePartyTrayItems,
+          cateringDessertCatalogItems,
+          cateringWholeCakesCatalogItems,
+          cateringPartyTraysCatalogItems,
+          regularDessertCatalogItems,
+          dessertItems as Product[]
+        ]
+      : [
+          activeIndividualDessertItems,
+          regularDessertCatalogItems,
+          dessertItems as Product[],
+          activeWholeCakeItems,
+          activePartyTrayItems
+        ];
+
+    for (const pool of orderedPools) {
+      const hit = pool.find((p) => String(p?.name || '').trim().toLowerCase() === cleanName);
+      if (hit) return hit;
+    }
+
+    const fallback = (allProducts || []).filter((p) =>
+      String(p?.name || '').trim().toLowerCase() === cleanName &&
+      String(p?.category || '').toLowerCase().includes('dessert')
+    );
+    if (fallback.length === 0) return undefined;
+    if (isCateringProductContext) {
+      return (
+        fallback.find((p) => String(p?.category || '').toLowerCase() === 'catering-desserts') ||
+        fallback.find((p) => String(p?.category || '').toLowerCase() === 'catering-whole-cakes') ||
+        fallback.find((p) => String(p?.category || '').toLowerCase() === 'catering-party-trays') ||
+        fallback[0]
+      );
+    }
+    return fallback.find((p) => String(p?.category || '').toLowerCase() === 'desserts') || fallback[0];
+  };
+
   const handleSaladToppingToggle = (toppingId: string) => {
     setSelectedSaladToppings(prev => {
       const isSelected = prev.includes(toppingId);
@@ -7468,7 +7571,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       const labels: string[] = [];
       Object.entries(selectedDesserts).forEach(([id, qty]) => {
         if (!qty || qty <= 0) return;
-        const item = dessertItems.find((d) => d.id === id) || allProducts?.find((p) => p.id === id) || wholeCakesItems.find((w) => w.id === id) || partyCakesItems.find((p) => p.id === id);
+        const item = resolveDessertById(id) || allProducts?.find((p) => p.id === id);
         if (!item?.name) return;
         const label = qty > 1 ? `${item.name} x${qty}` : item.name;
         labels.push(label);
@@ -8034,7 +8137,16 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     const onTheSideToppingsNameById = mapById([...(cheesesteakSideToppingsRequired || [])]);
     const sideToppingsNameById = mapById([...(sideToppingItems || [])]);
     const extraSidesNameById = mapById(extraSidesItems);
-    const dessertsNameById = mapById(dessertItems);
+    const dessertsNameById = mapById([
+      ...(activeIndividualDessertItems || []),
+      ...(activeWholeCakeItems || []),
+      ...(activePartyTrayItems || []),
+      ...(regularDessertCatalogItems || []),
+      ...(cateringDessertCatalogItems || []),
+      ...(cateringWholeCakesCatalogItems || []),
+      ...(cateringPartyTraysCatalogItems || []),
+      ...(dessertItems as Product[])
+    ]);
     const beveragesNameById = mapById([
       ...(activeBeverageItems || []),
       ...(regularBeverageCatalogItems || []),
@@ -8231,23 +8343,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     }, 0);
     
     const dessertsPrice = Object.entries(selectedDesserts).reduce((total, [dessertId, qty]) => {
-      const dessert = dessertItems.find(d => d.id === dessertId);
-      let price = 0;
-      if (dessert) {
-        price = parseFloat(dessert.price.replace('$', ''));
-      } else {
-        // Check in Whole Cakes
-        const wholeCake = wholeCakesItems.find(c => c.id === dessertId);
-        if (wholeCake) {
-          price = wholeCake.price;
-        } else {
-          // Check in Party Cakes
-          const partyCake = partyCakesItems.find(c => c.id === dessertId);
-          if (partyCake) {
-            price = partyCake.price;
-          }
-        }
-      }
+      const dessert = resolveDessertById(dessertId);
+      const rawPrice = (dessert as any)?.price ?? 0;
+      const price = typeof rawPrice === 'number'
+        ? rawPrice
+        : Number.parseFloat(String(rawPrice).replace(/[^0-9.]/g, '')) || 0;
       return total + (price * qty);
     }, 0);
     
@@ -8763,11 +8863,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     const standaloneDessertsTotal = Object.entries(selectedDesserts || {}).reduce((sum, [id, qty]) => {
       const nQty = Number(qty) || 0;
       if (nQty <= 0) return sum;
-      const dessert = dessertItems.find((d) => d.id === id);
-      const wholeCake = wholeCakesItems.find((d) => d.id === id);
-      const partyTray = partyCakesItems.find((d) => d.id === id);
+      const dessert = resolveDessertById(id);
       const catalog = allProducts?.find((p) => p.id === id);
-      const rawPrice = (dessert as any)?.price ?? (wholeCake as any)?.price ?? (partyTray as any)?.price ?? (catalog as any)?.price ?? 0;
+      const rawPrice = (dessert as any)?.price ?? (catalog as any)?.price ?? 0;
       const unit = typeof rawPrice === 'number' ? rawPrice : Number.parseFloat(String(rawPrice).replace(/[^0-9.]/g, '')) || 0;
       return sum + unit * nQty;
     }, 0);
@@ -26175,7 +26273,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                     {((product.category === 'pizzelle' || product.category === 'gelati')
                       ? (allProducts || []).filter((p) => p.category === product.category)
-                      : dessertItems
+                      : activeIndividualDessertItems
                     ).map((item) => {
                       const quantity = selectedDesserts[item.id] || 0;
                       const isActive = activeDessertItem === item.id;
@@ -26206,13 +26304,16 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 )}
 
                 {/* Whole Cakes Section - Only for catering products */}
-                {product.category && product.category.startsWith('catering-') && product.category !== 'catering-party-trays' && (
+                {product.category &&
+                  product.category.startsWith('catering-') &&
+                  product.category !== 'catering-party-trays' &&
+                  product.category !== 'catering-desserts' && (
                   <>
                     <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg">
                       <span className="font-semibold" style={{fontSize: 'calc(1em + 3px)'}}>Whole Cakes</span>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                      {wholeCakesItems.map((item) => {
+                      {activeWholeCakeItems.map((item) => {
                         const quantity = selectedDesserts[item.id] || 0;
                         const isActive = activeDessertItem === item.id;
                         
@@ -26243,13 +26344,16 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 )}
 
                 {/* Party Trays Section - Only for catering products */}
-                {product.category && product.category.startsWith('catering-') && product.category !== 'catering-whole-cakes' && (
+                {product.category &&
+                  product.category.startsWith('catering-') &&
+                  product.category !== 'catering-whole-cakes' &&
+                  product.category !== 'catering-desserts' && (
                   <>
                     <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg">
                       <span className="font-semibold" style={{fontSize: 'calc(1em + 3px)'}}>Party Trays</span>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                      {partyCakesItems.map((item) => {
+                      {activePartyTrayItems.map((item) => {
                         const quantity = selectedDesserts[item.id] || 0;
                         const isActive = activeDessertItem === item.id;
                         const partyItem = { ...item, name: formatPartyTrayCardName(item.name) };
@@ -26287,7 +26391,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       <span className="font-semibold" style={{fontSize: 'calc(1em + 3px)'}}>Desserts</span>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                      {dessertItems.map((item) => {
+                      {activeIndividualDessertItems.map((item) => {
                         const quantity = selectedDesserts[item.id] || 0;
                         const isActive = activeDessertItem === item.id;
                         
@@ -28185,7 +28289,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   groupTitle: 'Beverages',
                   type: 'beverage'
                 });
-                registerOptionsToLookup(selectionLookup, dessertItems, {
+                registerOptionsToLookup(selectionLookup, activeIndividualDessertItems, {
                   groupId: 'desserts',
                   groupTitle: 'Desserts',
                   type: 'dessert'
@@ -28200,12 +28304,12 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   groupTitle: 'Chafing Kit',
                   type: 'other'
                 });
-                registerOptionsToLookup(selectionLookup, wholeCakesItems, {
+                registerOptionsToLookup(selectionLookup, activeWholeCakeItems, {
                   groupId: 'whole_cakes',
                   groupTitle: 'Whole Cakes',
                   type: 'dessert'
                 });
-                registerOptionsToLookup(selectionLookup, partyCakesItems, {
+                registerOptionsToLookup(selectionLookup, activePartyTrayItems, {
                   groupId: 'party_trays',
                   groupTitle: 'Party Trays',
                   type: 'dessert'
@@ -29317,10 +29421,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 if (Object.keys(selectedDesserts).length > 0) {
                   Object.entries(selectedDesserts).forEach(([dessertId, qty]) => {
                     if (qty > 0) {
-                      const dessert = dessertItems.find(d => d.id === dessertId) || 
-                                    allProducts?.find(p => p.id === dessertId) ||
-                                    wholeCakesItems.find(c => c.id === dessertId) ||
-                                    partyCakesItems.find(c => c.id === dessertId);
+                      const dessert = resolveDessertById(dessertId) || allProducts?.find(p => p.id === dessertId);
                       
                       const name = dessert?.name;
                       if (name) {
@@ -33149,7 +33250,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     groupTitle: 'Beverages',
                     type: 'beverage'
                   });
-                  registerOptionsToLookup(selectionLookupDesktop, dessertItems, {
+                  registerOptionsToLookup(selectionLookupDesktop, activeIndividualDessertItems, {
                     groupId: 'desserts',
                     groupTitle: 'Desserts',
                     type: 'dessert'
@@ -33164,12 +33265,12 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     groupTitle: 'Chafing Kit',
                     type: 'other'
                   });
-                  registerOptionsToLookup(selectionLookupDesktop, wholeCakesItems, {
+                  registerOptionsToLookup(selectionLookupDesktop, activeWholeCakeItems, {
                     groupId: 'whole_cakes',
                     groupTitle: 'Whole Cakes',
                     type: 'dessert'
                   });
-                  registerOptionsToLookup(selectionLookupDesktop, partyCakesItems, {
+                  registerOptionsToLookup(selectionLookupDesktop, activePartyTrayItems, {
                     groupId: 'party_trays',
                     groupTitle: 'Party Trays',
                     type: 'dessert'
@@ -34157,10 +34258,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   if (Object.keys(selectedDesserts).length > 0) {
                     Object.entries(selectedDesserts).forEach(([dessertId, qty]) => {
                       if (qty > 0) {
-                        const dessert = dessertItems.find(d => d.id === dessertId) ||
-                                      allProducts?.find(p => p.id === dessertId) || 
-                                      wholeCakesItems.find(c => c.id === dessertId) ||
-                                      partyCakesItems.find(c => c.id === dessertId);
+                        const dessert = resolveDessertById(dessertId) || allProducts?.find(p => p.id === dessertId);
                         
                         const name = dessert?.name;
                         if (name) {
