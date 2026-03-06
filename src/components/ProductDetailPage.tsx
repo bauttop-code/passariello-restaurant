@@ -1607,9 +1607,9 @@ const kidsPastaTypes: Topping[] = [
   { id: 'kpt2', name: 'Penne', price: 0.00, image: 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200' },
   { id: 'kpt5', name: 'Capellini', price: 0.00, image: 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200' },
   { id: 'kpt6', name: 'Fettuccine', price: 0.00, image: 'https://images.unsplash.com/photo-1611171711882-7d7a1f5c1280?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200' },
-  { id: 'kpt9', name: 'GF Penne', price: 4.00, image: 'https://drive.google.com/thumbnail?id=19DhUTVbcnbkHioBLbq9wZx-NRCvvu7Nl&sz=w1000' },
+  { id: 'kpt9', name: 'Gluten Free Kids Pasta', price: 1.50, image: 'https://drive.google.com/thumbnail?id=19DhUTVbcnbkHioBLbq9wZx-NRCvvu7Nl&sz=w1000' },
   { id: 'kpt4', name: 'Linguine', price: 0.00, image: 'https://images.unsplash.com/photo-1611171711882-7d7a1f5c1280?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200' },
-  { id: 'kpt8', name: 'Gnocchi', price: 2.00, image: 'https://drive.google.com/thumbnail?id=1fWZ6wibVSHz7SNWTaCKN38ycxbUt9k2z&sz=w1000' },
+  { id: 'kpt8', name: 'Gnocchi', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1fWZ6wibVSHz7SNWTaCKN38ycxbUt9k2z&sz=w1000' },
   { id: 'kpt7', name: 'Rigatoni', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1B2GHWA0NHWvNNhfqEJSZvquTRnTOMrte&sz=w1000' },
   { id: 'kpt1', name: 'Spaghetti', price: 0.00, image: 'https://images.unsplash.com/photo-1600803907087-f56d462fd26b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200' },
   { id: 'kpt3', name: 'Ziti', price: 0.00, image: 'https://drive.google.com/thumbnail?id=1JvFSnnImV1DJHodwU77OH3xN6zr7ekB8&sz=w400' },
@@ -6756,6 +6756,22 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     }
   };
 
+  const getSoupUnitPrice = () => {
+    const prices = (product.priceRange || '')
+      .split(' - ')
+      .map((p) => parseFloat(String(p).replace('$', '').trim()))
+      .filter((n) => !Number.isNaN(n));
+
+    const fallbackMedium = parseFloat(String(product.price || '$8.49').replace('$', ''));
+    const mediumPrice = prices[0] ?? (Number.isNaN(fallbackMedium) ? 8.49 : fallbackMedium);
+    const largePrice = prices[1] ?? 12.99;
+
+    const normalizedSize = String(selectedSize || '').toLowerCase();
+    const isLarge = normalizedSize === 'large' || normalizedSize === '32oz' || normalizedSize === '32';
+
+    return isLarge ? largePrice : mediumPrice;
+  };
+
   const handleIncludedSelect = (includedId: string) => {
     setSelectedIncluded(includedId);
   };
@@ -8308,6 +8324,12 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     } else {
       // Use getSizePrice() to get the correct price based on selected size
       basePrice = getSizePrice();
+    }
+
+    // Soups should only use size-based base pricing.
+    // This prevents unrelated state from other products from polluting soup totals.
+    if (product.category === 'soups') {
+      return getSoupUnitPrice().toFixed(2);
     }
     
     const toppingsPrice = selectedToppings.reduce((total, toppingId) => {

@@ -4585,6 +4585,23 @@ export default function App() {
             ? Number.parseInt(servesMatch[1], 10)
             : NaN;
 
+        // Party trays have two different size schemes:
+        // - cptray1/2/4/5/6 => 10PCS / 20PCS
+        // - cptray3 (mini cannoli) => 20PCS / 40PCS
+        const addonId = String((addonProduct as any)?.id || '').toLowerCase();
+        if (addonId === 'cptray3' && range.length >= 2 && Number.isFinite(quantityHint)) {
+          if (quantityHint === 20) return range[0];
+          if (quantityHint === 40) return range[1];
+        }
+        if (
+          ['cptray1', 'cptray2', 'cptray4', 'cptray5', 'cptray6'].includes(addonId) &&
+          range.length >= 2 &&
+          Number.isFinite(quantityHint)
+        ) {
+          if (quantityHint === 10) return range[0];
+          if (quantityHint === 20) return range[1];
+        }
+
         // Map common catering size hints to range positions.
         const indexByQty: Record<number, number> = {
           10: 0,
@@ -4705,14 +4722,17 @@ export default function App() {
         allAddonSelections.forEach(sel => {
           const parsed = parseAddonFromSelection(sel);
           if (parsed) {
-            const variantLabelKey = normalizeName(String(parsed.displayLabel || ''));
+            const resolvedAddonProduct = products.find((p) => p.id === parsed.addonProductId);
+            const effectiveVariantLabel =
+              String(parsed.displayLabel || resolvedAddonProduct?.name || '').trim();
+            const variantLabelKey = normalizeName(effectiveVariantLabel);
             const variantKey = `${parsed.addonProductId}::${variantLabelKey}`;
             const prev = addonQtyByVariantKey.get(variantKey);
             const nextQty = Math.max(prev?.qty || 0, parsed.qty);
             addonQtyByVariantKey.set(variantKey, {
               addonProductId: parsed.addonProductId,
               qty: nextQty,
-              displayLabel: parsed.displayLabel || prev?.displayLabel
+              displayLabel: effectiveVariantLabel || prev?.displayLabel
             });
             return;
           }
@@ -4819,21 +4839,11 @@ export default function App() {
       const safeNormalizedPrice =
         normalizedPrice > 0 ? normalizedPrice : (catalogBasePrice > 0 ? catalogBasePrice : 0);
 
+      // Parent unit price must remain the exact unit price coming from ProductDetailPage.
+      // Standalone add-ons (desserts, beverages, dippings, extra-sides) are added as separate cart rows
+      // and should never mutate the parent item price here.
       const standaloneAddonUnitTotal = calculateStandaloneAddonUnitTotal();
       let adjustedParentUnitPrice = safeNormalizedPrice;
-
-      // If incoming unit price already includes standalone addons, remove only those addons here.
-      // Keep paid non-standalone customizations inside parent price.
-      if (standaloneAddonUnitTotal > 0) {
-        const hasCatalogBase = catalogBasePrice > 0;
-        const incomingAboveCatalog = hasCatalogBase && safeNormalizedPrice > (catalogBasePrice + 0.01);
-        const canSubtractWithoutNegative = safeNormalizedPrice > (standaloneAddonUnitTotal + 0.01);
-
-        if ((incomingAboveCatalog || !hasCatalogBase) && canSubtractWithoutNegative) {
-          const candidate = safeNormalizedPrice - standaloneAddonUnitTotal;
-          adjustedParentUnitPrice = hasCatalogBase ? Math.max(catalogBasePrice, candidate) : candidate;
-        }
-      }
 
       adjustedParentUnitPrice = Number(adjustedParentUnitPrice.toFixed(2));
 
