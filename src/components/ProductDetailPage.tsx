@@ -31212,8 +31212,6 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   selectedChickenTendersQuantity: { kind: "singleString", value: selectedChickenTendersQuantity },
                   selectedChickenTendersSauce: { kind: "singleString", value: selectedChickenTendersSauce },
                   selectedChickenTendersSpecialInstructions: { kind: "stringArray", value: selectedChickenTendersSpecialInstructions },
-                  selectedChickenTendersExtraSauce: { kind: "stringRecord", value: selectedChickenTendersExtraSauce },
-                  selectedChickenTendersExtraCheeseRanch: { kind: "stringRecord", value: selectedChickenTendersExtraCheeseRanch },
                   selectedSubstituteSauce: { kind: "singleString", value: selectedSubstituteSauce },
 
                   // Mozzarella Sticks state
@@ -31285,8 +31283,6 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   selectedWingsQuantity: { kind: "singleString", value: selectedWingsQuantity },
                   selectedWingsSauce: { kind: "singleString", value: selectedWingsSauce },
                   selectedWingsSpecialInstructions: { kind: "stringArray", value: selectedWingsSpecialInstructions },
-                  selectedWingsExtraSauce: { kind: "stringRecord", value: selectedWingsExtraSauce },
-                  selectedWingsExtraCheeseRanch: { kind: "stringRecord", value: selectedWingsExtraCheeseRanch },
 
                   // Pizza Dippings state
                   selectedPizzaDippings: { kind: "numberRecord", value: selectedPizzaDippings },
@@ -34750,8 +34746,6 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     selectedChickenTendersQuantity: { kind: "singleString", value: selectedChickenTendersQuantity },
                     selectedChickenTendersSauce: { kind: "singleString", value: selectedChickenTendersSauce },
                     selectedChickenTendersSpecialInstructions: { kind: "stringArray", value: selectedChickenTendersSpecialInstructions },
-                    selectedChickenTendersExtraSauce: { kind: "stringRecord", value: selectedChickenTendersExtraSauce },
-                    selectedChickenTendersExtraCheeseRanch: { kind: "stringRecord", value: selectedChickenTendersExtraCheeseRanch },
                     selectedSubstituteSauce: { kind: "singleString", value: selectedSubstituteSauce },
 
                     // Mozzarella Sticks state
@@ -34823,8 +34817,6 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     selectedWingsQuantity: { kind: "singleString", value: selectedWingsQuantity },
                     selectedWingsSauce: { kind: "singleString", value: selectedWingsSauce },
                     selectedWingsSpecialInstructions: { kind: "stringArray", value: selectedWingsSpecialInstructions },
-                    selectedWingsExtraSauce: { kind: "stringRecord", value: selectedWingsExtraSauce },
-                    selectedWingsExtraCheeseRanch: { kind: "stringRecord", value: selectedWingsExtraCheeseRanch },
 
                     // Pizza Dippings state
                     selectedPizzaDippings: { kind: "numberRecord", value: selectedPizzaDippings },
