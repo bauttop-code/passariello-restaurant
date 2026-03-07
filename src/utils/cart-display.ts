@@ -2884,6 +2884,12 @@ const parseStromboliQty = (raw: string): { name: string; qty: number } => {
   }
 
   // Normalize Name
+  // Remove serving-size suffixes that should not split equivalent dips.
+  s = s.replace(/\(\s*\d+\s*oz\s*\)\s*$/i, '').trim();
+  s = s.replace(/\b\d+\s*oz\b/i, '').trim();
+  // Normalize trailing "sauce" token for dip equivalence (Ranch Sauce -> Ranch).
+  s = s.replace(/\s+sauce$/i, '').trim();
+
   // Only strip "Extra " for dipping-style entries. Keep real topping names
   // like "Extra Cheese" intact.
   if (s.toLowerCase().startsWith("extra ")) {
@@ -2892,7 +2898,9 @@ const parseStromboliQty = (raw: string): { name: string; qty: number } => {
       candidate === 'bleu cheese' ||
       candidate === 'blue cheese' ||
       candidate === 'buttermilk ranch' ||
-      candidate === 'ranch'
+      candidate === 'ranch' ||
+      candidate === 'ranch sauce' ||
+      candidate === 'buttermilk ranch sauce'
     ) {
       s = s.substring(6).trim();
     }
@@ -2902,7 +2910,12 @@ const parseStromboliQty = (raw: string): { name: string; qty: number } => {
 };
 
 const normalizeStromboliAdditionalName = (name: string): string => {
-  const raw = String(name || '').trim();
+  const raw = String(name || '')
+    .trim()
+    .replace(/\(\s*\d+\s*oz\s*\)\s*$/i, '')
+    .replace(/\b\d+\s*oz\b/i, '')
+    .replace(/\s+sauce$/i, '')
+    .trim();
   const lower = raw.toLowerCase();
 
   // Normalize aliases to canonical menu labels used in UI data.
@@ -2914,6 +2927,9 @@ const normalizeStromboliAdditionalName = (name: string): string => {
     'blue cheese': 'Bleu Cheese',
     'bleu cheese': 'Bleu Cheese',
     'buttermilk ranch': 'Buttermilk Ranch',
+    'ranch': 'Buttermilk Ranch',
+    'ranch sauce': 'Buttermilk Ranch',
+    'buttermilk ranch sauce': 'Buttermilk Ranch',
     'cup & char pepperoni': 'Cup n Char Pepperoni',
     'cup n char pepperoni': 'Cup n Char Pepperoni',
     'fresh mozz': 'Fresh Mozzarella',
@@ -2943,6 +2959,40 @@ const normalizeStromboliAdditionalName = (name: string): string => {
 const canUseStromboliQtySuffix = (name: string): boolean => {
   const n = String(name || '').trim().toLowerCase();
   return n === 'bleu cheese' || n === 'buttermilk ranch';
+};
+
+const normalizeStromboliExtraSauceName = (name: string): string => {
+  const raw = String(name || '').trim();
+  if (!raw) return raw;
+
+  // Keep explicit volume if present, canonicalized.
+  const ozMatch = raw.match(/(\d+)\s*oz/i);
+  const oz = ozMatch ? `${ozMatch[1]}oz` : '';
+
+  const lower = raw.toLowerCase();
+  if (lower === 'sauce inside') {
+    return 'Sauce Inside';
+  }
+  const looksExtraSauce =
+    lower.includes('extra sauce') ||
+    lower === 'sauce' ||
+    lower.includes('pomodoro');
+
+  if (looksExtraSauce) {
+    return oz ? `Extra Sauce (${oz})` : 'Extra Sauce';
+  }
+
+  return raw;
+};
+
+const parseStromboliTrailingQty = (raw: string): { name: string; qty: number } => {
+  const text = String(raw || '').trim();
+  const match = text.match(/^(.*?)\s+x\s*(\d+)$/i);
+  if (!match) return { name: text, qty: 1 };
+  return {
+    name: String(match[1] || '').trim(),
+    qty: Number.parseInt(String(match[2] || '1'), 10) || 1,
+  };
 };
 
 const buildStromboliCalzoneLines = (item: CartItem, rawLines: { text: string; originalSel?: CartSelection }[], itemQty: number): string[] => {
@@ -3041,21 +3091,21 @@ const buildStromboliCalzoneLines = (item: CartItem, rawLines: { text: string; or
     const items = Array.isArray(c?.items) ? c.items : [];
     items.map(stromboliLabel).forEach((x: string) => {
       if (!x || stromboliIsNone(x) || stromboliIsArtifact(x)) return;
-      pushUnique(extraSauceLines, normalizeStromboliAdditionalName(x));
+      pushUnique(extraSauceLines, normalizeStromboliExtraSauceName(x));
     });
   });
   inputSelections.forEach((s: any) => {
     const label = stromboliLabel(s);
     if (!label || stromboliIsNone(label) || stromboliIsArtifact(label)) return;
     if (!isExtraSauceLike(s.groupTitle, s.groupId, label)) return;
-    pushUnique(extraSauceLines, normalizeStromboliAdditionalName(label));
+    pushUnique(extraSauceLines, normalizeStromboliExtraSauceName(label));
   });
   rawLines.forEach((r) => {
     const label = stromboliLabel(r);
     const s = r.originalSel as any;
     if (!label || stromboliIsNone(label) || stromboliIsArtifact(label)) return;
     if (!isExtraSauceLike(s?.groupTitle, s?.groupId, label)) return;
-    pushUnique(extraSauceLines, normalizeStromboliAdditionalName(label));
+    pushUnique(extraSauceLines, normalizeStromboliExtraSauceName(label));
   });
   extraSauceLines = Array.from(new Set(extraSauceLines));
 
@@ -3113,15 +3163,13 @@ const buildStromboliCalzoneLines = (item: CartItem, rawLines: { text: string; or
     const name = normalizeStromboliAdditionalName(parsed.name);
     const qty = parsed.qty;
     
-    // Heuristic: if exact string match with a Dipping and qty is 1, ignore.
-    if (qty === 1 && dippingsLines.includes(name)) {
-        return;
-    }
-
     const key = name.toLowerCase();
     
     if (toppingMap.has(key)) {
-      toppingMap.get(key)!.qty += qty;
+      // Same logical topping can appear repeated across selections/customizations/rawLines.
+      // Keep the highest observed qty to avoid artificial inflation.
+      const current = toppingMap.get(key)!;
+      current.qty = Math.max(current.qty, qty);
     } else {
       toppingMap.set(key, { name, qty });
     }
@@ -3188,14 +3236,64 @@ const buildStromboliCalzoneLines = (item: CartItem, rawLines: { text: string; or
 
 
   // --- FINAL ASSEMBLY ---
+  // Merge dipping required + additional topping dipping when they are the same
+  // (Bleu Cheese / Buttermilk Ranch), so cart shows a single "xN" line.
+  const requiredDippingQty = new Map<string, { name: string; qty: number }>();
+  const additionalDippingQty = new Map<string, { name: string; qty: number }>();
+  const dippingOrder: string[] = [];
+  const pushDippingQty = (
+    target: Map<string, { name: string; qty: number }>,
+    rawName: string,
+    qty: number
+  ) => {
+    const canonicalName = normalizeStromboliAdditionalName(rawName);
+    if (!canUseStromboliQtySuffix(canonicalName)) return;
+    const key = canonicalName.toLowerCase();
+    if (!target.has(key)) {
+      target.set(key, { name: canonicalName, qty: 0 });
+      dippingOrder.push(key);
+    }
+    const entry = target.get(key)!;
+    const nextQty = Math.max(1, qty);
+    // Same source may appear repeated across legacy capture paths; keep max.
+    entry.qty = Math.max(entry.qty, nextQty);
+  };
+
+  dippingsLines.forEach((line) => {
+    const parsed = parseStromboliTrailingQty(line);
+    pushDippingQty(requiredDippingQty, parsed.name, parsed.qty);
+  });
+
+  const filteredAdditionalLines: string[] = [];
+  additionalToppingsLines.forEach((line) => {
+    const parsed = parseStromboliTrailingQty(line);
+    const canonicalName = normalizeStromboliAdditionalName(parsed.name);
+    if (canUseStromboliQtySuffix(canonicalName)) {
+      pushDippingQty(additionalDippingQty, canonicalName, parsed.qty);
+      return;
+    }
+    filteredAdditionalLines.push(line);
+  });
+
+  const mergedDippingLines = dippingOrder
+    .filter((key, idx, arr) => arr.indexOf(key) === idx)
+    .map((key) => {
+      const req = requiredDippingQty.get(key);
+      const add = additionalDippingQty.get(key);
+      const name = req?.name || add?.name || key;
+      const qty = (req?.qty || 0) + (add?.qty || 0);
+      return { name, qty: Math.max(1, qty) };
+    })
+    .map((entry) => (entry.qty > 1 ? `${entry.name} x${entry.qty}` : entry.name));
+
   const finalLines = isTurnoverCalzonePepperoniRoll
     ? [
         ...additionalToppingsLines,
         ...extraSauceLines
       ]
     : [
-        ...dippingsLines,
-        ...additionalToppingsLines
+        ...mergedDippingLines,
+        ...filteredAdditionalLines
       ];
 
   console.log("[STROMBOLI_REPORT_DEBUG]", { 

@@ -8776,6 +8776,14 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       const instruction = mozzarellaSticksSpecialInstructionsOptions.find(i => i.id === instructionId);
       return total + (instruction?.price || 0);
     }, 0);
+
+    // Arancini prices (app8, capp4)
+    const aranciniSpecialInstructionsPrice = (
+      [...selectedAranciniRegularInstructions, ...selectedAranciniInstructions]
+    ).reduce((total, instructionId) => {
+      const instruction = aranciniSpecialInstructionsOptions.find(i => i.id === instructionId);
+      return total + (instruction?.price || 0);
+    }, 0);
     
     
     const chickenTendersExtraSaucePrice = Object.values(selectedChickenTendersExtraSauce).reduce((total, size) => {
@@ -8865,7 +8873,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
 
     // Desserts, beverages, pizza dippings and extra-sides (for selected categories)
     // are handled as standalone cart rows and must not remain in parent unit price.
-    return (basePrice + toppingsPrice + cafingKitPrice + extraSaucePrice + sideToppingsPrice + parentExtraSidesPrice + addToppingsPrice + liteToppingsPrice + noToppingsCheesesteakPrice + burgerAddPrice + burgerExtraPrice + burgerLitePrice + burgerSidePrice + briocheAddCheesePrice + briocheExtraCheesePrice + briocheNoPrice + briocheSidePrice + paniniExtraCheesePrice + paniniSidesPrice + wrapAddToppingsPrice + wrapExtraCheesePrice + wrapLitePrice + wrapNoPrice + wrapSidePrice + wrapChipsPrice + kidsPastaTypePrice + kidsPastaToppingsPrice + buildPastaTypePrice + buildPastaSaucePrice + buildPastaToppingsPrice + buildPastaSoupPrice + pastaTypePrice + pastaAdditionsPrice + hoagiePlatterOptionsPrice + hoagiePlatterSideToppingsPrice + wrapPlatterOptionsPrice + wrapPlatterSideToppingsPrice + hotSandwichPlatterOptionsPrice + hotSandwichPlatterSideToppingsPrice + parentHotHoagieSidesPrice + hotHoagieExtrasPrice + hotHoagieCheesePrice + coldHoagieCheesePrice + coldHoagieToppingsPrice + coldHoagieExtrasPrice + coldHoagieLitePrice + coldHoagieNoPrice + coldHoagieSidesPrice + parentColdHoagieExtraSidesPrice + chipsPrice + saladExtraDressingPrice + saladExtraToppingsPrice + cheesesteakCheesePrice + friesInstructionsPrice + garlicStickInstructionsPrice + garlicBreadInstructionsPrice + garlicBreadMozzarellaInstructionsPrice + mozzarellaSticksInstructionsPrice + onionRingsInstructionsPrice + macAndCheeseBitesInstructionsPrice + broccoliCheddarBitesInstructionsPrice + passarielloFriesInstructionsPrice + cheddarSteakFriesInstructionsPrice + wingsSpecialInstructionsPrice + wingsExtraSaucePrice + wingsExtraCheeseRanchPrice + chickenTendersSpecialInstructionsPrice + chickenTendersExtraSaucePrice + chickenTendersExtraCheeseRanchPrice + mozzarellaSticksSpecialInstructionsPrice + traditionalDinnersSidesPrice + traditionalDinnersSoupsSaladsPrice + extraBreadPrice + kidsPastaMeatballTypePrice + kidsPastaMeatballToppingsPrice + kidsBakedExtraPrice + kidsBakedLitePrice + kidsBakedNoPrice + seafoodPastaTypePrice + calamariPastaTypePrice + musselsPastaTypePrice + seafoodComboPastaTypePrice + shrimpMarinaraPastaTypePrice + pizzaSteakExtrasPrice + extraSideSaucesPrice).toFixed(2);
+    return (basePrice + toppingsPrice + cafingKitPrice + extraSaucePrice + sideToppingsPrice + parentExtraSidesPrice + addToppingsPrice + liteToppingsPrice + noToppingsCheesesteakPrice + burgerAddPrice + burgerExtraPrice + burgerLitePrice + burgerSidePrice + briocheAddCheesePrice + briocheExtraCheesePrice + briocheNoPrice + briocheSidePrice + paniniExtraCheesePrice + paniniSidesPrice + wrapAddToppingsPrice + wrapExtraCheesePrice + wrapLitePrice + wrapNoPrice + wrapSidePrice + wrapChipsPrice + kidsPastaTypePrice + kidsPastaToppingsPrice + buildPastaTypePrice + buildPastaSaucePrice + buildPastaToppingsPrice + buildPastaSoupPrice + pastaTypePrice + pastaAdditionsPrice + hoagiePlatterOptionsPrice + hoagiePlatterSideToppingsPrice + wrapPlatterOptionsPrice + wrapPlatterSideToppingsPrice + hotSandwichPlatterOptionsPrice + hotSandwichPlatterSideToppingsPrice + parentHotHoagieSidesPrice + hotHoagieExtrasPrice + hotHoagieCheesePrice + coldHoagieCheesePrice + coldHoagieToppingsPrice + coldHoagieExtrasPrice + coldHoagieLitePrice + coldHoagieNoPrice + coldHoagieSidesPrice + parentColdHoagieExtraSidesPrice + chipsPrice + saladExtraDressingPrice + saladExtraToppingsPrice + cheesesteakCheesePrice + friesInstructionsPrice + garlicStickInstructionsPrice + garlicBreadInstructionsPrice + garlicBreadMozzarellaInstructionsPrice + mozzarellaSticksInstructionsPrice + onionRingsInstructionsPrice + macAndCheeseBitesInstructionsPrice + broccoliCheddarBitesInstructionsPrice + passarielloFriesInstructionsPrice + cheddarSteakFriesInstructionsPrice + wingsSpecialInstructionsPrice + wingsExtraSaucePrice + wingsExtraCheeseRanchPrice + chickenTendersSpecialInstructionsPrice + chickenTendersExtraSaucePrice + chickenTendersExtraCheeseRanchPrice + mozzarellaSticksSpecialInstructionsPrice + aranciniSpecialInstructionsPrice + traditionalDinnersSidesPrice + traditionalDinnersSoupsSaladsPrice + extraBreadPrice + kidsPastaMeatballTypePrice + kidsPastaMeatballToppingsPrice + kidsBakedExtraPrice + kidsBakedLitePrice + kidsBakedNoPrice + seafoodPastaTypePrice + calamariPastaTypePrice + musselsPastaTypePrice + seafoodComboPastaTypePrice + shrimpMarinaraPastaTypePrice + pizzaSteakExtrasPrice + extraSideSaucesPrice).toFixed(2);
   };
 
   // Helper to strip size selections
@@ -23855,7 +23863,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 <div className="relative z-10 space-y-6">
                   {/* Sides Section */}
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {traditionalDinnersSides.filter(side => 
                       !['td-side1', 'td-side3', 'td-side6', 'td-side9', 'td-side11', 'td-side12', 'td-side14'].includes(side.id)
                     ).map((side) => {
