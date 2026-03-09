@@ -8250,9 +8250,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       return 0;
     }
 
-    // Gluten Free 12" has fixed topping pricing
-    // Cup n Char Pepperoni is the only premium topping in this SKU
-    if (product.id === 'cyo-gf12') {
+    // Gluten Free 12" and Cauliflower Gluten Free 10" share fixed topping pricing
+    // Cup n Char Pepperoni is the only premium topping in these SKUs
+    if (product.id === 'cyo-gf12' || product.id === 'cyo-cauliflower') {
       return topping.id === 'a1' ? 2.49 : 1.99;
     }
 
