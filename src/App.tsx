@@ -5153,12 +5153,16 @@ export default function App() {
   const handleDuplicateCartItem = (itemId: string) => {
     setCartItems(prev => {
       const item = prev.find(i => i.id === itemId);
-      if (item) {
-        // Create new item with unique ID
-        const uniqueId = `${item.productId}-${Date.now()}-${Math.random()}`;
-        return [...prev, { ...item, id: uniqueId }];
-      }
-      return prev;
+      if (!item) return prev;
+
+      // Keep a single cart row and increase quantity instead of creating a duplicated row.
+      // Duplicate action adds the same amount already present in that row.
+      const increment = Math.max(1, Number(item.quantity) || 1);
+      return prev.map(i =>
+        i.id === itemId
+          ? { ...i, quantity: (Number(i.quantity) || 0) + increment }
+          : i
+      );
     });
     console.log(`Duplicated item with ID: ${itemId}`);
   };
