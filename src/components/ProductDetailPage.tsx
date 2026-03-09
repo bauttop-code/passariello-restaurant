@@ -24924,7 +24924,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 )}
 
                 {/* Specialty Toppings - Only for pizzas (Excluded for Specialty Pizzas) */}
-                {(product.category === 'pizzas') && (
+                {(product.category === 'pizzas' && product.id !== 'cyo-minucci') && (
                   <>
                     {/* Specialty Toppings Divider */}
                     <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg">
