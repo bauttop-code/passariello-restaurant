@@ -6196,7 +6196,27 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     const mediumSentence = description.match(/Medium\s+Tray[^.]*\./i)?.[0] || '';
     const largeSentence = description.match(/Large\s+Tray[^.]*\./i)?.[0] || '';
 
-    if (!mediumSentence || !largeSentence) return description;
+    // Catering sides descriptions in catalog may not include tray/bread notes.
+    // Inject the selected-size sentence when missing.
+    if (!mediumSentence || !largeSentence) {
+      if (cat === 'catering-sides') {
+        const selectedSentence =
+          selectedSize === 'medium'
+            ? 'Medium Tray served with 10 pieces of our homemade bread.'
+            : 'Large Tray served with 20 pieces of our homemade bread.';
+
+        const trimmed = String(description || '').trim();
+        if (!trimmed) return selectedSentence;
+
+        if (/Medium\s+Tray[^.]*\./i.test(trimmed) || /Large\s+Tray[^.]*\./i.test(trimmed)) {
+          return trimmed;
+        }
+
+        const spacer = /[.!?]$/.test(trimmed) ? ' ' : '. ';
+        return `${trimmed}${spacer}${selectedSentence}`;
+      }
+      return description;
+    }
 
     const selectedSentence = selectedSize === 'medium' ? mediumSentence : largeSentence;
     const withoutSizeClauses = description
