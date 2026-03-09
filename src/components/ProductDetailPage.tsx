@@ -13595,7 +13595,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         return (
                           <div
                             key={option.id}
-                            className="flex items-center gap-0 rounded-lg overflow-hidden bg-[#F6F6F6] border border-gray-200"
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden bg-[#F6F6F6] ${
+                              currentCount > 0 ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            }`}
                           >
                             <div className="flex-1 flex items-center justify-between px-4 py-3">
                               <div className="flex flex-col gap-1">
@@ -13816,7 +13818,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         return (
                           <div
                             key={option.id}
-                            className="flex items-center gap-0 rounded-lg overflow-hidden bg-[#F6F6F6] border border-gray-200"
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden bg-[#F6F6F6] ${
+                              currentCount > 0 ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            }`}
                           >
                             <div className="flex-1 flex items-center justify-between px-4 py-3">
                               <div className="flex flex-col gap-1">
@@ -14052,7 +14056,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         return (
                           <div
                             key={option.id}
-                            className="flex items-center gap-0 rounded-lg overflow-hidden bg-[#F6F6F6] border border-gray-200"
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden bg-[#F6F6F6] ${
+                              currentCount > 0 ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            }`}
                           >
                             <div className="flex-1 flex items-center justify-between px-4 py-3">
                               <div className="flex flex-col gap-1">
@@ -22430,7 +22436,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       return (
                         <div
                           key={item.id}
-                          className="flex items-center gap-3 px-4 py-3 rounded-lg bg-[#F6F6F6] border border-gray-200"
+                          className={`flex items-center gap-3 px-4 py-3 rounded-lg bg-[#F6F6F6] ${
+                            chipsQuantity > 0 ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          }`}
                         >
                           <div className="flex-1 flex items-center justify-between">
                             <p className="text-gray-900">{item.name} - ${item.price?.toFixed(2)}</p>
@@ -23091,9 +23099,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             }
                           }}
                           className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            wrapTypeError 
-                              ? 'border-2 border-red-500 hover:border-red-600' 
-                              : 'border border-gray-200 hover:border-gray-300'
+                            isSelected
+                              ? 'border-2 border-[#A72020]'
+                              : wrapTypeError
+                                ? 'border-2 border-red-500 hover:border-red-600'
+                                : 'border border-gray-200 hover:border-gray-300'
                           }`}
                         >
                           <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
@@ -23281,9 +23291,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedWrapExtraCheese([...selectedWrapExtraCheese, topping.id]);
                             }
                           }}
-                          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors bg-[#F6F6F6] border border-gray-200 ${
-                            isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-gray-300'
-                          }`}
+                          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          } ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-gray-300'}`}
                         >
                           <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                             isSelected ? 'border-[#A72020] bg-white' : 'border-gray-300'
@@ -23478,9 +23488,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedWrapLite([...selectedWrapLite, topping.id]);
                             }
                           }}
-                          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors bg-[#F6F6F6] border border-gray-200 ${
-                            isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-gray-300'
-                          }`}
+                          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          } ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-gray-300'}`}
                         >
                           <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                             isSelected ? 'border-[#A72020] bg-white' : 'border-gray-300'
@@ -23670,9 +23680,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedWrapNo([...selectedWrapNo, topping.id]);
                             }
                           }}
-                          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors bg-[#F6F6F6] border border-gray-200 ${
-                            isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-gray-300'
-                          }`}
+                          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          } ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-gray-300'}`}
                         >
                           <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                             isSelected ? 'border-[#A72020] bg-white' : 'border-gray-300'
@@ -23697,7 +23707,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     <span className="font-semibold">Side of Extra Chips (Optional)</span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-[#F6F6F6] border border-gray-200 rounded-lg p-4">
+                    <div className={`bg-[#F6F6F6] rounded-lg p-4 ${
+                      wrapChipsQuantity > 0 ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                    }`}>
                       <div className="flex items-center justify-between">
                         <span className="text-gray-900">Extra Chips - $1.00</span>
                         <div className="flex items-center gap-3">
@@ -26213,7 +26225,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setActiveDippingItem(null);
                           }
                         }}
-                        className="relative flex items-center gap-3 h-28 rounded-lg overflow-hidden border border-gray-200 bg-[#F6F6F6] cursor-pointer hover:border-[#A72020] transition-colors"
+                        className={`relative flex items-center gap-3 h-28 rounded-lg overflow-hidden bg-[#F6F6F6] cursor-pointer transition-colors ${
+                          quantity > 0 ? 'border-2 border-[#A72020]' : 'border border-gray-200 hover:border-[#A72020]'
+                        }`}
                       >
                         {/* Check circle - positioned in top right corner */}
                         <div className="absolute top-2 right-2 z-10">
