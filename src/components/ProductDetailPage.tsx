@@ -4844,9 +4844,15 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   ? null
                                   : null
   );
+  const isCyoMinucci = product.id === 'cyo-minucci';
+  const isMinucciOneToppingMode = isCyoMinucci && selectedSize === 'medium';
+  const isMinucciTwoToFourMode = isCyoMinucci && selectedSize === 'large';
+  const maxMinucciToppings = isMinucciOneToppingMode ? 1 : (isMinucciTwoToFourMode ? 4 : Number.POSITIVE_INFINITY);
   const [selectedIncluded, setSelectedIncluded] = useState<string>('');
   const [selectedToppings, setSelectedToppings] = useState<string[]>([]);
   const [toppingDistribution, setToppingDistribution] = useState<Record<string, 'left' | 'whole' | 'right'>>({});
+  const [minucciToppingsError, setMinucciToppingsError] = useState(false);
+  const minucciToppingsErrorRef = useRef<HTMLDivElement>(null);
   
   // Desserts state - Changed to Record<string, number> for quantity support
   const [selectedDesserts, setSelectedDesserts] = useState<Record<string, number>>({});
@@ -4909,6 +4915,36 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
   const saladToppingsRef = useRef<HTMLDivElement>(null);
   const [dippingError, setDippingError] = useState(false);
   const dippingErrorRef = useRef<HTMLDivElement>(null);
+  const supportsHalfToppingSelection =
+    (product.category === 'pizzas' || product.category === 'specialty-pizza' || product.category === 'brooklyn-pizza') &&
+    !['cyo-gf12', 'cyo-cauliflower', 'cyo-minucci'].includes(product.id);
+
+  useEffect(() => {
+    if (!isCyoMinucci) return;
+    setSelectedToppings((prev) => {
+      if (maxMinucciToppings === Number.POSITIVE_INFINITY) return prev;
+      if (prev.length <= maxMinucciToppings) return prev;
+      return prev.slice(0, maxMinucciToppings);
+    });
+  }, [isCyoMinucci, maxMinucciToppings]);
+
+  useEffect(() => {
+    if (!isCyoMinucci) {
+      if (minucciToppingsError) setMinucciToppingsError(false);
+      return;
+    }
+    if (isMinucciOneToppingMode && selectedToppings.length <= 1) {
+      setMinucciToppingsError(false);
+    } else if (isMinucciTwoToFourMode && (selectedToppings.length === 0 || (selectedToppings.length >= 2 && selectedToppings.length <= 4))) {
+      setMinucciToppingsError(false);
+    }
+  }, [
+    isCyoMinucci,
+    isMinucciOneToppingMode,
+    isMinucciTwoToFourMode,
+    selectedToppings.length,
+    minucciToppingsError,
+  ]);
 
   useEffect(() => {
     if (dippingError) {
@@ -6988,6 +7024,10 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
         });
         return prev.filter(id => id !== toppingId);
       } else {
+        if (isCyoMinucci && prev.length >= maxMinucciToppings) {
+          return prev;
+        }
+
         // Set default distribution to 'whole' when topping is selected
         setToppingDistribution(dist => ({ ...dist, [toppingId]: 'whole' }));
         
@@ -8205,6 +8245,17 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
 
   // Helper function to get topping price based on category and distribution
   const getToppingPrice = (topping: Topping, distribution?: 'left' | 'right' | 'whole'): number => {
+    // CYO Minucci toppings are included in selected pricing mode (no per-topping upcharge)
+    if (product.id === 'cyo-minucci') {
+      return 0;
+    }
+
+    // Gluten Free 12" has fixed topping pricing
+    // Cup n Char Pepperoni is the only premium topping in this SKU
+    if (product.id === 'cyo-gf12') {
+      return topping.id === 'a1' ? 2.49 : 1.99;
+    }
+
     // For "by the slice" category, use special pricing
     if (product.category === 'by-the-slice') {
       // Premium toppings for slices
@@ -10013,7 +10064,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   {product.id === 'cyo-minucci' && (
                     <div className="flex gap-3">
                       <button
-                        onClick={() => setSelectedSize('medium')}
+                        onClick={() => {
+                          setSelectedSize('medium');
+                          setSelectedToppings((prev) => (prev.length > 1 ? prev.slice(0, 1) : prev));
+                          setMinucciToppingsError(false);
+                        }}
                         className={`px-5 py-2.5 rounded-lg border-2 transition-colors ${
                           selectedSize === 'medium'
                             ? 'border-[#A72020] bg-[#A72020] text-white'
@@ -10023,7 +10078,10 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         1 Topping
                       </button>
                       <button
-                        onClick={() => setSelectedSize('large')}
+                        onClick={() => {
+                          setSelectedSize('large');
+                          setMinucciToppingsError(false);
+                        }}
                         className={`px-5 py-2.5 rounded-lg border-2 transition-colors ${
                           selectedSize === 'large'
                             ? 'border-[#A72020] bg-[#A72020] text-white'
@@ -10553,7 +10611,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   {product.id === 'cyo-minucci' && (
                     <div className="flex gap-3">
                       <button
-                        onClick={() => setSelectedSize('medium')}
+                        onClick={() => {
+                          setSelectedSize('medium');
+                          setSelectedToppings((prev) => (prev.length > 1 ? prev.slice(0, 1) : prev));
+                          setMinucciToppingsError(false);
+                        }}
                         className={`px-5 py-2.5 rounded-lg border-2 transition-colors ${
                           selectedSize === 'medium'
                             ? 'border-[#A72020] bg-[#A72020] text-white'
@@ -10563,7 +10625,10 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         1 Topping
                       </button>
                       <button
-                        onClick={() => setSelectedSize('large')}
+                        onClick={() => {
+                          setSelectedSize('large');
+                          setMinucciToppingsError(false);
+                        }}
                         className={`px-5 py-2.5 rounded-lg border-2 transition-colors ${
                           selectedSize === 'large'
                             ? 'border-[#A72020] bg-[#A72020] text-white'
@@ -24766,11 +24831,17 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     }
                     const isSelected = selectedToppings.includes(topping.id);
                     const distribution = toppingDistribution[topping.id] || 'whole';
+                    const isMinucciAtLimit = isCyoMinucci && !isSelected && selectedToppings.length >= maxMinucciToppings;
                     return (
                       <div
                         key={topping.id}
-                        onClick={() => handleToppingToggle(topping.id)}
-                        className={`flex items-center gap-0 rounded-lg overflow-hidden bg-[#F6F6F6] cursor-pointer ${
+                        onClick={() => {
+                          if (isMinucciAtLimit) return;
+                          handleToppingToggle(topping.id);
+                        }}
+                        className={`flex items-center gap-0 rounded-lg overflow-hidden bg-[#F6F6F6] ${
+                          isMinucciAtLimit ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                        } ${
                           isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
                         }`}
                       >
@@ -24794,7 +24865,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             {topping.name}
                           </p>
                           <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
-                            {isSelected && (product.category === 'pizzas' || product.category === 'specialty-pizza' || product.category === 'brooklyn-pizza') && (
+                            {isSelected && supportsHalfToppingSelection && (
                               <div className="flex gap-1">
                                 <DistributionIcon 
                                   type="left" 
@@ -24813,13 +24884,32 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 />
                               </div>
                             )}
-                            <span className="text-sm text-gray-900">+${getToppingPrice(topping, distribution).toFixed(2)}</span>
+                            {!isCyoMinucci && (
+                              <span className="text-sm text-gray-900">+${getToppingPrice(topping, distribution).toFixed(2)}</span>
+                            )}
                           </div>
                         </div>
                       </div>
                     );
                   })}
                 </div>
+
+                {isCyoMinucci && minucciToppingsError && (
+                  <div
+                    ref={minucciToppingsErrorRef}
+                    className="bg-red-50 border-l-4 border-red-600 text-red-700 p-4 rounded-r-lg flex items-center gap-3"
+                    role="alert"
+                  >
+                    <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                    <p className="font-semibold">
+                      {isMinucciOneToppingMode
+                        ? 'Please select exactly 1 topping.'
+                        : 'Please select between 2 and 4 toppings.'}
+                    </p>
+                  </div>
+                )}
 
                 {/* Specialty Toppings - Only for pizzas (Excluded for Specialty Pizzas) */}
                 {(product.category === 'pizzas') && (
@@ -26991,7 +27081,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   {product.id === 'cyo-minucci' && (
                     <div className="flex gap-2">
                       <button
-                        onClick={() => setSelectedSize('medium')}
+                        onClick={() => {
+                          setSelectedSize('medium');
+                          setSelectedToppings((prev) => (prev.length > 1 ? prev.slice(0, 1) : prev));
+                          setMinucciToppingsError(false);
+                        }}
                         className={`px-5 py-1.5 rounded-lg border-2 transition-colors ${
                           selectedSize === 'medium'
                             ? 'border-[#A72020] bg-[#A72020] text-white'
@@ -27001,7 +27095,10 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         1 Topping
                       </button>
                       <button
-                        onClick={() => setSelectedSize('large')}
+                        onClick={() => {
+                          setSelectedSize('large');
+                          setMinucciToppingsError(false);
+                        }}
                         className={`px-5 py-1.5 rounded-lg border-2 transition-colors ${
                           selectedSize === 'large'
                             ? 'border-[#A72020] bg-[#A72020] text-white'
@@ -27800,6 +27897,16 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     hasError = true;
                   }
                 }
+
+                // Validate CYO Minucci topping rules by pricing mode
+                if (product.id === 'cyo-minucci') {
+                  const toppingCount = selectedToppings.length;
+                  if ((selectedSize === 'medium' && toppingCount > 1) || (selectedSize === 'large' && toppingCount !== 0 && (toppingCount < 2 || toppingCount > 4))) {
+                    setMinucciToppingsError(true);
+                    setIsAdditionalOpen(true);
+                    hasError = true;
+                  }
+                }
                 
                 // If there are errors, scroll to the first error and return
                 if (hasError) {
@@ -27827,6 +27934,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     kidsPastaTypeRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
                   } else if (kidsPastaSauceRef.current) {
                     kidsPastaSauceRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  } else if (minucciToppingsErrorRef.current) {
+                    minucciToppingsErrorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
                   } else if (kidsPastaMeatballTypeRef.current) {
                     kidsPastaMeatballTypeRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
                   } else if (buildPastaTypeRef.current) {
@@ -32811,6 +32920,16 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                      hasError = true;
                   }
 
+                  // Validate CYO Minucci topping rules by pricing mode
+                  if (product.id === 'cyo-minucci') {
+                    const toppingCount = selectedToppings.length;
+                    if ((selectedSize === 'medium' && toppingCount > 1) || (selectedSize === 'large' && toppingCount !== 0 && (toppingCount < 2 || toppingCount > 4))) {
+                      setMinucciToppingsError(true);
+                      setIsAdditionalOpen(true);
+                      hasError = true;
+                    }
+                  }
+
                   // Validate Pasta e Fagioli Substitute selection
                   if (product.id === 'soup1' && !selectedPastaFagioliSubstitute) {
                     setPastaFagioliSubstituteError(true);
@@ -32878,6 +32997,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       sauceErrorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     } else if (kidsPastaSauceRef.current) {
                       kidsPastaSauceRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } else if (minucciToppingsErrorRef.current) {
+                      minucciToppingsErrorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     } else if (kidsPastaMeatballTypeRef.current) {
                       kidsPastaMeatballTypeRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     } else if (buildPastaTypeRef.current) {
