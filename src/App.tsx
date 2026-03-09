@@ -190,13 +190,14 @@ const createYourOwnPizzas: Product[] = [
     category: 'pizzas',
     customizationOptions: [
       {
-        id: 'cyo-gf12-special-instructions',
-        title: 'Special Instructions',
+        id: 'cyo-gf12-sauce-choice',
+        title: 'Sauce',
         subtitle: 'Optional',
         required: false,
-        multiple: true,
+        maxSelections: 1,
         options: [
-          { id: 'half-white', name: 'Half White', price: 0 },
+          { id: 'sauce-red', name: 'Red Sauce', price: 0 },
+          { id: 'sauce-white', name: 'White Sauce', price: 0 },
         ],
       },
     ],
@@ -209,6 +210,19 @@ const createYourOwnPizzas: Product[] = [
     priceRange: '$12.99',
     image: 'https://drive.google.com/thumbnail?id=1XaXUfeHhv6OiJ6Vh84zPy_fkcnIjbTQ7&sz=w1000',
     category: 'pizzas',
+    customizationOptions: [
+      {
+        id: 'cyo-cauliflower-sauce-choice',
+        title: 'Sauce',
+        subtitle: 'Optional',
+        required: false,
+        maxSelections: 1,
+        options: [
+          { id: 'sauce-red', name: 'Red Sauce', price: 0 },
+          { id: 'sauce-white', name: 'White Sauce', price: 0 },
+        ],
+      },
+    ],
   },
   {
     id: 'cyo-minucci',
@@ -218,6 +232,19 @@ const createYourOwnPizzas: Product[] = [
     priceRange: '$9.99 - $12.99',
     image: 'https://drive.google.com/thumbnail?id=131vpwTUJIsszd5lTA8bmKG5cjxe4om8M&sz=w1000',
     category: 'pizzas',
+    customizationOptions: [
+      {
+        id: 'cyo-minucci-sauce-choice',
+        title: 'Sauce',
+        subtitle: 'Optional',
+        required: false,
+        maxSelections: 1,
+        options: [
+          { id: 'sauce-red', name: 'Red Sauce', price: 0 },
+          { id: 'sauce-white', name: 'White Sauce', price: 0 },
+        ],
+      },
+    ],
   },
 ];
 

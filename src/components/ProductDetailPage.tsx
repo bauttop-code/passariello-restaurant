@@ -5029,9 +5029,112 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       // Restore quantity
       setQuantity(editingCartItem.quantity);
 
+      const buildSelectionsFromSources = (
+        sources?: Record<string, RawSelectionShape>
+      ): CartSelection[] => {
+        if (!sources || typeof sources !== 'object') return [];
+        const generated: CartSelection[] = [];
+        completeSelectionsFromRawSources(generated, sources, getItemName, product);
+        return generated;
+      };
+
+      const restoredFromSources = buildSelectionsFromSources(editingCartItem.selectionSources);
+      const resolvedEditSelections =
+        restoredFromSources.length > 0
+          ? restoredFromSources
+          : (Array.isArray(editingCartItem.selections) ? editingCartItem.selections : []);
+
+      const hasSelectionSources =
+        !!editingCartItem.selectionSources &&
+        typeof editingCartItem.selectionSources === 'object' &&
+        Object.keys(editingCartItem.selectionSources).length > 0;
+
+      if (hasSelectionSources) {
+        const src = editingCartItem.selectionSources as Record<string, RawSelectionShape>;
+        const readArray = (key: string): string[] => {
+          const s = src[key];
+          return s?.kind === 'stringArray' && Array.isArray(s.value) ? s.value.map(String) : [];
+        };
+        const readSingle = (key: string): string => {
+          const s = src[key];
+          return s?.kind === 'singleString' && s.value != null ? String(s.value) : '';
+        };
+        const readNumberRecord = (key: string): Record<string, number> => {
+          const s = src[key];
+          if (s?.kind !== 'numberRecord' || !s.value) return {};
+          const out: Record<string, number> = {};
+          Object.entries(s.value).forEach(([k, v]) => {
+            const n = Number(v) || 0;
+            if (n > 0) out[k] = n;
+          });
+          return out;
+        };
+
+        // Core base states
+        setSelectedSauces(readArray('selectedSauces'));
+        setSelectedToppings(readArray('selectedToppings'));
+        setSelectedSpecialInstructions(readArray('selectedSpecialInstructions'));
+        setSelectedExtraSauce(readArray('selectedExtraSauce'));
+        setSelectedNoToppings(readArray('selectedNoToppings'));
+        setSelectedBrooklynInstructions(readArray('selectedBrooklynInstructions'));
+        setSelectedSideToppings(readArray('selectedSideToppings'));
+        setSelectedExtraSides(readArray('selectedExtraSides'));
+        setSelectedAddToppings(readArray('selectedAddToppings'));
+        setSelectedLiteToppings(readArray('selectedLiteToppings'));
+        setSelectedNoToppingsCheesesteak(readArray('selectedNoToppingsCheesesteak'));
+        setSelectedDesserts(readNumberRecord('selectedDesserts'));
+        setSelectedBeverages(readNumberRecord('selectedBeverages'));
+        setSelectedPizzaDippings(readNumberRecord('selectedPizzaDippings'));
+        setSelectedIncludedRequest(readNumberRecord('selectedIncludedRequest'));
+        setSelectedCafingKit(readNumberRecord('selectedCafingKit'));
+        setSelectedSize(readSingle('selectedSize') || selectedSize);
+        setSelectedCheese(readSingle('selectedCheese'));
+        setSelectedIncluded(readSingle('selectedIncluded'));
+        const toast = readSingle('toastRoll');
+        setToastRoll(toast === 'toast' || toast === 'no-toast' ? (toast as 'toast' | 'no-toast') : null);
+
+        // Hoagies / wraps / paninis / burgers
+        setSelectedHotHoagieCheese(readSingle('selectedHotHoagieCheese'));
+        setSelectedHotHoagieExtras(readArray('selectedHotHoagieExtras'));
+        setSelectedHotHoagieSides(readArray('selectedHotHoagieSides'));
+        setSelectedHotHoagieInstructions(readArray('selectedHotHoagieInstructions'));
+        setSelectedColdHoagieCheese(readSingle('selectedColdHoagieCheese'));
+        setSelectedColdHoagieSideToppingsRequired(readArray('selectedColdHoagieSideToppingsRequired'));
+        setSelectedColdHoagieToppings(readArray('selectedColdHoagieToppings'));
+        setSelectedColdHoagieExtras(readArray('selectedColdHoagieExtras'));
+        setSelectedColdHoagieLite(readArray('selectedColdHoagieLite'));
+        setSelectedColdHoagieNo(readArray('selectedColdHoagieNo'));
+        setSelectedColdHoagieSides(readArray('selectedColdHoagieSides'));
+        setSelectedColdHoagieExtraSides(readArray('selectedColdHoagieExtraSides'));
+        setSelectedWrapType(readSingle('selectedWrapType'));
+        setSelectedWrapCheese(readSingle('selectedWrapCheese'));
+        setSelectedWrapAddToppings(readArray('selectedWrapAddToppings'));
+        setSelectedWrapExtraCheese(readArray('selectedWrapExtraCheese'));
+        setSelectedWrapLite(readArray('selectedWrapLite'));
+        setSelectedWrapNo(readArray('selectedWrapNo'));
+        setSelectedWrapSide(readArray('selectedWrapSide'));
+        setSelectedPaniniType(readSingle('selectedPaniniType'));
+        setSelectedPaniniCheese(readSingle('selectedPaniniCheese'));
+        setSelectedPaniniExtraCheese(readArray('selectedPaniniExtraCheese'));
+        setSelectedPaniniLite(readArray('selectedPaniniLite'));
+        setSelectedPaniniNo(readArray('selectedPaniniNo'));
+        setSelectedPaniniSides(readArray('selectedPaniniSides'));
+        setSelectedBurgerAdd(readArray('selectedBurgerAdd'));
+        setSelectedBurgerExtra(readArray('selectedBurgerExtra'));
+        setSelectedBurgerLite(readArray('selectedBurgerLite'));
+        setSelectedBurgerSide(readArray('selectedBurgerSide'));
+        setSelectedBurgerCheese(readArray('selectedBurgerCheese'));
+
+        // Quantity controls not represented in selections
+        const chipsRaw = readSingle('chipsQuantity');
+        const wrapChipsRaw = readSingle('wrapChipsQuantity');
+        setChipsQuantity(Number.parseInt(chipsRaw, 10) || 0);
+        setWrapChipsQuantity(Number.parseInt(wrapChipsRaw, 10) || 0);
+      }
+
       const isCheesesteakProduct = (product.category || '').toLowerCase().includes('cheesesteak');
       if (isCheesesteakProduct) {
-        const editSelections = Array.isArray(editingCartItem.selections) ? editingCartItem.selections : [];
+        const editSelections = resolvedEditSelections;
         const uniqueIds = (ids: string[]) => Array.from(new Set(ids.filter(Boolean)));
         const normalizeSection = (sel: any): string => {
           const gt = String(sel?.groupTitle || '').trim().toLowerCase();
@@ -5200,7 +5303,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
 
       // Primary restore path: selections (cart display is already based on this).
       // This fills gaps where legacy customizations are incomplete per item/category.
-      const editSelections = Array.isArray(editingCartItem.selections) ? editingCartItem.selections : [];
+      const editSelections = resolvedEditSelections;
       if (editSelections.length > 0) {
         const allSelIds = editSelections.map((s: any) => String(s?.id || '').trim()).filter(Boolean);
         const allSelLabels = editSelections.map((s: any) => String(s?.label || '').trim()).filter(Boolean);
@@ -5348,6 +5451,38 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
           }
         }
 
+        // Wraps
+        if (product.category === 'wraps') {
+          const wrapTypeId = allSelIds.find((id) => wrapTypeOptions.some((o) => o.id === id)) || '';
+          if (wrapTypeId) setSelectedWrapType(wrapTypeId);
+
+          const wrapCheeseLists = [wrapSubstituteCheese, chickenCaesarWrapCheese];
+          const wrapCheeseId =
+            allSelIds.find((id) => wrapCheeseLists.some((list) => list.some((o) => o.id === id))) || '';
+          if (wrapCheeseId) setSelectedWrapCheese(wrapCheeseId);
+
+          const wrapAddIds = Array.from(new Set(allSelIds.filter((id) => wrapAddToppings.some((o) => o.id === id))));
+          if (wrapAddIds.length > 0) setSelectedWrapAddToppings(wrapAddIds);
+
+          const wrapExtraCheeseIds = Array.from(new Set(allSelIds.filter((id) => wrapExtraCheese.some((o) => o.id === id))));
+          if (wrapExtraCheeseIds.length > 0) setSelectedWrapExtraCheese(wrapExtraCheeseIds);
+
+          const wrapLiteIds = Array.from(new Set(allSelIds.filter((id) => wrapLiteToppings.some((o) => o.id === id))));
+          if (wrapLiteIds.length > 0) setSelectedWrapLite(wrapLiteIds);
+
+          const wrapNoIds = Array.from(new Set(allSelIds.filter((id) => wrapNoToppings.some((o) => o.id === id))));
+          if (wrapNoIds.length > 0) setSelectedWrapNo(wrapNoIds);
+
+          const wrapSideIds = Array.from(new Set(allSelIds.filter((id) => wrapSideToppings.some((o) => o.id === id))));
+          if (wrapSideIds.length > 0) setSelectedWrapSide(wrapSideIds);
+
+          const chipsLabel = allSelLabels.find((label) => /side of extra chips/i.test(label));
+          if (chipsLabel) {
+            const m = chipsLabel.match(/x(\d+)/i);
+            setWrapChipsQuantity(m ? (parseInt(m[1], 10) || 0) : 1);
+          }
+        }
+
         // Hot/Cold Hoagie Extra Sides (restore visual selected state + quantities)
         const hoagieExtraSideIdsRaw = editSelections
           .filter((sel: any) => {
@@ -5392,8 +5527,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
         }
       }
       
-      // Restore customizations
-      if (editingCartItem.customizations) {
+      // Restore customizations (legacy fallback for older cart rows without canonical selectionSources)
+      if (!hasSelectionSources && editingCartItem.customizations) {
         editingCartItem.customizations.forEach(custom => {
           const category = custom.category;
           const items = custom.items;
@@ -5505,19 +5640,34 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
               break;
             
             case 'Add Toppings':
-              const addIds = findIdsByNames(items, [burgerAddToppings, coldHoagieAddToppings]);
-              setSelectedAddToppings(prev => [...new Set([...prev, ...addIds])]);
+              if (product.category === 'wraps') {
+                const wrapAddIds = findIdsByNames(items, [wrapAddToppings]);
+                setSelectedWrapAddToppings(prev => [...new Set([...prev, ...wrapAddIds])]);
+              } else {
+                const addIds = findIdsByNames(items, [burgerAddToppings, coldHoagieAddToppings]);
+                setSelectedAddToppings(prev => [...new Set([...prev, ...addIds])]);
+              }
               break;
             
             case 'Lite Toppings':
             case 'Lite':
-              const liteIds = findIdsByNames(items, [liteToppings, burgerLiteToppings, coldHoagieLiteToppings]);
-              setSelectedLiteToppings(prev => [...new Set([...prev, ...liteIds])]);
+              if (product.category === 'wraps') {
+                const wrapLiteIds = findIdsByNames(items, [wrapLiteToppings]);
+                setSelectedWrapLite(prev => [...new Set([...prev, ...wrapLiteIds])]);
+              } else {
+                const liteIds = findIdsByNames(items, [liteToppings, burgerLiteToppings, coldHoagieLiteToppings]);
+                setSelectedLiteToppings(prev => [...new Set([...prev, ...liteIds])]);
+              }
               break;
             
             case 'No Toppings':
-              const noIds = findIdsByNames(items, [noToppings, cheesesteakNoToppings]);
-              setSelectedNoToppings(prev => [...new Set([...prev, ...noIds])]);
+              if (product.category === 'wraps') {
+                const wrapNoIds = findIdsByNames(items, [wrapNoToppings]);
+                setSelectedWrapNo(prev => [...new Set([...prev, ...wrapNoIds])]);
+              } else {
+                const noIds = findIdsByNames(items, [noToppings, cheesesteakNoToppings]);
+                setSelectedNoToppings(prev => [...new Set([...prev, ...noIds])]);
+              }
               break;
             
             case 'Extra Sauce':
@@ -5527,13 +5677,38 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
             
             case 'Side Toppings':
             case 'Sides':
-              const sideIds = findIdsByNames(items, [burgerSideToppings, coldHoagieSideToppings, hotHoagieSides]);
-              setSelectedSideToppings(prev => [...new Set([...prev, ...sideIds])]);
+              if (product.category === 'wraps') {
+                const wrapSideIds = findIdsByNames(items, [wrapSideToppings]);
+                setSelectedWrapSide(prev => [...new Set([...prev, ...wrapSideIds])]);
+              } else {
+                const sideIds = findIdsByNames(items, [burgerSideToppings, coldHoagieSideToppings, hotHoagieSides]);
+                setSelectedSideToppings(prev => [...new Set([...prev, ...sideIds])]);
+              }
               break;
             
             case 'Cheese':
-              const cheeseIds = findIdsByNames(items, [cheeseOptions]);
-              if (cheeseIds[0]) setSelectedCheese(cheeseIds[0]);
+              if (product.category === 'wraps') {
+                const wrapCheeseIds = findIdsByNames(items, [wrapSubstituteCheese, chickenCaesarWrapCheese]);
+                if (wrapCheeseIds[0]) setSelectedWrapCheese(wrapCheeseIds[0]);
+              } else {
+                const cheeseIds = findIdsByNames(items, [cheeseOptions]);
+                if (cheeseIds[0]) setSelectedCheese(cheeseIds[0]);
+              }
+              break;
+
+            case 'Wrap Type':
+              if (product.category === 'wraps') {
+                const wrapTypeIds = findIdsByNames(items, [wrapTypeOptions]);
+                if (wrapTypeIds[0]) setSelectedWrapType(wrapTypeIds[0]);
+              }
+              break;
+
+            case 'Side of Extra Chips':
+              if (product.category === 'wraps') {
+                const chipsText = items.find(i => /side of extra chips/i.test(String(i || ''))) || items[0];
+                const m = String(chipsText || '').match(/x(\d+)/i);
+                setWrapChipsQuantity(m ? (parseInt(m[1], 10) || 0) : 1);
+              }
               break;
             
             case 'Desserts':
@@ -5661,6 +5836,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     setSelectedBeverages({});
     setActiveDessertItem(null);
     setActiveBeverageItem(null);
+    setChipsQuantity(0);
+    setWrapChipsQuantity(0);
   }, [product.id, isEditMode]);
 
   // Categories that must start with Medium when opening product in non-edit mode.
@@ -5783,9 +5960,12 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
   const isPanOrSicilianSaucePizza =
     product.category === 'pizzas' &&
     (product.name.toLowerCase().includes('pan pizza') || product.name.toLowerCase().includes('sicilian'));
+  const isSimpleRedWhiteSaucePizza =
+    product.category === 'pizzas' &&
+    ['cyo-gf12', 'cyo-cauliflower', 'cyo-minucci'].includes(product.id);
 
   const sauceOptions = useMemo(() => {
-    if (isSpecialtySaucePizza || isPanOrSicilianSaucePizza) {
+    if (isSpecialtySaucePizza || isPanOrSicilianSaucePizza || isSimpleRedWhiteSaucePizza) {
       return [
         { id: 'sauce-pizza', name: 'Red Sauce', price: 0, image: 'https://images.unsplash.com/photo-1610913729746-9d5d752daf59?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaXp6YSUyMHNhdWNlfGVufDF8fHx8MTc2OTgwNzM2OHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral' },
         { id: 'sauce-white', name: 'White Sauce', price: 0, image: 'https://images.unsplash.com/photo-1593560708920-63984d8d606e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200' }
@@ -5794,7 +5974,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     return [
       { id: 'sauce-pizza', name: 'Red Sauce', price: 0, image: 'https://images.unsplash.com/photo-1610913729746-9d5d752daf59?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaXp6YSUyMHNhdWNlfGVufDF8fHx8MTc2OTgwNzM2OHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral' }
     ];
-  }, [isSpecialtySaucePizza, isPanOrSicilianSaucePizza]);
+  }, [isSpecialtySaucePizza, isPanOrSicilianSaucePizza, isSimpleRedWhiteSaucePizza]);
 
   const handleSauceToggle = (sauceId: string) => {
     setSauceError(false);
@@ -5815,7 +5995,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       }
 
       // Pan/Sicilian: optional but mutually exclusive (can't select Red + White at once)
-      if (isPanOrSicilianSaucePizza) {
+      if (isPanOrSicilianSaucePizza || isSimpleRedWhiteSaucePizza) {
         const isSelected = prev.includes(sauceId);
         if (isSelected) {
           setSauceDistribution(prevDist => {
@@ -9153,7 +9333,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       const coldKeys = [
         'selectedColdHoagieCheese', 'selectedColdHoagieSideToppingsRequired',
         'selectedColdHoagieToppings', 'selectedColdHoagieExtras', 'selectedColdHoagieLite',
-        'selectedColdHoagieNo', 'selectedColdHoagieSides', 'selectedColdHoagieExtraSides'
+        'selectedColdHoagieNo', 'selectedColdHoagieSides', 'selectedColdHoagieExtraSides',
+        'chipsQuantity'
       ];
       coldKeys.forEach(key => {
         if (allSources[key]) filtered[key] = allSources[key];
@@ -9183,7 +9364,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     }
     
     // PANINI specific
-    if (currentProduct.category === 'panini') {
+    if (currentProduct.category === 'panini' || currentProduct.category === 'paninis') {
       const paniniKeys = [
         'selectedPaniniType', 'selectedPaniniExtraCheese', 'selectedPaniniLite',
         'selectedPaniniNo', 'selectedPaniniSides', 'selectedPaniniCheese'
@@ -9197,7 +9378,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     if (currentProduct.category === 'wraps') {
       const wrapKeys = [
         'selectedWrapType', 'selectedWrapCheese', 'selectedWrapAddToppings',
-        'selectedWrapExtraCheese', 'selectedWrapLite', 'selectedWrapNo', 'selectedWrapSide'
+        'selectedWrapExtraCheese', 'selectedWrapLite', 'selectedWrapNo', 'selectedWrapSide',
+        'wrapChipsQuantity'
       ];
       wrapKeys.forEach(key => {
         if (allSources[key]) filtered[key] = allSources[key];
@@ -9205,7 +9387,12 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     }
     
     // PASTA specific
-    if (currentProduct.category === 'baked-pasta-dinners' || currentProduct.category === 'traditional-dinners') {
+    if (
+      currentProduct.category === 'create-pasta' ||
+      currentProduct.category === 'pasta' ||
+      currentProduct.category === 'baked-pasta' ||
+      currentProduct.category === 'traditional-dinners'
+    ) {
       const pastaKeys = [
         'selectedPastaType', 'selectedPastaAdditions', 'selectedTraditionalDinnersSides',
         'selectedTraditionalDinnersSoupsSalads'
@@ -9216,7 +9403,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     }
     
     // KIDS MENU specific
-    if (currentProduct.category === 'kids-menu') {
+    if (currentProduct.category === 'kids-menu' || currentProduct.category === 'kids') {
       const kidsKeys = [
         'selectedKidsPastaType', 'selectedKidsPastaSauce', 'selectedKidsPastaToppings',
         'selectedKidsPastaSpecialInstructions', 'selectedBuildPastaType', 'selectedBuildPastaSauce',
@@ -24199,8 +24386,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
             <>
               {/* 0. Sauce - Only for pizzas */}
               {((
-                 (product.category === 'pizzas') && 
-                 !['cyo-gf12', 'cyo-cauliflower', 'cyo-minucci'].includes(product.id)
+                 (product.category === 'pizzas')
                ) || 
                (
                  product.category === 'specialty-pizza' && 
@@ -24258,6 +24444,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   if (isSpecialtySaucePizza) {
                                       return sauce.name;
                                   }
+                                  if (isSimpleRedWhiteSaucePizza) {
+                                      return sauce.name;
+                                  }
 
                                   const isWhitePizza = product.id === 'cyo-white';
                                   let baseName = sauce.name;
@@ -24284,7 +24473,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 })()}
                               </p>
                               <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
-                                {isSelected && !isSpecialtySaucePizza && (
+                                {isSelected && !isSpecialtySaucePizza && !isSimpleRedWhiteSaucePizza && (
                                   <div className="flex gap-1">
                                     <DistributionIcon 
                                       type="left" 
@@ -31417,6 +31606,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   selectedChickenTendersSauce: { kind: "singleString", value: selectedChickenTendersSauce },
                   selectedChickenTendersSpecialInstructions: { kind: "stringArray", value: selectedChickenTendersSpecialInstructions },
                   selectedSubstituteSauce: { kind: "singleString", value: selectedSubstituteSauce },
+                  chipsQuantity: { kind: "singleString", value: String(chipsQuantity) },
+                  wrapChipsQuantity: { kind: "singleString", value: String(wrapChipsQuantity) },
 
                   // Mozzarella Sticks state
                   selectedMozzarellaSticksSpecialInstructions: { kind: "stringArray", value: selectedMozzarellaSticksSpecialInstructions },
@@ -34932,6 +35123,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     selectedChickenTendersSauce: { kind: "singleString", value: selectedChickenTendersSauce },
                     selectedChickenTendersSpecialInstructions: { kind: "stringArray", value: selectedChickenTendersSpecialInstructions },
                     selectedSubstituteSauce: { kind: "singleString", value: selectedSubstituteSauce },
+                    chipsQuantity: { kind: "singleString", value: String(chipsQuantity) },
+                    wrapChipsQuantity: { kind: "singleString", value: String(wrapChipsQuantity) },
 
                     // Mozzarella Sticks state
                     selectedMozzarellaSticksSpecialInstructions: { kind: "stringArray", value: selectedMozzarellaSticksSpecialInstructions },

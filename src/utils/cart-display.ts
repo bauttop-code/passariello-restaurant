@@ -2454,8 +2454,9 @@ const buildColdHoagieLines = (item: CartItem, rawLines: { text: string; original
   const withChipsSuffix = (value: string) => {
     const text = String(value || '').trim();
     if (!text) return text;
-    if (/\bx\d+\b/i.test(text)) return text;
-    return `${text} x6`;
+    // Respect explicit quantity coming from selections (e.g. "x2").
+    // Do not inject synthetic quantities.
+    return text;
   };
 
   const pushUnique = (section: (typeof order)[number], value: string) => {
@@ -2698,8 +2699,9 @@ const buildWrapLines = (item: CartItem, rawLines: { text: string; originalSel?: 
   const withWrapChipsSuffix = (value: string) => {
     const text = String(value || '').trim();
     if (!text) return text;
-    const noQty = text.replace(/\s*x\s*\d+\s*$/i, '').trim();
-    return `${noQty} x6`;
+    // Respect explicit quantity coming from selections (e.g. "x2").
+    // Do not inject synthetic quantities.
+    return text;
   };
 
   const normalizeWrapLine = (section: (typeof order)[number], value: string) => {
@@ -3902,7 +3904,7 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
 
   const debugCart = typeof window !== 'undefined' && window.location.search.includes('debugCart=1');
   const itemId = String(item.productId || item.id || '').toLowerCase();
-  const suppressSauceForItem = ['cyo-gf12', 'cyo-cauliflower', 'cyo-minucci'].includes(itemId);
+  const suppressSauceForItem = false;
   const allowSpecialtySauceIds = new Set(['sp-10', 'sp-12', 'sp-15']);
   const isSpecialtyPizza = String(item.category || '').toLowerCase() === 'specialty-pizza';
   const normalizeLabel = (input: string): string => {
