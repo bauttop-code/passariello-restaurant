@@ -29,8 +29,8 @@ export const AddonCard = ({
   return (
     <div
       onClick={onSelect}
-      className={`relative flex items-center gap-3 h-28 rounded-lg overflow-hidden border cursor-pointer transition-colors ${
-        isSelected ? 'border-[#A72020] bg-[#F6F6F6]' : 'border-gray-200 bg-[#F6F6F6] hover:border-[#A72020]'
+      className={`relative flex items-center gap-3 h-28 rounded-lg overflow-hidden border cursor-pointer transition-colors selection-tile ${
+        isSelected ? 'border-[#A72020] selection-selected bg-[#F6F6F6]' : 'border-gray-200 bg-[#F6F6F6] hover:border-[#A72020]'
       }`}
     >
       {/* Check circle */}

@@ -295,16 +295,14 @@ const SALAD_EXTRA_DRESSING_IMAGES: { [key: string]: string } = {
 const DistributionIcon = ({ 
   type, 
   isActive, 
-  onClick,
-  isInverted = false
+  onClick
 }: { 
   type: 'left' | 'whole' | 'right'; 
   isActive: boolean; 
   onClick: () => void;
-  isInverted?: boolean;
 }) => {
-  const activeColor = isInverted ? '#D1D5DB' : '#A72020';
-  const inactiveColor = isInverted ? '#E08080' : '#D1D5DB';
+  const activeColor = '#A72020';
+  const inactiveColor = '#D1D5DB';
   const fillColor = isActive ? activeColor : inactiveColor;
   
   return (
@@ -317,15 +315,23 @@ const DistributionIcon = ({
       className="w-7 h-7 flex items-center justify-center hover:scale-110 transition-transform"
     >
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <defs>
+          <clipPath id="clip-left-half">
+            <rect x="2" y="2" width="10" height="20" />
+          </clipPath>
+          <clipPath id="clip-right-half">
+            <rect x="12" y="2" width="10" height="20" />
+          </clipPath>
+        </defs>
         <circle cx="12" cy="12" r="10" stroke={fillColor} strokeWidth="2" fill="none" />
         {type === 'left' && (
-          <path d="M12 2 A10 10 0 0 1 12 22 Z" fill={fillColor} />
+          <circle cx="12" cy="12" r="10" fill={fillColor} clipPath="url(#clip-left-half)" />
         )}
         {type === 'whole' && (
           <circle cx="12" cy="12" r="9" fill={fillColor} />
         )}
         {type === 'right' && (
-          <path d="M12 2 A10 10 0 0 0 12 22 Z" fill={fillColor} />
+          <circle cx="12" cy="12" r="10" fill={fillColor} clipPath="url(#clip-right-half)" />
         )}
       </svg>
     </button>
@@ -9682,7 +9688,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 }
               }}
               className={`flex items-center gap-0 bg-[#F6F6F6] rounded-lg overflow-hidden cursor-pointer shadow-sm transition-all hover:shadow-md ${
-                isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
               }`}
             >
               <div className="w-14 h-14 flex-shrink-0 relative bg-gray-50 border-r border-gray-100">
@@ -11204,8 +11210,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             <div
                               key={pastaType.id}
                               onClick={() => setSelectedBuildPastaType(pastaType.id)}
-                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                                isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                                isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                               }`}
                             >
                               <div className="w-14 h-14 flex-shrink-0 relative">
@@ -11325,7 +11331,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               }
                             }}
                             className={`flex items-center gap-0 bg-[#F6F6F6] rounded-lg overflow-hidden cursor-pointer shadow-sm transition-all hover:shadow-md ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative bg-gray-50 border-r border-gray-100">
@@ -11394,7 +11400,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               }
                             }}
                             className={`flex items-center gap-0 bg-[#F6F6F6] rounded-lg overflow-hidden cursor-pointer shadow-sm transition-all hover:shadow-md ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative bg-gray-50 border-r border-gray-100">
@@ -11532,7 +11538,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             }
                           }}
                           className={`flex items-center gap-0 bg-[#F6F6F6] rounded-lg overflow-hidden cursor-pointer shadow-sm transition-all hover:shadow-md ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative bg-gray-50 border-r border-gray-100">
@@ -11602,7 +11608,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             }
                           }}
                           className={`flex items-center gap-0 bg-[#F6F6F6] rounded-lg overflow-hidden cursor-pointer shadow-sm transition-all hover:shadow-md ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative bg-gray-50 border-r border-gray-100">
@@ -11769,8 +11775,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedExtraSauce([...selectedExtraSauce, instruction.id]);
                             }
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className="flex-1 flex items-center justify-between px-4 py-3">
@@ -11840,8 +11846,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedPastaType(pastaType.id);
                             setCateringPastaTypeError(false);
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative">
@@ -11974,8 +11980,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedAntipastoBase(base.id);
                               setCateringSaladBaseError(false);
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative">
@@ -12057,8 +12063,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 }
                               }
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative">
@@ -12145,8 +12151,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 setSelectedAntipastoSpecialInstructions([...selectedAntipastoSpecialInstructions, instruction.id]);
                               }
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="flex-1 flex items-center justify-between px-4 py-3">
@@ -12215,8 +12221,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedCaesarBase(base.id);
                               setCateringSaladBaseError(false);
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative">
@@ -12298,8 +12304,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 }
                               }
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative">
@@ -12386,8 +12392,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 setSelectedCaesarSpecialInstructions([...selectedCaesarSpecialInstructions, instruction.id]);
                               }
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="flex-1 flex items-center justify-between px-4 py-3">
@@ -12456,8 +12462,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedChickenCaesarBase(base.id);
                               setCateringSaladBaseError(false);
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative">
@@ -12539,8 +12545,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 }
                               }
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative">
@@ -12627,8 +12633,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 setSelectedChickenCaesarSpecialInstructions([...selectedChickenCaesarSpecialInstructions, instruction.id]);
                               }
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="flex-1 flex items-center justify-between px-4 py-3">
@@ -12705,8 +12711,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedGardenBase(base.id);
                               setCateringSaladBaseError(false);
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative">
@@ -12788,8 +12794,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 }
                               }
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative">
@@ -12876,8 +12882,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 setSelectedGardenSpecialInstructions([...selectedGardenSpecialInstructions, instruction.id]);
                               }
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="flex-1 flex items-center justify-between px-4 py-3">
@@ -12946,8 +12952,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedRoastedRedPepperBase(base.id);
                               setCateringSaladBaseError(false);
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative">
@@ -13029,8 +13035,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 }
                               }
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative">
@@ -13123,8 +13129,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedThreeCheeseBase(base.id);
                               setCateringSaladBaseError(false);
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative">
@@ -13206,8 +13212,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 }
                               }
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative">
@@ -13294,8 +13300,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 setSelectedThreeCheeseSpecialInstructions([...selectedThreeCheeseSpecialInstructions, instruction.id]);
                               }
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="flex-1 flex items-center justify-between px-4 py-3">
@@ -13365,8 +13371,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedTraditionalChefBase(base.id);
                               setCateringSaladBaseError(false);
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative">
@@ -13448,8 +13454,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 }
                               }
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative">
@@ -13536,8 +13542,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 setSelectedTraditionalChefSpecialInstructions([...selectedTraditionalChefSpecialInstructions, instruction.id]);
                               }
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="flex-1 flex items-center justify-between px-4 py-3">
@@ -13605,7 +13611,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           <div
                             key={option.id}
                             className={`flex items-center gap-0 rounded-lg overflow-hidden bg-[#F6F6F6] ${
-                              currentCount > 0 ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              currentCount > 0 ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="flex-1 flex items-center justify-between px-4 py-3">
@@ -13691,8 +13697,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           <div
                             key={option.id}
                             onClick={() => setSelectedHoagiePlatterCut(option.id)}
-                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -13756,8 +13762,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 });
                               }
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="relative w-14 h-14 md:w-16 md:h-16 flex-shrink-0">
@@ -13828,7 +13834,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           <div
                             key={option.id}
                             className={`flex items-center gap-0 rounded-lg overflow-hidden bg-[#F6F6F6] ${
-                              currentCount > 0 ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              currentCount > 0 ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="flex-1 flex items-center justify-between px-4 py-3">
@@ -13922,8 +13928,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedWrapPlatterWrapType(type.id);
                               setWrapPlatterWrapTypeError(false);
                             }}
-                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -13994,8 +14000,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 });
                               }
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="relative w-14 h-14 md:w-16 md:h-16 flex-shrink-0">
@@ -14066,7 +14072,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           <div
                             key={option.id}
                             className={`flex items-center gap-0 rounded-lg overflow-hidden bg-[#F6F6F6] ${
-                              currentCount > 0 ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              currentCount > 0 ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="flex-1 flex items-center justify-between px-4 py-3">
@@ -14152,8 +14158,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           <div
                             key={option.id}
                             onClick={() => setSelectedHotSandwichPlatterCut(option.id)}
-                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -14217,8 +14223,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 });
                               }
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="relative w-14 h-14 md:w-16 md:h-16 flex-shrink-0">
@@ -14292,8 +14298,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedBabyClamPastaType(type.id);
                               setBabyClamPastaTypeError(false);
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative">
@@ -14368,8 +14374,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedBabyClamSauceChoice(sauce.id);
                               setBabyClamSauceError(false);
                             }}
-                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -14442,8 +14448,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedCalamariPastaType(type.id);
                               setCalamariPastaTypeError(false);
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative">
@@ -14517,8 +14523,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedCalamariSubstituteSauce(sauce.id);
                               setCalamariSauceError(false);
                             }}
-                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -14592,8 +14598,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedMusselsPastaType(type.id);
                               setMusselsPastaTypeError(false);
                             }}
-                            className={`flex items-center ${isNoPastaOption ? 'gap-3 px-4 py-3' : 'gap-0'} rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center ${isNoPastaOption ? 'gap-3 px-4 py-3' : 'gap-0'} rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             {isNoPastaOption ? (
@@ -14676,8 +14682,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedMusselsSauceChoice(sauce.id);
                               setMusselsSauceError(false);
                             }}
-                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -14751,8 +14757,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedSeafoodComboPastaType(type.id);
                               setSeafoodComboPastaTypeError(false);
                             }}
-                            className={`flex items-center ${isNoPastaOption ? 'gap-3 px-4 py-3' : 'gap-0'} rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center ${isNoPastaOption ? 'gap-3 px-4 py-3' : 'gap-0'} rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             {isNoPastaOption ? (
@@ -14835,8 +14841,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedSeafoodComboSauceChoice(sauce.id);
                               setSeafoodComboSauceError(false);
                             }}
-                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -14909,8 +14915,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedShrimpMarinaraPastaType(type.id);
                               setShrimpMarinaraPastaTypeError(false);
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative bg-gray-100">
@@ -14987,8 +14993,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedShrimpMarinaraSubstituteSauce(sauce.id);
                               setShrimpMarinaraSauceError(false);
                             }}
-                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -15050,8 +15056,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         <div
                           key={instruction.id}
                           onClick={() => setSelectedCannoliSpecialInstruction(!selectedCannoliSpecialInstruction)}
-                          className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
@@ -15108,8 +15114,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         <div
                           key={instruction.id}
                           onClick={() => setSelectedDessertTraySpecialInstruction(!selectedDessertTraySpecialInstruction)}
-                          className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
@@ -15175,8 +15181,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSaladBase(option.id);
                             setSaladBaseError(false);
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative">
@@ -15222,8 +15228,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSaladDressing(option.id);
                             setSaladDressingError(false);
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative overflow-hidden bg-gray-100">
@@ -15284,8 +15290,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             if (!canSelect && !isSelected) return;
                             handleSaladToppingToggle(topping.id);
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           } ${!canSelect && !isSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative">
@@ -15322,8 +15328,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         <div
                           key={instruction.id}
                           onClick={() => setSelectedDressingInstruction(isSelected ? '' : instruction.id)}
-                          className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -15356,8 +15362,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedExtraDressing([...selectedExtraDressing, dressing.id]);
                             }
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative overflow-hidden bg-gray-100">
@@ -15498,8 +15504,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   }
                                 }
                               }}
-                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                                isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                                isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                               }`}
                             >
                               <div className="flex-1 flex items-center justify-between px-4 py-3">
@@ -15573,8 +15579,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedExtraSauce([topping.id]);
                             }
                           }}
-                          className={`flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <p className="text-gray-900">{topping.name}</p>
@@ -15631,8 +15637,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedExtraSauce([topping.id]);
                             }
                           }}
-                          className={`flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <p className="text-gray-900">{topping.name}</p>
@@ -15688,8 +15694,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedPastaFagioliSubstitute(isSelected ? '' : option.id);
                               setPastaFagioliSubstituteError(false);
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                           {option.showCircle ? (
@@ -15760,8 +15766,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedPastaFagioliSpecialInstructions([instruction.id]);
                             }
                           }}
-                          className={`flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <p className="text-gray-900">{instruction.name}</p>
@@ -15815,8 +15821,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedChickenTendersSauce(selectedChickenTendersSauce === sauce.id ? '' : sauce.id);
                               setChickenTendersSauceError(false);
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             {!isNoSauce && (
@@ -15929,8 +15935,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   [sauce.id]: isSelected ? '' : option.size
                                 }));
                               }}
-                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                                isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                                isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                               }`}
                             >
                               <div className="w-14 h-14 flex-shrink-0 relative">
@@ -16004,8 +16010,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   [option.id]: isSelected ? '' : sizeOption.size
                                 }));
                               }}
-                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                                isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                                isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                               }`}
                             >
                               <div className="w-14 h-14 flex-shrink-0 relative">
@@ -16079,8 +16085,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedBroccoliCheddarBitesInstructions([...selectedBroccoliCheddarBitesInstructions, instruction.id]);
                             }
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border-gray-200 hover:border-gray-300'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative">
@@ -16124,8 +16130,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 setSelectedBroccoliCheddarBitesInstructions([...selectedBroccoliCheddarBitesInstructions, instruction.id]);
                               }
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border-gray-200 hover:border-gray-300'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border-gray-200 hover:border-gray-300'
                             }`}
                           >
                             <div className="flex-1 flex items-center justify-between px-4 py-3 pl-4">
@@ -16189,8 +16195,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           <div
                             key={pastaType.id}
                             onClick={() => setSelectedBuildPastaType(pastaType.id)}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative">
@@ -16267,8 +16273,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           <div
                             key={sauce.id}
                             onClick={() => setSelectedBuildPastaSauce(sauce.id)}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative">
@@ -16566,8 +16572,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           <div
                             key={pastaType.id}
                             onClick={() => setSelectedKidsPastaType(pastaType.id)}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative">
@@ -16646,8 +16652,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           <div
                             key={sauce.id}
                             onClick={() => setSelectedKidsPastaSauce(sauce.id)}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative">
@@ -16730,8 +16736,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 setSelectedKidsPastaToppings([...selectedKidsPastaToppings, topping.id]);
                               }
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative">
@@ -16799,8 +16805,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 setSelectedKidsPastaSpecialInstructions([...selectedKidsPastaSpecialInstructions, instruction.id]);
                               }
                             }}
-                            className={`flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="flex items-center gap-3">
@@ -16878,8 +16884,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 setSelectedKidsBakedExtraToppings([...selectedKidsBakedExtraToppings, topping.id]);
                               }
                             }}
-                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
@@ -16947,8 +16953,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 setSelectedKidsBakedLiteToppings([...selectedKidsBakedLiteToppings, topping.id]);
                               }
                             }}
-                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
@@ -17016,8 +17022,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 setSelectedKidsBakedNoToppings([...selectedKidsBakedNoToppings, topping.id]);
                               }
                             }}
-                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
@@ -17082,8 +17088,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedKidsPastaMeatballType(pastaType.id);
                               setKidsPastaMeatballTypeError(false);
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative">
@@ -17164,8 +17170,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 setSelectedKidsPastaMeatballSpecialInstructions([instruction.id]);
                               }
                             }}
-                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
@@ -17228,8 +17234,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 setSelectedKidsPastaMeatballToppings([...selectedKidsPastaMeatballToppings, topping.id]);
                               }
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 flex-shrink-0 relative">
@@ -17303,8 +17309,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSaladBase(option.id);
                             setSaladBaseError(false);
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative">
@@ -17350,8 +17356,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSaladDressing(option.id);
                             setSaladDressingError(false);
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative overflow-hidden bg-gray-100">
@@ -17412,8 +17418,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             if (!canSelect && !isSelected) return;
                             handleSaladToppingToggle(option.id);
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           } ${!canSelect && !isSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative">
@@ -17450,8 +17456,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         <div
                           key={option.id}
                           onClick={() => setSelectedDressingInstructions(option.id)}
-                          className={`flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <p className="text-gray-900">{option.name}</p>
@@ -17478,8 +17484,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedExtraDressing([...selectedExtraDressing, option.id]);
                             }
                           }}
-                          className={`flex items-stretch gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] h-14 ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-stretch gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] h-14 ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className="w-14 aspect-square flex-shrink-0 relative bg-[#F6F6F6]">
@@ -17522,8 +17528,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedExtraToppings([...selectedExtraToppings, option.id]);
                             }
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative">
@@ -17596,8 +17602,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedFriesInstructions([...selectedFriesInstructions, instruction.id]);
                           }
                         }}
-                        className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                          selectedFriesInstructions.includes(instruction.id) ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
+                        className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                          selectedFriesInstructions.includes(instruction.id) ? 'border-2 border-[#A72020] selection-selected bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
                         <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -17658,8 +17664,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedGarlicBreadInstructions([...selectedGarlicBreadInstructions, instruction.id]);
                           }
                         }}
-                        className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                          selectedGarlicBreadInstructions.includes(instruction.id) ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
+                        className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                          selectedGarlicBreadInstructions.includes(instruction.id) ? 'border-2 border-[#A72020] selection-selected bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
                         <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -17720,8 +17726,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedGarlicBreadMozzarellaInstructions([...selectedGarlicBreadMozzarellaInstructions, instruction.id]);
                           }
                         }}
-                        className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                          selectedGarlicBreadMozzarellaInstructions.includes(instruction.id) ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
+                        className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                          selectedGarlicBreadMozzarellaInstructions.includes(instruction.id) ? 'border-2 border-[#A72020] selection-selected bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
                         <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -17783,8 +17789,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedGarlicStickInstructions([...selectedGarlicStickInstructions, instruction.id]);
                             }
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border-gray-200 hover:border-gray-300'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative">
@@ -17827,8 +17833,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedGarlicStickInstructions([...selectedGarlicStickInstructions, instruction.id]);
                             }
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border-gray-200 hover:border-gray-300'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
                           <div className="flex-1 flex items-center justify-between px-4 py-3 pl-4">
@@ -17894,8 +17900,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedChickenTendersSauce(selectedChickenTendersSauce === sauce.id ? '' : sauce.id);
                               setChickenTendersSauceError(false);
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             {!isNoSauce && (
@@ -18002,8 +18008,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   setSelectedMozzarellaSticksSpecialInstructions([...selectedMozzarellaSticksSpecialInstructions, instruction.id]);
                                 }
                               }}
-                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                                isSelected ? 'border-2 border-[#A72020]' : 'border-gray-200 hover:border-gray-300'
+                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                                isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border-gray-200 hover:border-gray-300'
                               }`}
                             >
                               <div className="w-14 h-14 flex-shrink-0 relative">
@@ -18068,8 +18074,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                     setSelectedMozzarellaSticksSpecialInstructions([...selectedMozzarellaSticksSpecialInstructions, instruction.id]);
                                   }
                                 }}
-                                className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                                  isSelected ? 'border-2 border-[#A72020]' : 'border-gray-200 hover:border-gray-300'
+                                className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                                  isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border-gray-200 hover:border-gray-300'
                                 }`}
                               >
                                 <div className="flex-1 flex items-center justify-between px-4 py-3 pl-4">
@@ -18140,8 +18146,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   [sauce.id]: isSelected ? '' : option.size
                                 }));
                               }}
-                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                                isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                                isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                               }`}
                             >
                               <div className="w-14 h-14 flex-shrink-0 relative">
@@ -18213,8 +18219,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   [option.id]: isSelected ? '' : sizeOption.size
                                 }));
                               }}
-                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                                isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                                isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                               }`}
                             >
                               <div className="w-14 h-14 flex-shrink-0 relative">
@@ -18290,8 +18296,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedOnionRingsInstructions([...selectedOnionRingsInstructions, instruction.id]);
                             }
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border-gray-200 hover:border-gray-300'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative">
@@ -18335,8 +18341,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 setSelectedOnionRingsInstructions([...selectedOnionRingsInstructions, instruction.id]);
                               }
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border-gray-200 hover:border-gray-300'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border-gray-200 hover:border-gray-300'
                             }`}
                           >
                             <div className="flex-1 flex items-center justify-between px-4 py-3 pl-4">
@@ -18409,8 +18415,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedMacAndCheeseBitesInstructions([...selectedMacAndCheeseBitesInstructions, instruction.id]);
                             }
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border-gray-200 hover:border-gray-300'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative">
@@ -18454,8 +18460,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 setSelectedMacAndCheeseBitesInstructions([...selectedMacAndCheeseBitesInstructions, instruction.id]);
                               }
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border-gray-200 hover:border-gray-300'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border-gray-200 hover:border-gray-300'
                             }`}
                           >
                             <div className="flex-1 flex items-center justify-between px-4 py-3 pl-4">
@@ -18524,8 +18530,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedPassarielloFriesInstructions([...selectedPassarielloFriesInstructions, instruction.id]);
                           }
                         }}
-                        className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                          selectedPassarielloFriesInstructions.includes(instruction.id) ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
+                        className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                          selectedPassarielloFriesInstructions.includes(instruction.id) ? 'border-2 border-[#A72020] selection-selected bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
                         <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -18586,8 +18592,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedCheddarSteakFriesInstructions([...selectedCheddarSteakFriesInstructions, instruction.id]);
                           }
                         }}
-                        className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                          selectedCheddarSteakFriesInstructions.includes(instruction.id) ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
+                        className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                          selectedCheddarSteakFriesInstructions.includes(instruction.id) ? 'border-2 border-[#A72020] selection-selected bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
                         <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -18649,8 +18655,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedCalamariSubSauce(sauce.id);
                             setCalamariAppetizerSauceError(false);
                           }}
-                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                            isSelected ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
+                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
                           <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -18720,8 +18726,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedMusselsSauce(sauce.id);
                             setMusselsAppetizerSauceError(false);
                           }}
-                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                            isSelected ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
+                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
                           <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -18791,8 +18797,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSeafoodComboSauce(sauce.id);
                             setSeafoodComboAppetizerSauceError(false);
                           }}
-                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                            isSelected ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
+                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
                           <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -18863,8 +18869,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSeafoodSauceId(sauce.id);
                             setMusselsSauceAppetizerError(false);
                           }}
-                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                            isSelected ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
+                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
                           <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -18935,8 +18941,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSeafoodSauceId(sauce.id);
                             setSeafoodComboSauceAppetizerError(false);
                           }}
-                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                            isSelected ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
+                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
                           <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -19006,8 +19012,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           setSelectedSeafoodSauceId(sauce.id);
                           setCalamariSauceError(false);
                         }}
-                        className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                          selectedSeafoodSauceId === sauce.id ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
+                        className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                          selectedSeafoodSauceId === sauce.id ? 'border-2 border-[#A72020] selection-selected bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
                         <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -19075,8 +19081,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           setSelectedSeafoodSauceId(sauce.id);
                           setShrimpSauceError(false);
                         }}
-                        className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                          selectedSeafoodSauceId === sauce.id ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
+                        className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                          selectedSeafoodSauceId === sauce.id ? 'border-2 border-[#A72020] selection-selected bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
                         <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -19141,8 +19147,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           setSelectedShrimpMarinaraSubSauce(selectedShrimpMarinaraSubSauce === sauce.id ? '' : sauce.id);
                           setShrimpAppetizerSauceError(false);
                         }}
-                        className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                          selectedShrimpMarinaraSubSauce === sauce.id ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
+                        className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                          selectedShrimpMarinaraSubSauce === sauce.id ? 'border-2 border-[#A72020] selection-selected bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
                         <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -19209,8 +19215,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSeafoodPastaType(pastaType.id);
                             setSeafoodPastaTypeError(false);
                           }}
-                          className={`flex items-center ${isNoPastaOption ? 'gap-3 px-4 py-3' : 'gap-0'} rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center ${isNoPastaOption ? 'gap-3 px-4 py-3' : 'gap-0'} rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           {isNoPastaOption ? (
@@ -19268,8 +19274,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSeafoodSauceId(selectedCalamariSubSauce === sauce.id ? '' : sauce.id);
                             setCalamariAppetizerSauceError(false);
                           }}
-                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                            isSelected ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
+                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
                           <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -19337,8 +19343,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSeafoodPastaType(pastaType.id);
                             setSeafoodPastaTypeError(false);
                           }}
-                          className={`flex items-center ${isNoPastaOption ? 'gap-3 px-4 py-3' : 'gap-0'} rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center ${isNoPastaOption ? 'gap-3 px-4 py-3' : 'gap-0'} rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           {isNoPastaOption ? (
@@ -19401,8 +19407,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           setSelectedSeafoodSauceId(sauce.id);
                           setBabyClamSauceError(false);
                         }}
-                        className={`flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                          selectedBabyClamSauceChoice === sauce.id ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
+                        className={`flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                          selectedBabyClamSauceChoice === sauce.id ? 'border-2 border-[#A72020] selection-selected bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -19471,8 +19477,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSeafoodPastaType(pastaType.id);
                             setSeafoodPastaTypeError(false);
                           }}
-                          className={`flex items-center ${isNoPastaOption ? 'gap-3 px-4 py-3' : 'gap-0'} rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center ${isNoPastaOption ? 'gap-3 px-4 py-3' : 'gap-0'} rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           {isNoPastaOption ? (
@@ -19530,8 +19536,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSeafoodSauceId(sauce.id);
                             setMusselsAppetizerSauceError(false);
                           }}
-                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                            isSelected ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
+                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
                           <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -19599,8 +19605,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSeafoodPastaType(pastaType.id);
                             setSeafoodPastaTypeError(false);
                           }}
-                          className={`flex items-center ${isNoPastaOption ? 'gap-3 px-4 py-3' : 'gap-0'} rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center ${isNoPastaOption ? 'gap-3 px-4 py-3' : 'gap-0'} rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           {isNoPastaOption ? (
@@ -19658,8 +19664,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSeafoodSauceId(sauce.id);
                             setSeafoodComboAppetizerSauceError(false);
                           }}
-                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                            isSelected ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
+                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
                           <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -19727,8 +19733,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedSeafoodPastaType(pastaType.id);
                             setSeafoodPastaTypeError(false);
                           }}
-                          className={`flex items-center ${isNoPastaOption ? 'gap-3 px-4 py-3' : 'gap-0'} rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center ${isNoPastaOption ? 'gap-3 px-4 py-3' : 'gap-0'} rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           {isNoPastaOption ? (
@@ -19786,8 +19792,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           setSelectedSeafoodSauceId(selectedShrimpMarinaraSubSauce === sauce.id ? '' : sauce.id);
                           setShrimpMarinaraSubSauceError(false);
                         }}
-                        className={`flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                          selectedShrimpMarinaraSubSauce === sauce.id ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
+                        className={`flex items-center justify-between p-4 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                          selectedShrimpMarinaraSubSauce === sauce.id ? 'border-2 border-[#A72020] selection-selected bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -19888,8 +19894,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               }
                               setWingsSauceError(false);
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             {!isNoSauce && (
@@ -19996,8 +20002,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   setSelectedWingsSpecialInstructions([...selectedWingsSpecialInstructions, instruction.id]);
                                 }
                               }}
-                              className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                                isSelected ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
+                              className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                                isSelected ? 'border-2 border-[#A72020] selection-selected bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                               }`}
                             >
                               <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -20035,8 +20041,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   setWingsSpecialInstructionsError(false);
                                 }
                               }}
-                              className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                                isSelected ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
+                              className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                                isSelected ? 'border-2 border-[#A72020] selection-selected bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                               }`}
                             >
                               <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -20120,8 +20126,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   [sauce.id]: isSelected ? '' : option.size
                                 }));
                               }}
-                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                                isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                                isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                               }`}
                             >
                               <div className="w-14 h-14 flex-shrink-0 relative">
@@ -20195,8 +20201,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   [option.id]: isSelected ? '' : sizeOption.size
                                 }));
                               }}
-                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                                isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                                isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                               }`}
                             >
                               <div className="w-14 h-14 flex-shrink-0 relative">
@@ -20264,8 +20270,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
                         <div
                           onClick={() => handleToastRollToggle('toast')}
-                          className={`flex items-center gap-3 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] px-5 py-5 ${
-                            toastRoll === 'toast' ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-3 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] px-5 py-5 ${
+                            toastRoll === 'toast' ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className={`rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 ${toastRoll === 'toast' ? 'bg-[#A72020]' : 'border-2 border-gray-300'}`}>
@@ -20280,8 +20286,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         </div>
                         <div
                           onClick={() => handleToastRollToggle('no-toast')}
-                          className={`flex items-center gap-3 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] px-5 py-5 ${
-                            toastRoll === 'no-toast' ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-3 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] px-5 py-5 ${
+                            toastRoll === 'no-toast' ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className={`rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 ${toastRoll === 'no-toast' ? 'bg-[#A72020]' : 'border-2 border-gray-300'}`}>
@@ -20344,7 +20350,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 isDisabled 
                                   ? 'opacity-40 cursor-not-allowed border border-gray-200' 
                                   : isSelected 
-                                    ? 'border-2 border-[#A72020] cursor-pointer' 
+                                    ? 'border-2 border-[#A72020] selection-selected cursor-pointer' 
                                     : 'border border-gray-200 cursor-pointer'
                               }`}
                             >
@@ -20416,8 +20422,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                     setSelectedCheesesteakSideToppingsRequired(prev => [...prev, topping.id]);
                                   }
                                 }}
-                                className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                                  isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                                className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                                  isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                                 }`}
                               >
                                 {topping.showCircle ? (
@@ -20494,8 +20500,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             <div
                           key={topping.id}
                           onClick={() => handleToppingToggle(topping.id)}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative">
@@ -20560,7 +20566,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             isDisabled 
                               ? 'opacity-50 cursor-not-allowed border border-gray-200' 
                               : isSelected 
-                                ? 'border-2 border-[#A72020] cursor-pointer' 
+                                ? 'border-2 border-[#A72020] selection-selected cursor-pointer' 
                                 : 'border border-gray-200 cursor-pointer'
                           }`}
                         >
@@ -20622,7 +20628,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             isDisabled 
                               ? 'opacity-50 cursor-not-allowed border border-gray-200' 
                               : isSelected 
-                                ? 'border-2 border-[#A72020] cursor-pointer' 
+                                ? 'border-2 border-[#A72020] selection-selected cursor-pointer' 
                                 : 'border border-gray-200 cursor-pointer'
                           }`}
                         >
@@ -20716,7 +20722,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             isDisabled 
                               ? 'opacity-50 cursor-not-allowed border border-gray-200' 
                               : isSelected 
-                                ? 'border-2 border-[#A72020] cursor-pointer' 
+                                ? 'border-2 border-[#A72020] selection-selected cursor-pointer' 
                                 : 'border border-gray-200 cursor-pointer'
                           }`}
                         >
@@ -20779,8 +20785,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
                       <div
                         onClick={() => handleToastRollToggle('toast')}
-                        className={`flex items-center gap-3 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] px-5 py-5 ${
-                          toastRoll === 'toast' ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                        className={`flex items-center gap-3 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] px-5 py-5 ${
+                          toastRoll === 'toast' ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                         }`}
                       >
                         <div className={`rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 ${toastRoll === 'toast' ? 'bg-[#A72020]' : 'border-2 border-gray-300'}`}>
@@ -20795,8 +20801,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       </div>
                       <div
                         onClick={() => handleToastRollToggle('no-toast')}
-                        className={`flex items-center gap-3 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] px-5 py-5 ${
-                          toastRoll === 'no-toast' ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                        className={`flex items-center gap-3 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] px-5 py-5 ${
+                          toastRoll === 'no-toast' ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                         }`}
                       >
                         <div className={`rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 ${toastRoll === 'no-toast' ? 'bg-[#A72020]' : 'border-2 border-gray-300'}`}>
@@ -20885,8 +20891,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setSelectedHotHoagieCheese(cheese.id);
                             setHotHoagieCheeseError(false);
                           }}
-                          className={`flex items-center ${isNoCheese ? 'gap-3 px-4 py-3' : 'gap-0 overflow-hidden'} rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center ${isNoCheese ? 'gap-3 px-4 py-3' : 'gap-0 overflow-hidden'} rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           {isNoCheese ? (
@@ -20945,8 +20951,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                     setSelectedGrilledChickenSideToppingsRequired(prev => [...prev, topping.id]);
                                   }
                                 }}
-                                className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                                  isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                                className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                                  isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                                 }`}
                               >
                                 {topping.showCircle ? (
@@ -21396,8 +21402,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   }
                                 }
                               }}
-                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                                isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                                isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                               }`}
                             >
                               <div className="w-14 h-14 flex-shrink-0 relative">
@@ -21455,8 +21461,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   setSelectedBurgerAdd([...selectedBurgerAdd, topping.id]);
                                 }
                               }}
-                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                                isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                                isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                               }`}
                             >
                               <div className="w-14 h-14 flex-shrink-0 relative">
@@ -21527,7 +21533,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               }}
                               className={`flex items-center gap-3 h-14 rounded-lg overflow-hidden transition-colors bg-[#F6F6F6] px-4 ${
                                 isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                              } ${isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              } ${isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className={`rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-[#A72020]' : 'border-2 border-gray-300'}`}>
@@ -21590,7 +21596,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               }}
                               className={`flex items-center gap-3 h-14 rounded-lg overflow-hidden transition-colors bg-[#F6F6F6] px-4 ${
                                 isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                              } ${isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              } ${isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                               }`}
                             >
                               <div className={`rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-[#A72020]' : 'border-2 border-gray-300'}`}>
@@ -21627,7 +21633,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                     }
                                   }}
                                   className={`flex items-center gap-3 h-14 rounded-lg overflow-hidden transition-colors bg-[#F6F6F6] px-4 cursor-pointer ${
-                                    isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                                    isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                                   }`}
                                 >
                                   <div className={`rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-[#A72020]' : 'border-2 border-gray-300'}`}>
@@ -21681,8 +21687,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   setSelectedBriocheAddCheese(cheese.id);
                                 }
                               }}
-                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                                isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                                isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                               }`}
                             >
                               <div className="w-14 h-14 flex-shrink-0 relative">
@@ -21753,7 +21759,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 isDisabled 
                                   ? 'opacity-50 cursor-not-allowed border border-gray-200' 
                                   : isSelected 
-                                  ? 'border-2 border-[#A72020] cursor-pointer' 
+                                  ? 'border-2 border-[#A72020] selection-selected cursor-pointer' 
                                   : 'border border-gray-200 cursor-pointer'
                               }`}
                             >
@@ -21800,8 +21806,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   setSelectedBriocheNo([...selectedBriocheNo, topping.id]);
                                 }
                               }}
-                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                                isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                                isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                               }`}
                             >
                               <div className="w-14 h-14 flex-shrink-0 relative">
@@ -21843,8 +21849,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   setSelectedBriocheSide([...selectedBriocheSide, topping.id]);
                                 }
                               }}
-                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                                isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                                isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                               }`}
                             >
                               <div className="w-14 h-14 flex-shrink-0 relative">
@@ -21941,7 +21947,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             isDisabled 
                               ? 'opacity-40 cursor-not-allowed border border-gray-200' 
                               : isSelected 
-                                ? 'border-2 border-[#A72020] cursor-pointer' 
+                                ? 'border-2 border-[#A72020] selection-selected cursor-pointer' 
                                 : 'border border-gray-200 cursor-pointer'
                           }`}
                         >
@@ -22003,8 +22009,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedColdHoagieSideToppingsRequired(prev => [...prev, topping.id]);
                             }
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           {topping.showCircle ? (
@@ -22072,8 +22078,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedColdHoagieToppings([...selectedColdHoagieToppings, topping.id]);
                             }
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative">
@@ -22380,7 +22386,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         <div
                           key={item.id}
                           className={`flex items-center gap-3 px-4 py-3 rounded-lg bg-[#F6F6F6] ${
-                            chipsQuantity > 0 ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            chipsQuantity > 0 ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className="flex-1 flex items-center justify-between">
@@ -22423,8 +22429,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedColdHoagieSides([...selectedColdHoagieSides, topping.id]);
                             }
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative">
@@ -22560,7 +22566,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setPaniniTypeError(false);
                             }
                           }}
-                          className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] ${
+                          className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
                             paniniTypeError 
                               ? 'border-2 border-red-500 hover:border-red-600' 
                               : 'border border-gray-200 hover:border-gray-300'
@@ -22619,8 +22625,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedPaniniCheese(cheese.id);
                             }
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           {cheese.image && (
@@ -22954,8 +22960,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedPaniniSides([...selectedPaniniSides, topping.id]);
                             }
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           {topping.image && (
@@ -23041,9 +23047,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setWrapTypeError(false);
                             }
                           }}
-                          className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] ${
+                          className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
                             isSelected
-                              ? 'border-2 border-[#A72020]'
+                              ? 'border-2 border-[#A72020] selection-selected'
                               : wrapTypeError
                                 ? 'border-2 border-red-500 hover:border-red-600'
                                 : 'border border-gray-200 hover:border-gray-300'
@@ -23121,8 +23127,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setWrapCheeseError(false);
                             }
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative">
@@ -23180,8 +23186,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedWrapAddToppings([...selectedWrapAddToppings, topping.id]);
                             }
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           {topping.image && (
@@ -23235,7 +23241,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             }
                           }}
                           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           } ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-gray-300'}`}
                         >
                           <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
@@ -23432,7 +23438,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             }
                           }}
                           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           } ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-gray-300'}`}
                         >
                           <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
@@ -23624,7 +23630,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             }
                           }}
                           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           } ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-gray-300'}`}
                         >
                           <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
@@ -23651,7 +23657,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className={`bg-[#F6F6F6] rounded-lg p-4 ${
-                      wrapChipsQuantity > 0 ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                      wrapChipsQuantity > 0 ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                     }`}>
                       <div className="flex items-center justify-between">
                         <span className="text-gray-900">Extra Chips - $1.00</span>
@@ -23691,8 +23697,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedWrapSide([...selectedWrapSide, topping.id]);
                             }
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           {topping.image && (
@@ -23772,8 +23778,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 setSelectedTraditionalDinnersSides([...selectedTraditionalDinnersSides, side.id]);
                               }
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             } ${!canSelect && !isSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
                             {side.image && (
@@ -23830,7 +23836,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           <div
                             key={item.id}
                             className={`flex items-center gap-0 min-h-[72px] rounded-lg overflow-hidden bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             {item.image && (
@@ -24029,8 +24035,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   setSelectedExtraSauce([...selectedExtraSauce, instruction.id]);
                                 }
                               }}
-                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                                isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                                isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                               }`}
                             >
                               <div className="flex-1 flex items-center justify-between px-4 py-3">
@@ -24112,8 +24118,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 setTraditionalDinnersSidesError(false);
                               }
                             }}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             } ${!canSelect && !isSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
                             {side.image && (
@@ -24173,7 +24179,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           <div
                             key={item.id}
                             className={`flex items-center gap-0 min-h-[72px] rounded-lg overflow-hidden bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             {item.image && (
@@ -24370,8 +24376,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedExtraSauce([...selectedExtraSauce, instruction.id]);
                             }
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className="flex-1 flex items-center justify-between px-4 py-3">
@@ -24444,7 +24450,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               handleSauceToggle(sauce.id);
                             }}
                             className={`flex items-center gap-0 rounded-lg overflow-hidden bg-[#F6F6F6] cursor-pointer ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="pl-4 flex-shrink-0">
@@ -24498,7 +24504,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                     <DistributionIcon 
                                       type="left" 
                                       isActive={distribution === 'left'} 
-                                      isInverted={product.id === 'cyo-white'}
+                                     
                                       onClick={() => {
                                         handleSauceDistributionChange(sauce.id, 'left');
                                       }} 
@@ -24506,7 +24512,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                     <DistributionIcon 
                                       type="whole" 
                                       isActive={distribution === 'whole'} 
-                                      isInverted={product.id === 'cyo-white'}
+                                     
                                       onClick={() => {
                                         handleSauceDistributionChange(sauce.id, 'whole');
                                       }} 
@@ -24514,7 +24520,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                     <DistributionIcon 
                                       type="right" 
                                       isActive={distribution === 'right'} 
-                                      isInverted={product.id === 'cyo-white'}
+                                     
                                       onClick={() => {
                                         handleSauceDistributionChange(sauce.id, 'right');
                                       }} 
@@ -24581,8 +24587,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               <div
                                 key={item.id}
                                 onClick={() => handleSpecialInstructionToggle(item.id)}
-                                className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                                  isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                                className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                                  isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                                 }`}
                               >
                                 <div className="flex-1 flex items-center justify-between px-4 py-3">
@@ -24667,7 +24673,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                           }
                                         }}
                                         className={`flex items-center gap-0 rounded-lg overflow-hidden bg-[#F6F6F6] cursor-pointer ${
-                                          isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                                          isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                                         }`}
                                       >
                                         <div className="w-14 h-14 flex-shrink-0 relative bg-white">
@@ -24795,7 +24801,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         <div
                           key={topping.id}
                           className={`flex items-center gap-0 rounded-lg overflow-hidden bg-[#F6F6F6] transition-colors ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative bg-white">
@@ -24861,7 +24867,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         className={`flex items-center gap-0 rounded-lg overflow-hidden bg-[#F6F6F6] ${
                           isMinucciAtLimit ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                         } ${
-                          isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                         }`}
                       >
                         <div 
@@ -24946,8 +24952,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           <div
                             key={topping.id}
                             onClick={() => handleSpecialtyToppingToggle(topping.id, 'first')}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="flex-1 flex items-center justify-between px-4 py-3">
@@ -24983,8 +24989,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           <div
                             key={topping.id}
                             onClick={() => handleSpecialtyToppingToggle(topping.id, 'second')}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="flex-1 flex items-center justify-between px-4 py-3">
@@ -25038,8 +25044,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             <div
                               key={sauce.id}
                               onClick={() => handleExtraSauceToggle(sauce.id)}
-                              className={`flex items-center justify-between gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                                isSelected ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
+                              className={`flex items-center justify-between gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                                isSelected ? 'border-2 border-[#A72020] selection-selected bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                               }`}
                             >
                               <div className="flex items-center gap-3 flex-1">
@@ -25107,8 +25113,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             <div
                               key={item.id}
                               onClick={() => handleSpecialInstructionToggle(item.id)}
-                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                                isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                                isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                               }`}
                             >
                               <div className="flex-1 flex items-center justify-between px-4 py-3">
@@ -25176,8 +25182,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           <div
                             key={item.id}
                             onClick={() => handleNoToppingToggle(item.id)}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors ${
-                              isSelected ? 'bg-gray-50 border-2 border-[#A72020]' : 'bg-[#F6F6F6] border border-gray-200'
+                            className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors selection-tile ${
+                              isSelected ? 'bg-gray-50 border-2 border-[#A72020] selection-selected' : 'bg-[#F6F6F6] border border-gray-200'
                             }`}
                           >
                             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
@@ -25209,8 +25215,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           <div
                             key={item.id}
                             onClick={() => handleBrooklynInstructionToggle(item.id)}
-                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
@@ -25268,8 +25274,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           <div
                             key={sauce.id}
                             onClick={() => handleExtraSauceToggle(sauce.id)}
-                            className={`flex items-center justify-between gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] border ${
-                              isSelected ? 'border-2 border-[#A72020] bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
+                            className={`flex items-center justify-between gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
                             }`}
                           >
                             <div className="flex items-center gap-3 flex-1">
@@ -25354,8 +25360,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           <div
                             key={item.id}
                             onClick={() => handleSideToppingToggle(item.id)}
-                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                              isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                            className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                              isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
                           >
                             <div className="w-14 h-14 min-w-[56px] min-h-[56px] flex-shrink-0 relative bg-gray-100">
@@ -25418,8 +25424,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         <div
                           key={item.id}
                           onClick={() => (isSelected ? removeExtraSideFromSource('cheesesteak', item.id) : openExtraSideCustomizer(item, 'cheesesteak'))}
-                          className={`flex flex-col rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex flex-col rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className="w-full h-32 relative bg-gray-100">
@@ -25551,8 +25557,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               }
                             }
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative">
@@ -25610,8 +25616,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedBurgerAdd([...selectedBurgerAdd, topping.id]);
                             }
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative">
@@ -25682,7 +25688,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           }}
                           className={`flex items-center gap-3 h-14 rounded-lg overflow-hidden transition-colors bg-[#F6F6F6] px-4 ${
                             isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                          } ${isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          } ${isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                         }`}
                       >
                         <div className={`rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-[#A72020]' : 'border-2 border-gray-300'}`}>
@@ -25745,7 +25751,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           }}
                           className={`flex items-center gap-3 h-14 rounded-lg overflow-hidden transition-colors bg-[#F6F6F6] px-4 ${
                             isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                          } ${isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          } ${isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className={`rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-[#A72020]' : 'border-2 border-gray-300'}`}>
@@ -25781,8 +25787,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   setSelectedCheeseBurgerDeluxeNoToppings([...selectedCheeseBurgerDeluxeNoToppings, topping.id]);
                                 }
                               }}
-                              className={`flex items-center gap-3 h-14 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] px-4 ${
-                                isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                              className={`flex items-center gap-3 h-14 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] px-4 ${
+                                isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                               }`}
                             >
                               <div className={`rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-[#A72020]' : 'border-2 border-gray-300'}`}>
@@ -25820,8 +25826,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedBurgerSide([...selectedBurgerSide, topping.id]);
                             }
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative">
@@ -25919,8 +25925,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedBriocheAddCheese(cheese.id);
                             }
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative">
@@ -25991,7 +25997,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             isDisabled 
                               ? 'opacity-50 cursor-not-allowed border border-gray-200' 
                               : isSelected 
-                              ? 'border-2 border-[#A72020] cursor-pointer' 
+                              ? 'border-2 border-[#A72020] selection-selected cursor-pointer' 
                               : 'border border-gray-200 cursor-pointer'
                           }`}
                         >
@@ -26038,8 +26044,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedBriocheNo([...selectedBriocheNo, topping.id]);
                             }
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative">
@@ -26081,8 +26087,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                               setSelectedBriocheSide([...selectedBriocheSide, topping.id]);
                             }
                           }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative">
@@ -26159,8 +26165,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                       setSelectedNoToppings([...selectedNoToppings, option.id]);
                                     }
                                   }}
-                                  className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                                    isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                                  className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                                    isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                                   }`}
                                 >
                                   <div className="flex-1 flex items-center justify-between px-4 py-3">
@@ -26236,14 +26242,14 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setActiveDippingItem(null);
                           }
                         }}
-                        className={`relative flex items-center gap-3 h-28 rounded-lg overflow-hidden bg-[#F6F6F6] cursor-pointer transition-colors ${
-                          quantity > 0 ? 'border-2 border-[#A72020]' : 'border border-gray-200 hover:border-[#A72020]'
+                        className={`relative flex items-center gap-3 h-28 rounded-lg overflow-hidden bg-[#F6F6F6] cursor-pointer transition-colors selection-tile ${
+                          quantity > 0 ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200 hover:border-[#A72020]'
                         }`}
                       >
                         {/* Check circle - positioned in top right corner */}
                         <div className="absolute top-2 right-2 z-10">
                           {quantity > 0 ? (
-                            <div className="w-6 h-6 rounded-full border-2 border-[#A72020] bg-[#A72020] flex items-center justify-center">
+                            <div className="w-6 h-6 rounded-full border-2 border-[#A72020] selection-selected bg-[#A72020] flex items-center justify-center">
                               <svg className="w-4 h-4 text-white" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                               </svg>
@@ -26364,13 +26370,13 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setActiveIncludedRequestItem(null);
                           }
                         }}
-                        className={`relative rounded-lg border bg-[#F6F6F6] p-4 cursor-pointer transition-colors ${
+                        className={`relative rounded-lg border bg-[#F6F6F6] p-4 cursor-pointer transition-colors selection-tile ${
                           quantity > 0 ? 'border-[#A72020]' : 'border-gray-200 hover:border-[#A72020]'
                         }`}
                       >
                         <div className="absolute top-2 right-2 z-10">
                           {quantity > 0 ? (
-                            <div className="w-6 h-6 rounded-full border-2 border-[#A72020] bg-[#A72020] flex items-center justify-center">
+                            <div className="w-6 h-6 rounded-full border-2 border-[#A72020] selection-selected bg-[#A72020] flex items-center justify-center">
                               <Check className="w-3 h-3 text-white" strokeWidth={3} />
                             </div>
                           ) : (
@@ -26463,13 +26469,13 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             setActiveCafingKitItem(null);
                           }
                         }}
-                        className={`relative rounded-lg border bg-[#F6F6F6] p-4 cursor-pointer transition-colors ${
+                        className={`relative rounded-lg border bg-[#F6F6F6] p-4 cursor-pointer transition-colors selection-tile ${
                           quantity > 0 ? 'border-[#A72020]' : 'border-gray-200 hover:border-[#A72020]'
                         }`}
                       >
                         <div className="absolute top-2 right-2 z-10">
                           {quantity > 0 ? (
-                            <div className="w-6 h-6 rounded-full border-2 border-[#A72020] bg-[#A72020] flex items-center justify-center">
+                            <div className="w-6 h-6 rounded-full border-2 border-[#A72020] selection-selected bg-[#A72020] flex items-center justify-center">
                               <Check className="w-3 h-3 text-white" strokeWidth={3} />
                             </div>
                           ) : (
@@ -29393,6 +29399,33 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     }
                   });
                 }
+
+                // Catering Party Trays - explicit special instructions
+                if (product.category === 'catering-party-trays') {
+                  const partyTraySpecialInstructionIds: string[] = [];
+                  if (selectedCannoliSpecialInstruction) partyTraySpecialInstructionIds.push('csi1');
+                  if (selectedDessertTraySpecialInstruction) partyTraySpecialInstructionIds.push('dtsi1');
+
+                  if (partyTraySpecialInstructionIds.length > 0) {
+                    const names = partyTraySpecialInstructionIds.map((id) => getItemName(id));
+                    customizations.push({
+                      category: 'Special Instructions',
+                      items: names
+                    });
+                    partyTraySpecialInstructionIds.forEach((id) => {
+                      const name = getItemName(id);
+                      if (name) {
+                        selections.push({
+                          id,
+                          label: name,
+                          type: 'special_instruction',
+                          groupId: 'party_tray_special_instructions',
+                          groupTitle: 'Special Instructions'
+                        });
+                      }
+                    });
+                  }
+                }
                 
                 // Add "Add" toppings
                 if (selectedAddToppings.length > 0) {
@@ -31923,10 +31956,10 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   selectedShrimpMarinaraSubstituteSauce: { kind: "singleString", value: selectedShrimpMarinaraSubstituteSauce },
 
                   // Cannoli states
-                  selectedCannoliSpecialInstruction: { kind: "booleanRecord", value: selectedCannoliSpecialInstruction ? { 'cannoli-special': selectedCannoliSpecialInstruction } : {} },
+                  selectedCannoliSpecialInstruction: { kind: "booleanRecord", value: selectedCannoliSpecialInstruction ? { 'csi1': selectedCannoliSpecialInstruction } : {} },
 
                   // Dessert Tray states
-                  selectedDessertTraySpecialInstruction: { kind: "booleanRecord", value: selectedDessertTraySpecialInstruction ? { 'dessert-tray-special': selectedDessertTraySpecialInstruction } : {} },
+                  selectedDessertTraySpecialInstruction: { kind: "booleanRecord", value: selectedDessertTraySpecialInstruction ? { 'dtsi1': selectedDessertTraySpecialInstruction } : {} },
                 };
 
                 // Apply filtering before auto-capture
@@ -34246,6 +34279,33 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       }
                     });
                   }
+
+                  // Catering Party Trays - explicit special instructions (desktop flow)
+                  if (product.category === 'catering-party-trays') {
+                    const partyTraySpecialInstructionIds: string[] = [];
+                    if (selectedCannoliSpecialInstruction) partyTraySpecialInstructionIds.push('csi1');
+                    if (selectedDessertTraySpecialInstruction) partyTraySpecialInstructionIds.push('dtsi1');
+
+                    if (partyTraySpecialInstructionIds.length > 0) {
+                      const names = partyTraySpecialInstructionIds.map((id) => getItemName(id));
+                      customizations.push({
+                        category: 'Special Instructions',
+                        items: names
+                      });
+                      partyTraySpecialInstructionIds.forEach((id) => {
+                        const name = getItemName(id);
+                        if (name) {
+                          selections.push({
+                            id,
+                            label: name,
+                            type: 'special_instruction',
+                            groupId: 'party_tray_special_instructions',
+                            groupTitle: 'Special Instructions'
+                          });
+                        }
+                      });
+                    }
+                  }
                   
                   // Add "Add" toppings
                   if (selectedAddToppings.length > 0) {
@@ -35454,10 +35514,10 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     selectedShrimpMarinaraSubstituteSauce: { kind: "singleString", value: selectedShrimpMarinaraSubstituteSauce },
 
                     // Cannoli states
-                    selectedCannoliSpecialInstruction: { kind: "booleanRecord", value: selectedCannoliSpecialInstruction ? { 'cannoli-special': selectedCannoliSpecialInstruction } : {} },
+                    selectedCannoliSpecialInstruction: { kind: "booleanRecord", value: selectedCannoliSpecialInstruction ? { 'csi1': selectedCannoliSpecialInstruction } : {} },
 
                     // Dessert Tray states
-                    selectedDessertTraySpecialInstruction: { kind: "booleanRecord", value: selectedDessertTraySpecialInstruction ? { 'dessert-tray-special': selectedDessertTraySpecialInstruction } : {} },
+                    selectedDessertTraySpecialInstruction: { kind: "booleanRecord", value: selectedDessertTraySpecialInstruction ? { 'dtsi1': selectedDessertTraySpecialInstruction } : {} },
                   };
 
                   // Apply filtering before auto-capture (DESKTOP)
@@ -36222,8 +36282,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         <div
                           key={option.id}
                           onClick={() => togglePairingOption(group, option.id)}
-                          className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
@@ -36308,8 +36368,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         <div
                           key={option.id}
                           onClick={() => toggleExtraSideOption(group, option.id)}
-                          className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                          className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                           }`}
                         >
                           <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
