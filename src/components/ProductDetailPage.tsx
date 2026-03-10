@@ -4842,6 +4842,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         ? '20'
                         : (product.id === 'c3' || product.id === 'c6' || product.id === 'c7')
                           ? 'large'
+                          : product.id === 'cyo-minucci'
+                              ? 'medium'
                           : product.category === 'pizzas'
                               ? 'large'
                               : product.category === 'specialty-pizza'
@@ -5898,7 +5900,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       product.category === 'entrees' ||
       product.category === 'catering-sides' ||
       product.category === 'catering-entrees' ||
-      product.category === 'catering-salad-soups'
+      product.category === 'catering-salad-soups' ||
+      product.id === 'cyo-minucci'
     ) {
       setSelectedSize('medium');
     }
@@ -24604,7 +24607,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                     </div>
                                     <p className="text-gray-900">{item.name}</p>
                                   </div>
-                                  <span className="text-sm text-gray-900">{item.price}</span>
+                                  {product.category !== 'minucci-pizzas' && (
+                                    <span className="text-sm text-gray-900">{item.price}</span>
+                                  )}
                                 </div>
                               </div>
                             );
@@ -24710,6 +24715,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
               )}
 
               {/* 1. Additional Toppings */}
+              {product.category !== 'minucci-pizzas' && (
               <Collapsible open={isAdditionalOpen} onOpenChange={setIsAdditionalOpen}>
             <CollapsibleTrigger asChild>
               <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
@@ -25130,7 +25136,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   </div>
                                   <p className="text-gray-900">{item.name}</p>
                                 </div>
-                                <span className="text-sm text-gray-900">{item.price}</span>
+                                {product.category !== 'minucci-pizzas' && (
+                                  <span className="text-sm text-gray-900">{item.price}</span>
+                                )}
                               </div>
                             </div>
                           );
@@ -25238,7 +25246,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 )}
               </div>
             </CollapsibleContent>
-          </Collapsible>
+              </Collapsible>
+              )}
             </>
           )}
 
@@ -26182,7 +26191,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                       </div>
                                       <p className="text-gray-900">{option.name}</p>
                                     </div>
-                                    <span className="text-sm text-gray-900">${option.price.toFixed(2)}</span>
+                                    {product.category !== 'minucci-pizzas' && (
+                                      <span className="text-sm text-gray-900">${option.price.toFixed(2)}</span>
+                                    )}
                                   </div>
                                 </div>
                               );
