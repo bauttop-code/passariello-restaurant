@@ -4845,6 +4845,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   : null
   );
   const isCyoMinucci = product.id === 'cyo-minucci';
+  const hideNoSauceInSpecialInstructions =
+    ['cyo-gf12', 'cyo-cauliflower', 'cyo-minucci'].includes(product.id) ||
+    product.category === 'minucci-pizzas';
   const isMinucciOneToppingMode = isCyoMinucci && selectedSize === 'medium';
   const isMinucciTwoToFourMode = isCyoMinucci && selectedSize === 'large';
   const maxMinucciToppings = isMinucciOneToppingMode ? 1 : (isMinucciTwoToFourMode ? 4 : Number.POSITIVE_INFINITY);
@@ -5109,7 +5112,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
         // Core base states
         setSelectedSauces(readArray('selectedSauces'));
         setSelectedToppings(readArray('selectedToppings'));
-        setSelectedSpecialInstructions(readArray('selectedSpecialInstructions'));
+        setSelectedSpecialInstructions(
+          hideNoSauceInSpecialInstructions
+            ? readArray('selectedSpecialInstructions').filter((id) => id !== 'si3')
+            : readArray('selectedSpecialInstructions')
+        );
         setSelectedExtraSauce(readArray('selectedExtraSauce'));
         setSelectedNoToppings(readArray('selectedNoToppings'));
         setSelectedBrooklynInstructions(readArray('selectedBrooklynInstructions'));
@@ -5997,14 +6004,16 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     product.category === 'pizzas' &&
     (product.name.toLowerCase().includes('pan pizza') || product.name.toLowerCase().includes('sicilian'));
   const isSimpleRedWhiteSaucePizza =
-    product.category === 'pizzas' &&
-    ['cyo-gf12', 'cyo-cauliflower', 'cyo-minucci'].includes(product.id);
+    (product.category === 'pizzas' &&
+      ['cyo-gf12', 'cyo-cauliflower', 'cyo-minucci'].includes(product.id)) ||
+    product.category === 'minucci-pizzas';
+  const WHITE_SAUCE_PIZZA_LABEL = 'White Sauce (Brushed with garlic and olive oil)';
 
   const sauceOptions = useMemo(() => {
     if (isSpecialtySaucePizza || isPanOrSicilianSaucePizza || isSimpleRedWhiteSaucePizza) {
       return [
         { id: 'sauce-pizza', name: 'Red Sauce', price: 0, image: 'https://images.unsplash.com/photo-1610913729746-9d5d752daf59?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaXp6YSUyMHNhdWNlfGVufDF8fHx8MTc2OTgwNzM2OHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral' },
-        { id: 'sauce-white', name: 'White Sauce', price: 0, image: 'https://images.unsplash.com/photo-1593560708920-63984d8d606e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200' }
+        { id: 'sauce-white', name: WHITE_SAUCE_PIZZA_LABEL, price: 0, image: 'https://images.unsplash.com/photo-1593560708920-63984d8d606e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200' }
       ];
     }
     return [
@@ -20220,72 +20229,6 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
 
 
           
-          {/* Special Instructions only for Minucci Pizzas */}
-          {product.category === 'minucci-pizzas' && (
-            <Collapsible open={isAdditionalOpen} onOpenChange={setIsAdditionalOpen}>
-              <CollapsibleTrigger asChild>
-                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
-                  <div className="flex flex-col items-start gap-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>1. Special Instructions (Optional):</span>
-                    </div>
-                  </div>
-                  {isAdditionalOpen ? (
-                    <ChevronUp className="w-6 h-6" />
-                  ) : (
-                    <ChevronDown className="w-6 h-6" />
-                  )}
-                </button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="relative border border-t-0 rounded-b-lg p-5">
-                {/* Background texture with opacity */}
-                <div 
-                  className="absolute inset-0 pointer-events-none opacity-30 rounded-b-lg"
-                  style={{ 
-                    backgroundImage: `url(${backgroundTexture})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  }}
-                />
-                <div className="relative z-10 space-y-6">
-                  {/* Special Instructions Section */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {specialInstructionsOptions.map((item) => {
-                      const isSelected = selectedSpecialInstructions.includes(item.id);
-                      return (
-                        <div
-                          key={item.id}
-                          onClick={() => handleSpecialInstructionToggle(item.id)}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
-                          }`}
-                        >
-                          <div className="flex-1 flex items-center justify-between px-4 py-3">
-                            <div className="flex items-center gap-3">
-                              <div className="w-5 h-5 flex-shrink-0">
-                                {isSelected ? (
-                                  <div className="bg-[#A72020] rounded-full p-0.5 flex items-center justify-center w-5 h-5">
-                                    <Check className="w-3 h-3 text-white" strokeWidth={3} />
-                                  </div>
-                                ) : (
-                                  <div className="border-2 border-gray-300 rounded-full w-5 h-5"></div>
-                                )}
-                              </div>
-                              <p className="text-gray-900">{item.name}</p>
-                            </div>
-                            <span className="text-sm text-gray-900">{item.price}</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-          )}
-
-
-
           {/* Choose Toppings for Cheesesteaks */}
           {product.category === 'cheesesteaks' && (
             <Collapsible open={isAdditionalOpen} onOpenChange={setIsAdditionalOpen}>
@@ -24459,11 +24402,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
           )}
 
           {/* Toppings sections - Only for pizzas and slices */}
-          {(product.category === 'pizzas' || product.category === 'by-the-slice' || (product.category === 'stromboli-calzone' && product.id !== 'stromboli-8') || product.category === 'brooklyn-pizza' || product.category === 'specialty-pizza') && (
+          {(product.category === 'pizzas' || product.category === 'minucci-pizzas' || product.category === 'by-the-slice' || (product.category === 'stromboli-calzone' && product.id !== 'stromboli-8') || product.category === 'brooklyn-pizza' || product.category === 'specialty-pizza') && (
             <>
               {/* 0. Sauce - Only for pizzas */}
               {((
-                 (product.category === 'pizzas')
+                 (product.category === 'pizzas' || product.category === 'minucci-pizzas')
                ) || 
                (
                  product.category === 'specialty-pizza' && 
@@ -24529,7 +24472,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   let baseName = sauce.name;
                                   
                                   if (sauce.id === 'sauce-pizza') {
-                                    baseName = isWhitePizza ? 'White Sauce' : 'Red Sauce';
+                                    baseName = isWhitePizza ? WHITE_SAUCE_PIZZA_LABEL : 'Red Sauce';
                                   }
                                   
                                   if (!isSelected) return baseName;
@@ -24539,7 +24482,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                     if (distribution === 'right') return 'Right Half White Pizza';
                                   }
 
-                                  if (baseName === 'White Sauce' && isWhitePizza) {
+                                  if (baseName === WHITE_SAUCE_PIZZA_LABEL && isWhitePizza) {
                                     if (distribution === 'left') return 'Left Half Red Pizza';
                                     if (distribution === 'right') return 'Right Half Red Pizza';
                                   }
@@ -24600,6 +24543,70 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   )}
                 </CollapsibleContent>
               </Collapsible>
+              )}
+
+              {/* Special Instructions only for Minucci Pizzas (after Sauce block) */}
+              {product.category === 'minucci-pizzas' && (
+                <Collapsible open={isAdditionalOpen} onOpenChange={setIsAdditionalOpen}>
+                  <CollapsibleTrigger asChild>
+                    <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+                      <div className="flex flex-col items-start gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>1. Special Instructions (Optional):</span>
+                        </div>
+                      </div>
+                      {isAdditionalOpen ? (
+                        <ChevronUp className="w-6 h-6" />
+                      ) : (
+                        <ChevronDown className="w-6 h-6" />
+                      )}
+                    </button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="relative border border-t-0 rounded-b-lg p-5">
+                    <div 
+                      className="absolute inset-0 pointer-events-none opacity-30 rounded-b-lg"
+                      style={{ 
+                        backgroundImage: `url(${backgroundTexture})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                      }}
+                    />
+                    <div className="relative z-10 space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {specialInstructionsOptions
+                          .filter((item) => !hideNoSauceInSpecialInstructions || item.id !== 'si3')
+                          .map((item) => {
+                            const isSelected = selectedSpecialInstructions.includes(item.id);
+                            return (
+                              <div
+                                key={item.id}
+                                onClick={() => handleSpecialInstructionToggle(item.id)}
+                                className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors bg-[#F6F6F6] ${
+                                  isSelected ? 'border-2 border-[#A72020]' : 'border border-gray-200'
+                                }`}
+                              >
+                                <div className="flex-1 flex items-center justify-between px-4 py-3">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-5 h-5 flex-shrink-0">
+                                      {isSelected ? (
+                                        <div className="bg-[#A72020] rounded-full p-0.5 flex items-center justify-center w-5 h-5">
+                                          <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                                        </div>
+                                      ) : (
+                                        <div className="border-2 border-gray-300 rounded-full w-5 h-5"></div>
+                                      )}
+                                    </div>
+                                    <p className="text-gray-900">{item.name}</p>
+                                  </div>
+                                  <span className="text-sm text-gray-900">{item.price}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               )}
 
               {/* Extra Dipping - Moved up for Buffalo Chicken Stromboli */}
@@ -25077,6 +25084,10 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           ...specialInstructionsOptions,
                           ...productSpecificInstructions.filter(d => !specialInstructionsOptions.some(s => s.id === d.id))
                         ].filter(item => item.name !== 'Half White');
+
+                        if (hideNoSauceInSpecialInstructions) {
+                          allInstructions = allInstructions.filter((item) => item.id !== 'si3' && item.name !== 'No Sauce');
+                        }
 
                         // Filter for By the Slice items: Only Double Cut, Well Done, lightly cooked
                         if (product.id.startsWith('slice-')) {
@@ -28357,7 +28368,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 // Register Pizza Sauce Options
                 const allSauceOptions = [
                   { id: 'sauce-pizza', name: 'Red Sauce' },
-                  { id: 'sauce-white', name: 'White Sauce' }
+                  { id: 'sauce-white', name: WHITE_SAUCE_PIZZA_LABEL }
                 ];
                 registerOptionsToLookup(selectionLookup, allSauceOptions, {
                   groupId: 'pizza_sauce',
@@ -28749,7 +28760,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   if (!id) return '';
                   
                   // Special sauce override
-                  if (id === 'sauce-white') return 'White Sauce';
+                  if (id === 'sauce-white') return WHITE_SAUCE_PIZZA_LABEL;
                   if (id === 'sauce-pizza') return 'Red Sauce';
 
                   // Special case for pizza sizes (fixes console warnings)
@@ -31951,7 +31962,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           groupTitle: sel.groupTitle,
                           productId: sel.productId
                         });
-                      } else if (baseName === 'White Sauce' || baseName === 'White Pizza') {
+                      } else if (baseName === WHITE_SAUCE_PIZZA_LABEL || baseName === 'White Sauce' || baseName === 'White Pizza') {
                         const otherSide = dist === 'left' ? 'right' : 'left';
 
                         // Add the complementary Red Pizza selection
@@ -33337,7 +33348,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   // Register Pizza Sauce Options
                   const allSauceOptions = [
                     { id: 'sauce-pizza', name: 'Red Sauce' },
-                    { id: 'sauce-white', name: 'White Sauce' }
+                    { id: 'sauce-white', name: WHITE_SAUCE_PIZZA_LABEL }
                   ];
                   registerOptionsToLookup(selectionLookupDesktop, allSauceOptions, {
                     groupId: 'pizza_sauce',
@@ -35482,7 +35493,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             groupTitle: sel.groupTitle,
                             productId: sel.productId
                           });
-                        } else if (baseName === 'White Sauce' || baseName === 'White Pizza') {
+                        } else if (baseName === WHITE_SAUCE_PIZZA_LABEL || baseName === 'White Sauce' || baseName === 'White Pizza') {
                           const otherSide = dist === 'left' ? 'right' : 'left';
 
                           // Add the complementary Red Pizza selection

@@ -3905,16 +3905,17 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
   const debugCart = typeof window !== 'undefined' && window.location.search.includes('debugCart=1');
   const itemId = String(item.productId || item.id || '').toLowerCase();
   const suppressSauceForItem = false;
+  const WHITE_SAUCE_PIZZA_LABEL = 'White Sauce (Brushed with garlic and olive oil)';
   const allowSpecialtySauceIds = new Set(['sp-10', 'sp-12', 'sp-15']);
   const isSpecialtyPizza = String(item.category || '').toLowerCase() === 'specialty-pizza';
   const normalizeLabel = (input: string): string => {
     const text = String(input || '').trim();
     if (!text) return '';
     if (/^white pizza$/i.test(text) || /^white pizza\s*\((left|right)\)$/i.test(text)) {
-      return 'White Sauce';
+      return WHITE_SAUCE_PIZZA_LABEL;
     }
-    if (/^left half white pizza$/i.test(text)) return 'Left Half White Sauce';
-    if (/^right half white pizza$/i.test(text)) return 'Right Half White Sauce';
+    if (/^left half white pizza$/i.test(text)) return `Left Half ${WHITE_SAUCE_PIZZA_LABEL}`;
+    if (/^right half white pizza$/i.test(text)) return `Right Half ${WHITE_SAUCE_PIZZA_LABEL}`;
     return text;
   };
 
@@ -4140,12 +4141,12 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
   }
 
   // CYO White should not report plain Red Sauce as whole-sauce output.
-  // If it's not a split-half sauce case, normalize to White Sauce.
+  // If it's not a split-half sauce case, normalize to White Sauce label.
   if (itemId === 'cyo-white') {
     const hasHalfSauce = buckets['SAUCE'].some((s) => /\bhalf\b/i.test(String(s || '')));
     if (!hasHalfSauce) {
       if (buckets['SAUCE'].length > 0) {
-        buckets['SAUCE'] = ['White Sauce'];
+        buckets['SAUCE'] = [WHITE_SAUCE_PIZZA_LABEL];
       }
     }
   }
@@ -4317,7 +4318,7 @@ const getDesiredOrder = (item: CartItem): { mode: 'full' | 'tail'; sections: str
     name.includes('create your own pasta');
 
   if (category === 'pizzas' && pid.startsWith('cyo-')) return { mode: 'full', sections: ['Sauce', 'Additional Toppings', 'Specialty Toppings 1ST HALF', 'Specialty Toppings 2ND HALF', 'Special Instructions', 'Dippings', 'Dessert', 'Beverages'] };
-  if (category === 'minucci-pizzas') return { mode: 'full', sections: ['Special Instructions', 'No Toppings', 'Dippings', 'Dessert', 'Beverages'] };
+  if (category === 'minucci-pizzas') return { mode: 'full', sections: ['Sauce', 'Special Instructions', 'No Toppings', 'Dippings', 'Dessert', 'Beverages'] };
   if (category === 'specialty-pizza') return { mode: 'full', sections: ['Sauce', 'Additional Toppings', 'Special Instructions', 'No Toppings', 'Dippings', 'Dessert', 'Beverages'] };
   if (category === 'brooklyn-pizza') return { mode: 'full', sections: ['Additional Toppings', 'Special Instructions', 'No Toppings', 'Dippings', 'Dessert', 'Beverages'] };
   if (category === 'stromboli-calzone') return { mode: 'full', sections: ['Choose Your Dipping Sauce', 'Additional Toppings', 'Dessert', 'Beverages'] };
@@ -5043,18 +5044,21 @@ export const buildCartDisplayLines = (item: CartItem): string[] => {
         isPizzaCategory &&
         (sel.groupId === 'pizza_sauce' || sel.type === 'sauce' || String(sel.groupTitle || '').toLowerCase().includes('sauce'));
       const isWhiteSauceLike =
-        /^white pizza$/i.test(text) || /^white sauce$/i.test(text) || sel.id === 'sauce-white' || sel.id.startsWith('generated-white-pizza');
+        /^white pizza$/i.test(text) ||
+        /^white sauce(\s*\(brushed with garlic and olive oil\))?$/i.test(text) ||
+        sel.id === 'sauce-white' ||
+        sel.id.startsWith('generated-white-pizza');
       const isRedSauceLike =
         /^red sauce$/i.test(text) || sel.id === 'sauce-pizza';
 
       if (isPizzaSauceSelection) {
         if (sel.distribution && sel.distribution !== 'whole') {
           const side = sel.distribution === 'left' ? 'Left' : 'Right';
-          if (isWhiteSauceLike) text = `${side} Half White Sauce`;
+          if (isWhiteSauceLike) text = `${side} Half ${WHITE_SAUCE_PIZZA_LABEL}`;
           else if (isRedSauceLike) text = `${side} Half Red Pizza`;
           else text = `${side} Half ${text}`;
         } else {
-          if (isWhiteSauceLike) text = 'White Sauce';
+          if (isWhiteSauceLike) text = WHITE_SAUCE_PIZZA_LABEL;
           else if (isRedSauceLike) text = 'Red Sauce';
         }
       }
@@ -5074,7 +5078,7 @@ export const buildCartDisplayLines = (item: CartItem): string[] => {
 
       // White Pizza (whole only fallback)
       if (text === 'White Pizza') {
-          text = 'White Sauce';
+          text = WHITE_SAUCE_PIZZA_LABEL;
       }
 
       rawLines.push({ text, priority, originalSel: sel });

@@ -197,7 +197,7 @@ const createYourOwnPizzas: Product[] = [
         maxSelections: 1,
         options: [
           { id: 'sauce-red', name: 'Red Sauce', price: 0 },
-          { id: 'sauce-white', name: 'White Sauce', price: 0 },
+          { id: 'sauce-white', name: 'White Sauce (Brushed with garlic and olive oil)', price: 0 },
         ],
       },
     ],
@@ -219,7 +219,7 @@ const createYourOwnPizzas: Product[] = [
         maxSelections: 1,
         options: [
           { id: 'sauce-red', name: 'Red Sauce', price: 0 },
-          { id: 'sauce-white', name: 'White Sauce', price: 0 },
+          { id: 'sauce-white', name: 'White Sauce (Brushed with garlic and olive oil)', price: 0 },
         ],
       },
     ],
@@ -241,7 +241,7 @@ const createYourOwnPizzas: Product[] = [
         maxSelections: 1,
         options: [
           { id: 'sauce-red', name: 'Red Sauce', price: 0 },
-          { id: 'sauce-white', name: 'White Sauce', price: 0 },
+          { id: 'sauce-white', name: 'White Sauce (Brushed with garlic and olive oil)', price: 0 },
         ],
       },
     ],
@@ -1441,7 +1441,7 @@ const products: Product[] = [
         maxSelections: 1,
         options: [
           { id: 'sauce-red', name: 'Red Sauce', price: 0 },
-          { id: 'sauce-white', name: 'White Sauce', price: 0 },
+          { id: 'sauce-white', name: 'White Sauce (Brushed with garlic and olive oil)', price: 0 },
         ],
       },
       {
@@ -1498,7 +1498,7 @@ const products: Product[] = [
         maxSelections: 1,
         options: [
           { id: 'sauce-red', name: 'Red Sauce', price: 0 },
-          { id: 'sauce-white', name: 'White Sauce', price: 0 },
+          { id: 'sauce-white', name: 'White Sauce (Brushed with garlic and olive oil)', price: 0 },
         ],
       },
       {
@@ -1581,7 +1581,7 @@ const products: Product[] = [
         maxSelections: 1,
         options: [
           { id: 'sauce-red', name: 'Red Sauce', price: 0 },
-          { id: 'sauce-white', name: 'White Sauce', price: 0 },
+          { id: 'sauce-white', name: 'White Sauce (Brushed with garlic and olive oil)', price: 0 },
         ],
       },
       {
