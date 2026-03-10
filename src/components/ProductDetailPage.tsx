@@ -4818,6 +4818,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
         ? 'large'
         : product.category === 'soups'
           ? 'medium'
+        : product.category === 'create-salad'
+          ? 'large'
         : product.category === 'catering-salad-soups'
           ? 'medium'
         : (product.category === 'sides' || product.category === 'entrees' || product.category === 'catering-sides')
@@ -5651,6 +5653,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
 
             case 'Size':
               // Extract size from format like "Medium (14")"
+              if (items[0]?.includes('Small')) setSelectedSize('medium');
+              else
               if (items[0]?.includes('Medium')) setSelectedSize('medium');
               else if (items[0]?.includes('Large')) setSelectedSize('large');
               else if (items[0]?.includes('Jumbo')) setSelectedSize('jumbo');
@@ -6873,6 +6877,17 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       }
       return parseFloat(product.price?.replace('$', '') || '8.49');
     }
+
+    // Create-salad: unified item with Small/Large size pricing
+    if (product.category === 'create-salad') {
+      const prices = (product.priceRange || '$8.49 - $14.49')
+        .split(' - ')
+        .map((p) => parseFloat(String(p).replace('$', '').trim()))
+        .filter((n) => !Number.isNaN(n));
+      const smallPrice = prices[0] ?? 8.49;
+      const largePrice = prices[1] ?? 14.49;
+      return selectedSize === 'medium' ? smallPrice : largePrice;
+    }
     
     // For by-the-slice and other single-price categories, return fixed price
     if (product.category === 'by-the-slice' || 
@@ -6891,7 +6906,6 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
         product.category === 'traditional-dinners' ||
         product.category === 'pasta' ||
         product.category === 'baked-pasta' ||
-        product.category === 'create-salad' ||
         product.category === 'create-pasta' ||
         product.category === 'kids' ||
         product.category === 'minucci-pizzas' ||
@@ -10071,7 +10085,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
               )}
 
               {/* Size Selection - Mobile */}
-              {((!product.name.includes('Sicilian') && !product.name.includes('Pan Pizza') && !product.name.includes('Gluten Free') && product.category !== 'brooklyn-pizza' && product.category !== 'cheesesteaks' && product.category !== 'wings' && product.category !== 'hot-hoagies' && product.category !== 'cold-hoagies' && product.category !== 'by-the-slice' && product.category !== 'burgers' && product.category !== 'brioche' && product.category !== 'paninis' && product.category !== 'wraps' && product.category !== 'appetizers' && product.category !== 'traditional-dinners' && product.category !== 'pasta' && product.category !== 'baked-pasta' && product.category !== 'create-salad' && product.category !== 'salads' && product.category !== 'soups' && product.category !== 'kids' && product.category !== 'beverages' && product.category !== 'desserts' && product.category !== 'dippings' && product.category !== 'catering-desserts' && product.category !== 'pizzelle' && product.category !== 'gelati' && product.id !== 'cp-1' && product.id !== 'k1' && product.id !== 'stromboli-8' && product.id !== 'cptray1' && product.id !== 'cptray2' && product.id !== 'cptray3' && product.id !== 'cptray4' && product.id !== 'cptray5' && product.id !== 'cptray6') || product.category === 'catering-salad-soups' || product.id === 'cyo-minucci') && (
+              {((!product.name.includes('Sicilian') && !product.name.includes('Pan Pizza') && !product.name.includes('Gluten Free') && product.category !== 'brooklyn-pizza' && product.category !== 'cheesesteaks' && product.category !== 'wings' && product.category !== 'hot-hoagies' && product.category !== 'cold-hoagies' && product.category !== 'by-the-slice' && product.category !== 'burgers' && product.category !== 'brioche' && product.category !== 'paninis' && product.category !== 'wraps' && product.category !== 'appetizers' && product.category !== 'traditional-dinners' && product.category !== 'pasta' && product.category !== 'baked-pasta' && product.category !== 'salads' && product.category !== 'soups' && product.category !== 'kids' && product.category !== 'beverages' && product.category !== 'desserts' && product.category !== 'dippings' && product.category !== 'catering-desserts' && product.category !== 'pizzelle' && product.category !== 'gelati' && product.id !== 'cp-1' && product.id !== 'k1' && product.id !== 'stromboli-8' && product.id !== 'cptray1' && product.id !== 'cptray2' && product.id !== 'cptray3' && product.id !== 'cptray4' && product.id !== 'cptray5' && product.id !== 'cptray6') || product.category === 'catering-salad-soups' || product.id === 'cyo-minucci') && (
                 <div className="mb-6">
                   {/* Size selection label - hide for Whole Cakes, Beverages, Hoagies Wraps, Sides, Seafood, Appetizers, Catering Appetizers, Minucci Pizzas, and Thick Crust Specialty Pizzas */}
                   {product.category !== 'catering-whole-cakes' && product.category !== 'catering-beverages' && product.category !== 'catering-hoagies-wraps' && product.category !== 'catering-appetizers' && product.category !== 'sides' && product.category !== 'seafood' && product.category !== 'appetizers' && product.category !== 'desserts' && product.category !== 'dippings' && product.category !== 'catering-desserts' && product.category !== 'minucci-pizzas' && !['sp-4', 'sp-5', 'sp-6', 'sp-9', 'cyo-sicilian-pesto', 'sp-17'].includes(product.id) && (
@@ -10122,7 +10136,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             : 'border-gray-300 bg-white text-gray-900 hover:border-[#A72020]'
                         }`}
                       >
-                        {product.category === 'catering-pasta' || product.category === 'catering-entrees' || product.category === 'catering-salad-soups' || product.name.includes('Tray') ? 'Medium' : product.category === 'pasta' ? 'Medium' : product.id.startsWith('stromboli-') ? '10" Medium' : (product.id === 'calzone-1' || product.id === 'calzone-2') ? '8" Medium' : '14" Medium'}
+                        {product.category === 'catering-pasta' || product.category === 'catering-entrees' || product.category === 'catering-salad-soups' || product.name.includes('Tray') ? 'Medium' : product.category === 'pasta' ? 'Medium' : product.category === 'create-salad' ? 'Small' : product.id.startsWith('stromboli-') ? '10" Medium' : (product.id === 'calzone-1' || product.id === 'calzone-2') ? '8" Medium' : '14" Medium'}
                       </button>
                       <button
                         onClick={() => setSelectedSize('large')}
@@ -10132,10 +10146,10 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             : 'border-gray-300 bg-white text-gray-900 hover:border-[#A72020]'
                         }`}
                       >
-                        {product.category === 'catering-pasta' || product.category === 'catering-entrees' || product.category === 'catering-salad-soups' || product.name.includes('Tray') ? 'Large' : product.category === 'pasta' ? 'Large' : (product.id === 'calzone-1' || product.id === 'calzone-2') ? '14" Large' : '16" Large'}
+                        {product.category === 'catering-pasta' || product.category === 'catering-entrees' || product.category === 'catering-salad-soups' || product.name.includes('Tray') ? 'Large' : product.category === 'pasta' ? 'Large' : product.category === 'create-salad' ? 'Large' : (product.id === 'calzone-1' || product.id === 'calzone-2') ? '14" Large' : '16" Large'}
                       </button>
                       {/* Hide Jumbo for Calzone, Turnover, Stromboli, Catering Trays and Catering Salad/Soups */}
-                      {product.id !== 'calzone-1' && product.id !== 'calzone-2' && !product.id.startsWith('stromboli-') && product.category !== 'catering-pasta' && product.category !== 'catering-appetizers' && product.category !== 'catering-entrees' && product.category !== 'catering-salad-soups' && !product.name.includes('Tray') && (
+                      {product.id !== 'calzone-1' && product.id !== 'calzone-2' && !product.id.startsWith('stromboli-') && product.category !== 'create-salad' && product.category !== 'catering-pasta' && product.category !== 'catering-appetizers' && product.category !== 'catering-entrees' && product.category !== 'catering-salad-soups' && !product.name.includes('Tray') && (
                         <button
                           onClick={() => setSelectedSize('jumbo')}
                           className={`px-5 py-2.5 rounded-lg border-2 transition-colors ${
@@ -10618,7 +10632,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
               )}
 
               {/* Size Selection - Hidden for Sicilian, Pan Pizza, Gluten Free, Brooklyn, Cheesesteaks, Hoagies, Slices, Burgers, Brioche, Paninis, Wraps, Appetizers, Traditional Dinners, Pasta, Baked Pasta, Salads, Soups, Build Your Own Pasta, Create Your Own Kids Pasta, Kids, Dessert and Beverages - Except Catering Salad/Soups and Minucci (has custom buttons) */}
-              {((!product.name.includes('Sicilian') && !product.name.includes('Pan Pizza') && !product.name.includes('Gluten Free') && product.category !== 'brooklyn-pizza' && product.category !== 'cheesesteaks' && product.category !== 'wings' && product.category !== 'hot-hoagies' && product.category !== 'cold-hoagies' && product.category !== 'by-the-slice' && product.category !== 'burgers' && product.category !== 'brioche' && product.category !== 'paninis' && product.category !== 'wraps' && product.category !== 'appetizers' && product.category !== 'traditional-dinners' && product.category !== 'pasta' && product.category !== 'baked-pasta' && product.category !== 'create-salad' && product.category !== 'salads' && product.category !== 'soups' && product.category !== 'kids' && product.category !== 'beverages' && product.category !== 'desserts' && product.category !== 'dippings' && product.category !== 'catering-desserts' && product.category !== 'pizzelle' && product.category !== 'gelati' && product.id !== 'cp-1' && product.id !== 'k1' && product.id !== 'stromboli-8' && product.id !== 'cptray1' && product.id !== 'cptray2' && product.id !== 'cptray3' && product.id !== 'cptray4' && product.id !== 'cptray5' && product.id !== 'cptray6') || product.category === 'catering-salad-soups' || product.id === 'cyo-minucci') && (
+              {((!product.name.includes('Sicilian') && !product.name.includes('Pan Pizza') && !product.name.includes('Gluten Free') && product.category !== 'brooklyn-pizza' && product.category !== 'cheesesteaks' && product.category !== 'wings' && product.category !== 'hot-hoagies' && product.category !== 'cold-hoagies' && product.category !== 'by-the-slice' && product.category !== 'burgers' && product.category !== 'brioche' && product.category !== 'paninis' && product.category !== 'wraps' && product.category !== 'appetizers' && product.category !== 'traditional-dinners' && product.category !== 'pasta' && product.category !== 'baked-pasta' && product.category !== 'salads' && product.category !== 'soups' && product.category !== 'kids' && product.category !== 'beverages' && product.category !== 'desserts' && product.category !== 'dippings' && product.category !== 'catering-desserts' && product.category !== 'pizzelle' && product.category !== 'gelati' && product.id !== 'cp-1' && product.id !== 'k1' && product.id !== 'stromboli-8' && product.id !== 'cptray1' && product.id !== 'cptray2' && product.id !== 'cptray3' && product.id !== 'cptray4' && product.id !== 'cptray5' && product.id !== 'cptray6') || product.category === 'catering-salad-soups' || product.id === 'cyo-minucci') && (
                 <div className="mt-3 mb-4 xl:mb-5">
                   {/* Size selection label - hide for Whole Cakes, Beverages, Hoagies Wraps, Sides, Seafood, Appetizers, Catering Appetizers, Minucci Pizzas, and Thick Crust Specialty Pizzas */}
                   {product.category !== 'catering-whole-cakes' && product.category !== 'catering-beverages' && product.category !== 'catering-hoagies-wraps' && product.category !== 'catering-appetizers' && product.category !== 'sides' && product.category !== 'seafood' && product.category !== 'appetizers' && product.category !== 'desserts' && product.category !== 'dippings' && product.category !== 'catering-desserts' && product.category !== 'minucci-pizzas' && !['sp-4', 'sp-5', 'sp-6', 'sp-9', 'cyo-sicilian-pesto', 'sp-17'].includes(product.id) && (
@@ -10669,7 +10683,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             : 'border-gray-300 bg-white text-gray-900 hover:border-[#A72020]'
                         }`}
                       >
-                        {product.category === 'catering-pasta' || product.category === 'catering-entrees' || product.category === 'catering-salad-soups' || product.name.includes('Tray') ? 'Medium' : product.category === 'pasta' ? 'Medium' : product.id.startsWith('stromboli-') ? '10" Medium' : (product.id === 'calzone-1' || product.id === 'calzone-2') ? '8" Medium' : '14" Medium'}
+                        {product.category === 'catering-pasta' || product.category === 'catering-entrees' || product.category === 'catering-salad-soups' || product.name.includes('Tray') ? 'Medium' : product.category === 'pasta' ? 'Medium' : product.category === 'create-salad' ? 'Small' : product.id.startsWith('stromboli-') ? '10" Medium' : (product.id === 'calzone-1' || product.id === 'calzone-2') ? '8" Medium' : '14" Medium'}
                       </button>
                       <button
                         onClick={() => setSelectedSize('large')}
@@ -10679,10 +10693,10 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             : 'border-gray-300 bg-white text-gray-900 hover:border-[#A72020]'
                         }`}
                       >
-                        {product.category === 'catering-pasta' || product.category === 'catering-entrees' || product.category === 'catering-salad-soups' || product.name.includes('Tray') ? 'Large' : product.category === 'pasta' ? 'Large' : (product.id === 'calzone-1' || product.id === 'calzone-2') ? '14" Large' : '16" Large'}
+                        {product.category === 'catering-pasta' || product.category === 'catering-entrees' || product.category === 'catering-salad-soups' || product.name.includes('Tray') ? 'Large' : product.category === 'pasta' ? 'Large' : product.category === 'create-salad' ? 'Large' : (product.id === 'calzone-1' || product.id === 'calzone-2') ? '14" Large' : '16" Large'}
                       </button>
                       {/* Hide Jumbo for Calzone, Turnover, Stromboli, Catering Trays and Catering Salad/Soups */}
-                      {product.id !== 'calzone-1' && product.id !== 'calzone-2' && !product.id.startsWith('stromboli-') && product.category !== 'catering-pasta' && product.category !== 'catering-appetizers' && product.category !== 'catering-entrees' && product.category !== 'catering-salad-soups' && !product.name.includes('Tray') && (
+                      {product.id !== 'calzone-1' && product.id !== 'calzone-2' && !product.id.startsWith('stromboli-') && product.category !== 'create-salad' && product.category !== 'catering-pasta' && product.category !== 'catering-appetizers' && product.category !== 'catering-entrees' && product.category !== 'catering-salad-soups' && !product.name.includes('Tray') && (
                         <button
                           onClick={() => setSelectedSize('jumbo')}
                           className={`px-5 py-2.5 rounded-lg border-2 transition-colors ${
@@ -27112,7 +27126,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
 
             {/* Size Selection - Desktop */}
             <div className="hidden lg:block">
-              {((!product.name.includes('Sicilian') && !product.name.includes('Pan Pizza') && !product.name.includes('Gluten Free') && product.category !== 'brooklyn-pizza' && product.category !== 'cheesesteaks' && product.category !== 'wings' && product.category !== 'hot-hoagies' && product.category !== 'cold-hoagies' && product.category !== 'by-the-slice' && product.category !== 'burgers' && product.category !== 'brioche' && product.category !== 'paninis' && product.category !== 'wraps' && product.category !== 'appetizers' && product.category !== 'traditional-dinners' && product.category !== 'pasta' && product.category !== 'baked-pasta' && product.category !== 'create-salad' && product.category !== 'salads' && product.category !== 'soups' && product.category !== 'kids' && product.category !== 'beverages' && product.category !== 'desserts' && product.category !== 'dippings' && product.category !== 'catering-desserts' && product.category !== 'pizzelle' && product.category !== 'gelati' && product.id !== 'cp-1' && product.id !== 'k1' && product.id !== 'stromboli-8' && product.id !== 'cptray1' && product.id !== 'cptray2' && product.id !== 'cptray3' && product.id !== 'cptray4' && product.id !== 'cptray5' && product.id !== 'cptray6') || product.category === 'catering-salad-soups' || product.id === 'cyo-minucci') && (
+              {((!product.name.includes('Sicilian') && !product.name.includes('Pan Pizza') && !product.name.includes('Gluten Free') && product.category !== 'brooklyn-pizza' && product.category !== 'cheesesteaks' && product.category !== 'wings' && product.category !== 'hot-hoagies' && product.category !== 'cold-hoagies' && product.category !== 'by-the-slice' && product.category !== 'burgers' && product.category !== 'brioche' && product.category !== 'paninis' && product.category !== 'wraps' && product.category !== 'appetizers' && product.category !== 'traditional-dinners' && product.category !== 'pasta' && product.category !== 'baked-pasta' && product.category !== 'salads' && product.category !== 'soups' && product.category !== 'kids' && product.category !== 'beverages' && product.category !== 'desserts' && product.category !== 'dippings' && product.category !== 'catering-desserts' && product.category !== 'pizzelle' && product.category !== 'gelati' && product.id !== 'cp-1' && product.id !== 'k1' && product.id !== 'stromboli-8' && product.id !== 'cptray1' && product.id !== 'cptray2' && product.id !== 'cptray3' && product.id !== 'cptray4' && product.id !== 'cptray5' && product.id !== 'cptray6') || product.category === 'catering-salad-soups' || product.id === 'cyo-minucci') && (
                 <div className="mb-2">
                   {/* Size selection label - hide for Whole Cakes, Beverages, Hoagies Wraps, Sides, Seafood, Appetizers, Catering Appetizers, Minucci Pizzas, and Thick Crust Specialty Pizzas */}
                   {product.category !== 'catering-whole-cakes' && product.category !== 'catering-beverages' && product.category !== 'catering-hoagies-wraps' && product.category !== 'catering-appetizers' && product.category !== 'sides' && product.category !== 'seafood' && product.category !== 'appetizers' && product.category !== 'desserts' && product.category !== 'dippings' && product.category !== 'catering-desserts' && product.category !== 'minucci-pizzas' && !['sp-4', 'sp-5', 'sp-6', 'sp-9', 'cyo-sicilian-pesto', 'sp-17'].includes(product.id) && (
@@ -27163,7 +27177,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             : 'border-gray-300 bg-white text-gray-900 hover:border-[#A72020]'
                         }`}
                       >
-                        {product.category === 'catering-pasta' || product.category === 'catering-entrees' || product.category === 'catering-salad-soups' || product.name.includes('Tray') ? 'Medium' : product.category === 'pasta' ? 'Medium' : product.id.startsWith('stromboli-') ? '10" Medium' : (product.id === 'calzone-1' || product.id === 'calzone-2') ? '8" Medium' : '14" Medium'}
+                        {product.category === 'catering-pasta' || product.category === 'catering-entrees' || product.category === 'catering-salad-soups' || product.name.includes('Tray') ? 'Medium' : product.category === 'pasta' ? 'Medium' : product.category === 'create-salad' ? 'Small' : product.id.startsWith('stromboli-') ? '10" Medium' : (product.id === 'calzone-1' || product.id === 'calzone-2') ? '8" Medium' : '14" Medium'}
                       </button>
                       <button
                         onClick={() => setSelectedSize('large')}
@@ -27173,10 +27187,10 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             : 'border-gray-300 bg-white text-gray-900 hover:border-[#A72020]'
                         }`}
                       >
-                        {product.category === 'catering-pasta' || product.category === 'catering-entrees' || product.category === 'catering-salad-soups' || product.name.includes('Tray') ? 'Large' : product.category === 'pasta' ? 'Large' : (product.id === 'calzone-1' || product.id === 'calzone-2') ? '14" Large' : '16" Large'}
+                        {product.category === 'catering-pasta' || product.category === 'catering-entrees' || product.category === 'catering-salad-soups' || product.name.includes('Tray') ? 'Large' : product.category === 'pasta' ? 'Large' : product.category === 'create-salad' ? 'Large' : (product.id === 'calzone-1' || product.id === 'calzone-2') ? '14" Large' : '16" Large'}
                       </button>
                       {/* Hide Jumbo for Calzone, Turnover, Stromboli, Catering Trays and Catering Salad/Soups */}
-                      {product.id !== 'calzone-1' && product.id !== 'calzone-2' && !product.id.startsWith('stromboli-') && product.category !== 'catering-pasta' && product.category !== 'catering-appetizers' && product.category !== 'catering-entrees' && product.category !== 'catering-salad-soups' && !product.name.includes('Tray') && (
+                      {product.id !== 'calzone-1' && product.id !== 'calzone-2' && !product.id.startsWith('stromboli-') && product.category !== 'create-salad' && product.category !== 'catering-pasta' && product.category !== 'catering-appetizers' && product.category !== 'catering-entrees' && product.category !== 'catering-salad-soups' && !product.name.includes('Tray') && (
                         <button
                           onClick={() => setSelectedSize('jumbo')}
                           className={`px-5 py-1.5 rounded-lg border-2 transition-colors ${
@@ -28874,6 +28888,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 // Add Size (pizzas + soups + catering with size selectors)
                 const shouldCaptureSize =
                   (product.category === 'pizzas' && !product.name.toLowerCase().includes('pan pizza')) ||
+                  product.category === 'create-salad' ||
                   product.category === 'soups' ||
                   product.category === 'catering-entrees' ||
                   product.category === 'catering-pasta' ||
@@ -28883,6 +28898,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 if (shouldCaptureSize && selectedSize) {
                   const sizeNames: Record<string, string> = product.category === 'soups'
                     ? { 'medium': '16Oz', 'large': '32Oz' }
+                    : product.category === 'create-salad'
+                      ? { 'medium': 'Small', 'large': 'Large' }
                     : (product.category === 'pizzas' && !product.name.toLowerCase().includes('pan pizza'))
                       ? { 'medium': 'Medium (14")', 'large': 'Large (16")', 'jumbo': 'Jumbo (18")' }
                       : {
@@ -33876,6 +33893,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   // Add Size (pizzas + soups)
                   const shouldCaptureSizeDesktop =
                     (product.category === 'pizzas' && !product.name.toLowerCase().includes('pan pizza')) ||
+                    product.category === 'create-salad' ||
                     product.category === 'soups' ||
                     product.category === 'catering-entrees' ||
                     product.category === 'catering-pasta' ||
@@ -33885,6 +33903,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   if (shouldCaptureSizeDesktop && selectedSize) {
                     const sizeNames: Record<string, string> = product.category === 'soups'
                       ? { 'medium': '16Oz', 'large': '32Oz' }
+                      : product.category === 'create-salad'
+                        ? { 'medium': 'Small', 'large': 'Large' }
                       : (product.category === 'pizzas' && !product.name.toLowerCase().includes('pan pizza'))
                         ? { 'medium': 'Medium (14")', 'large': 'Large (16")', 'jumbo': 'Jumbo (18")' }
                         : {

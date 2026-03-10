@@ -1180,18 +1180,11 @@ const seafoodProducts: Product[] = [
 // Create Your Own Salad Products
 const createSaladProducts: Product[] = [
   {
-    id: 'cs-1',
-    name: 'Create Your Own Small Salad',
-    description: 'Select your choice of "Green Leaf" bases, dressing and up to any 5 different toppings from our farm table. Served with our fresh baked homemade bread.',
-    price: '$8.49',
-    image: 'https://drive.google.com/thumbnail?id=1mIsYQWR-8wdTzzW7jIswStkqVrbO6TM-&sz=w1000',
-    category: 'create-salad',
-  },
-  {
     id: 'cs-2',
     name: 'Create Your Own Fresh Salad',
     description: 'Select your choice of "Green Leaf" bases, dressing and up to any 5 different toppings from our farm table. Served with our fresh baked homemade bread.',
     price: '$14.49',
+    priceRange: '$8.49 - $14.49',
     image: 'https://drive.google.com/thumbnail?id=1mIsYQWR-8wdTzzW7jIswStkqVrbO6TM-&sz=w1000',
     category: 'create-salad',
   },
