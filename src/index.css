@@ -6479,6 +6479,13 @@ html {
 
 /* Tablet readability: avoid truncating option names in selection cards */
 @media (min-width: 768px) and (max-width: 1199px) {
+  /* Catalog/category product grids: force 2 columns on tablets */
+  .menu-grid-root .md\:grid-cols-3,
+  .menu-grid-root .md\:grid-cols-4,
+  .menu-grid-root .md\:grid-cols-5 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
   .product-detail-root .md\:grid-cols-3 {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }

@@ -5477,7 +5477,7 @@ export default function App() {
 
       {/* Main Content - Hidden when showing mobile home, more screen, or settings */}
       {!showMobileHome && mobileBottomTab !== 'more' && !isMobileSettingsOpen && (
-      <main>
+      <main className="menu-grid-root">
         {mode === 'reorder' ? (
           <MobileReorderScreen
             user={user}

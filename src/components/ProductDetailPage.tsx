@@ -15217,6 +15217,48 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     </div>
                   )}
 
+                  {/* Choose Your Toppings Section (up to 5 free) */}
+                  <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg mt-6 flex items-center" ref={saladToppingsRef}>
+                    <span className="font-semibold" style={{fontSize: 'calc(1em + 3px)'}}>Extra Toppings (Optional)</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {saladToppingsOptions.map((topping) => {
+                      const isSelected = selectedSaladToppings.includes(topping.id);
+                      const canSelect = selectedSaladToppings.length < 5 || isSelected;
+                      return (
+                        <div
+                          key={topping.id}
+                          onClick={() => {
+                            if (!canSelect && !isSelected) return;
+                            handleSaladToppingToggle(topping.id);
+                          }}
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
+                          } ${!canSelect && !isSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          <div className="w-14 h-14 flex-shrink-0 relative">
+                            <ImageWithFallback
+                              src={SALAD_TOPPING_IMAGES[topping.id]}
+                              alt={topping.name}
+                              className="w-full h-full object-cover"
+                            />
+                            {isSelected && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                <div className="bg-white rounded-full p-0.5">
+                                  <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 flex items-center justify-between px-4 py-3">
+                            <p className="text-gray-900">{topping.name}</p>
+                            <span className="text-sm text-gray-900">${topping.price.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
                   {/* Choose Your Dressing Section */}
                   <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg mt-6 flex items-center" ref={saladDressingRef}>
                     <span className="font-semibold" style={{fontSize: 'calc(1em + 3px)'}}>Choose Your Dressing (Required)</span>
@@ -15277,48 +15319,6 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       <span className="font-semibold">Please select a dressing before adding to cart</span>
                     </div>
                   )}
-
-                  {/* Choose Your Toppings Section (up to 5 free) */}
-                  <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg mt-6 flex items-center" ref={saladToppingsRef}>
-                    <span className="font-semibold" style={{fontSize: 'calc(1em + 3px)'}}>Extra Toppings (Optional)</span>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {saladToppingsOptions.map((topping) => {
-                      const isSelected = selectedSaladToppings.includes(topping.id);
-                      const canSelect = selectedSaladToppings.length < 5 || isSelected;
-                      return (
-                        <div
-                          key={topping.id}
-                          onClick={() => {
-                            if (!canSelect && !isSelected) return;
-                            handleSaladToppingToggle(topping.id);
-                          }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
-                          } ${!canSelect && !isSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                          <div className="w-14 h-14 flex-shrink-0 relative">
-                            <ImageWithFallback
-                              src={SALAD_TOPPING_IMAGES[topping.id]}
-                              alt={topping.name}
-                              className="w-full h-full object-cover"
-                            />
-                            {isSelected && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                                <div className="bg-white rounded-full p-0.5">
-                                  <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 flex items-center justify-between px-4 py-3">
-                            <p className="text-gray-900">{topping.name}</p>
-                            <span className="text-sm text-gray-900">${topping.price.toFixed(2)}</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
 
                   {/* Dressing Instructions Section */}
                   <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg mt-6 flex items-center">
@@ -17345,6 +17345,48 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     </div>
                   )}
 
+                  {/* Choose Your Toppings Section */}
+                  <div ref={saladToppingsRef} className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg mt-3 flex items-center">
+                    <span className="font-semibold" style={{fontSize: 'calc(1em + 3px)'}}>Choose Your Toppings (Choose at least 1, up to 5)</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {saladToppingsOptions.map((option) => {
+                      const isSelected = selectedSaladToppings.includes(option.id);
+                      const canSelect = selectedSaladToppings.length < 5 || isSelected;
+                      return (
+                        <div
+                          key={option.id}
+                          onClick={() => {
+                            if (!canSelect && !isSelected) return;
+                            handleSaladToppingToggle(option.id);
+                          }}
+                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
+                          } ${!canSelect && !isSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          <div className="w-14 h-14 flex-shrink-0 relative">
+                            <ImageWithFallback
+                              src={SALAD_TOPPING_IMAGES[option.id]}
+                              alt={option.name}
+                              className="w-full h-full object-cover"
+                            />
+                            {isSelected && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                <div className="bg-white rounded-full p-0.5">
+                                  <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 flex items-center justify-between px-4 py-3">
+                            <p className="text-gray-900">{option.name}</p>
+                            <span className="text-sm text-gray-900">${option.price.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
                   {/* Choose Your Dressing Section */}
                   <div ref={saladDressingRef} className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg mt-3 flex items-center">
                     <span className="font-semibold" style={{fontSize: 'calc(1em + 3px)'}}>Choose your Dressing (Required)</span>
@@ -17406,48 +17448,6 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     </div>
                   )}
 
-                  {/* Choose Your Toppings Section */}
-                  <div ref={saladToppingsRef} className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg mt-3 flex items-center">
-                    <span className="font-semibold" style={{fontSize: 'calc(1em + 3px)'}}>Choose Your Toppings (Choose at least 1, up to 5)</span>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {saladToppingsOptions.map((option) => {
-                      const isSelected = selectedSaladToppings.includes(option.id);
-                      const canSelect = selectedSaladToppings.length < 5 || isSelected;
-                      return (
-                        <div
-                          key={option.id}
-                          onClick={() => {
-                            if (!canSelect && !isSelected) return;
-                            handleSaladToppingToggle(option.id);
-                          }}
-                          className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
-                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
-                          } ${!canSelect && !isSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                          <div className="w-14 h-14 flex-shrink-0 relative">
-                            <ImageWithFallback
-                              src={SALAD_TOPPING_IMAGES[option.id]}
-                              alt={option.name}
-                              className="w-full h-full object-cover"
-                            />
-                            {isSelected && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                                <div className="bg-white rounded-full p-0.5">
-                                  <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 flex items-center justify-between px-4 py-3">
-                            <p className="text-gray-900">{option.name}</p>
-                            <span className="text-sm text-gray-900">${option.price.toFixed(2)}</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
                   {/* Dressing Instructions Section */}
                   <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg mt-3 flex items-center">
                     <span className="font-semibold" style={{fontSize: 'calc(1em + 3px)'}}>Dressing Instructions (Optional)</span>
@@ -17465,50 +17465,6 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         >
                           <p className="text-gray-900">{option.name}</p>
                           <span className="text-sm text-gray-900">${option.price.toFixed(2)}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Extra Dressing Section */}
-                  <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg mt-3 flex items-center">
-                    <span className="font-semibold" style={{fontSize: 'calc(1em + 3px)'}}>Extra Dressing (Optional)</span>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {saladExtraDressingOptions.map((option) => {
-                      const isSelected = selectedExtraDressing.includes(option.id);
-                      return (
-                        <div
-                          key={option.id}
-                          onClick={() => {
-                            if (isSelected) {
-                              setSelectedExtraDressing(selectedExtraDressing.filter(id => id !== option.id));
-                            } else {
-                              setSelectedExtraDressing([...selectedExtraDressing, option.id]);
-                            }
-                          }}
-                          className={`flex items-stretch gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] h-14 ${
-                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
-                          }`}
-                        >
-                          <div className="w-14 aspect-square flex-shrink-0 relative bg-[#F6F6F6]">
-                            <ImageWithFallback
-                              src={SALAD_EXTRA_DRESSING_IMAGES[option.id]}
-                              alt={option.name}
-                              className="w-full h-full object-cover object-center"
-                            />
-                            {isSelected && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                                <div className="bg-white rounded-full p-0.5">
-                                  <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 flex items-center justify-between px-4 py-2">
-                            <p className="text-gray-900">{option.name}</p>
-                            <span className="text-sm text-gray-900">${option.price.toFixed(2)}</span>
-                          </div>
                         </div>
                       );
                     })}
@@ -17550,6 +17506,50 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             )}
                           </div>
                           <div className="flex-1 flex items-center justify-between px-4 py-3">
+                            <p className="text-gray-900">{option.name}</p>
+                            <span className="text-sm text-gray-900">${option.price.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Extra Dressing Section */}
+                  <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg mt-3 flex items-center">
+                    <span className="font-semibold" style={{fontSize: 'calc(1em + 3px)'}}>Extra Dressing (Optional)</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {saladExtraDressingOptions.map((option) => {
+                      const isSelected = selectedExtraDressing.includes(option.id);
+                      return (
+                        <div
+                          key={option.id}
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedExtraDressing(selectedExtraDressing.filter(id => id !== option.id));
+                            } else {
+                              setSelectedExtraDressing([...selectedExtraDressing, option.id]);
+                            }
+                          }}
+                          className={`flex items-stretch gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] h-14 ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
+                          }`}
+                        >
+                          <div className="w-14 aspect-square flex-shrink-0 relative bg-[#F6F6F6]">
+                            <ImageWithFallback
+                              src={SALAD_EXTRA_DRESSING_IMAGES[option.id]}
+                              alt={option.name}
+                              className="w-full h-full object-cover object-center"
+                            />
+                            {isSelected && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                <div className="bg-white rounded-full p-0.5">
+                                  <Check className="w-4 h-4 text-[#A72020]" strokeWidth={3} />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 flex items-center justify-between px-4 py-2">
                             <p className="text-gray-900">{option.name}</p>
                             <span className="text-sm text-gray-900">${option.price.toFixed(2)}</span>
                           </div>
