@@ -3663,9 +3663,10 @@ const buildMinucciLines = (item: CartItem, rawLines: { text: string; originalSel
         console.log('[MINUCCI DEBUG] customizations:', item.customizations?.map(c => ({category: c.category, items: c.items})));
     }
 
-    type MinucciBucket = 'SPECIAL_INSTRUCTIONS' | 'NO_TOPPINGS' | 'DIPPINGS' | 'DESSERT' | 'BEVERAGES' | 'OTHER' | 'IGNORE';
+    type MinucciBucket = 'SAUCE' | 'SPECIAL_INSTRUCTIONS' | 'NO_TOPPINGS' | 'DIPPINGS' | 'DESSERT' | 'BEVERAGES' | 'OTHER' | 'IGNORE';
     
     const buckets: Record<Exclude<MinucciBucket, 'IGNORE'>, string[]> = {
+        'SAUCE': [],
         'SPECIAL_INSTRUCTIONS': [],
         'NO_TOPPINGS': [],
         'DIPPINGS': [],
@@ -3681,13 +3682,19 @@ const buildMinucciLines = (item: CartItem, rawLines: { text: string; originalSel
         const lowerText = text.toLowerCase();
 
         // 1. Explicit ignore rules for Minucci:
-        // report everything except Sauce/Size and known invalid artifact "American".
+        // report everything except Size and known invalid artifact "American".
         if (lowerText === 'american') return 'IGNORE';
         if (type === 'required_option' || type === 'size' || groupTitle.includes('size')) return 'IGNORE';
-        if ((groupTitle === 'sauce' || lowerText.includes('sauce')) &&
-            !(groupTitle.includes('dipping') || lowerText.includes('ranch') || lowerText.includes('bleu cheese'))) {
-            return 'IGNORE';
-        }
+
+        const isPizzaSauce =
+            sel.groupId === 'pizza_sauce' ||
+            groupTitle === 'sauce' ||
+            sel.id === 'sauce-pizza' ||
+            sel.id === 'sauce-white' ||
+            lowerText === 'red sauce' ||
+            lowerText === 'white sauce' ||
+            lowerText === 'white sauce (brushed with garlic and olive oil)';
+        if (isPizzaSauce) return 'SAUCE';
 
         // 2. Bucket Matching
         if (type === 'special_instruction') return 'SPECIAL_INSTRUCTIONS';
@@ -3784,6 +3791,7 @@ const buildMinucciLines = (item: CartItem, rawLines: { text: string; originalSel
     else buckets['BEVERAGES'] = consolidateItems(buckets['BEVERAGES']);
 
     buckets['SPECIAL_INSTRUCTIONS'] = dedupeNoQty(buckets['SPECIAL_INSTRUCTIONS']);
+    buckets['SAUCE'] = dedupeNoQty(buckets['SAUCE']);
     buckets['NO_TOPPINGS'] = dedupeNoQty(buckets['NO_TOPPINGS']);
     buckets['OTHER'] = dedupeNoQty(buckets['OTHER']);
 
@@ -3793,6 +3801,7 @@ const buildMinucciLines = (item: CartItem, rawLines: { text: string; originalSel
 
     // Minucci order + report all non-sauce selections.
     const finalOrder = [
+        ...buckets['SAUCE'],
         ...buckets['SPECIAL_INSTRUCTIONS'],
         ...buckets['NO_TOPPINGS'],
         ...buckets['OTHER'],
