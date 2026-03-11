@@ -6086,6 +6086,12 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
   const WHITE_SAUCE_PIZZA_LABEL = 'White Sauce (Brushed with garlic and olive oil)';
 
   const sauceOptions = useMemo(() => {
+    if (product.id === 'cyo-white') {
+      return [
+        { id: 'sauce-pizza', name: 'Red Sauce', price: 0, image: 'https://images.unsplash.com/photo-1610913729746-9d5d752daf59?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaXp6YSUyMHNhdWNlfGVufDF8fHx8MTc2OTgwNzM2OHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral' },
+        { id: 'sauce-none', name: 'No Sauce', price: 0, image: null }
+      ];
+    }
     if (isSpecialtySaucePizza || isPanOrSicilianSaucePizza || isSimpleRedWhiteSaucePizza) {
       return [
         { id: 'sauce-pizza', name: 'Red Sauce', price: 0, image: 'https://images.unsplash.com/photo-1610913729746-9d5d752daf59?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaXp6YSUyMHNhdWNlfGVufDF8fHx8MTc2OTgwNzM2OHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral' },
@@ -24596,8 +24602,17 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   if (sauce.id === 'sauce-pizza') {
                                     baseName = isWhitePizza ? WHITE_SAUCE_PIZZA_LABEL : 'Red Sauce';
                                   }
+                                  if (sauce.id === 'sauce-none') {
+                                    baseName = 'No Sauce';
+                                  }
                                   
                                   if (!isSelected) return baseName;
+
+                                  if (baseName === 'No Sauce') {
+                                    if (distribution === 'left') return 'Left Half No Sauce';
+                                    if (distribution === 'right') return 'Right Half No Sauce';
+                                    return 'No Sauce';
+                                  }
                                   
                                   if (baseName === 'Red Sauce') {
                                     if (distribution === 'left') return 'Left Half White Pizza';
@@ -28564,7 +28579,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 // Register Pizza Sauce Options
                 const allSauceOptions = [
                   { id: 'sauce-pizza', name: 'Red Sauce' },
-                  { id: 'sauce-white', name: WHITE_SAUCE_PIZZA_LABEL }
+                  { id: 'sauce-white', name: WHITE_SAUCE_PIZZA_LABEL },
+                  { id: 'sauce-none', name: 'No Sauce' }
                 ];
                 registerOptionsToLookup(selectionLookup, allSauceOptions, {
                   groupId: 'pizza_sauce',
@@ -28965,6 +28981,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   // Special sauce override
                   if (id === 'sauce-white') return WHITE_SAUCE_PIZZA_LABEL;
                   if (id === 'sauce-pizza') return 'Red Sauce';
+                  if (id === 'sauce-none') return 'No Sauce';
 
                   // Special case for pizza sizes (fixes console warnings)
                   if (id === 'medium') return 'Medium (14")';
@@ -32228,6 +32245,18 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           groupTitle: sel.groupTitle,
                           productId: sel.productId
                         });
+                      } else if (product.id === 'cyo-white' && (baseName === 'No Sauce' || sel.id === 'sauce-none')) {
+                        const otherSide = dist === 'left' ? 'right' : 'left';
+                        // For White Pizza, split No Sauce implies complementary White Sauce on the other half.
+                        extraSauceSelections.push({
+                          id: `generated-white-pizza-${Date.now()}`,
+                          label: 'White Pizza',
+                          type: sel.type,
+                          distribution: otherSide,
+                          groupId: sel.groupId,
+                          groupTitle: sel.groupTitle,
+                          productId: sel.productId
+                        });
                       }
                     } else {
                       sel.distribution = 'whole';
@@ -33601,7 +33630,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   // Register Pizza Sauce Options
                   const allSauceOptions = [
                     { id: 'sauce-pizza', name: 'Red Sauce' },
-                    { id: 'sauce-white', name: WHITE_SAUCE_PIZZA_LABEL }
+                    { id: 'sauce-white', name: WHITE_SAUCE_PIZZA_LABEL },
+                    { id: 'sauce-none', name: 'No Sauce' }
                   ];
                   registerOptionsToLookup(selectionLookupDesktop, allSauceOptions, {
                     groupId: 'pizza_sauce',
@@ -35810,6 +35840,18 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           extraSauceSelectionsDesktop.push({
                             id: `generated-red-pizza-dt-${Date.now()}`,
                             label: 'Red Pizza',
+                            type: sel.type,
+                            distribution: otherSide,
+                            groupId: sel.groupId,
+                            groupTitle: sel.groupTitle,
+                            productId: sel.productId
+                          });
+                        } else if (product.id === 'cyo-white' && (baseName === 'No Sauce' || sel.id === 'sauce-none')) {
+                          const otherSide = dist === 'left' ? 'right' : 'left';
+                          // For White Pizza, split No Sauce implies complementary White Sauce on the other half.
+                          extraSauceSelectionsDesktop.push({
+                            id: `generated-white-pizza-dt-${Date.now()}`,
+                            label: 'White Pizza',
                             type: sel.type,
                             distribution: otherSide,
                             groupId: sel.groupId,

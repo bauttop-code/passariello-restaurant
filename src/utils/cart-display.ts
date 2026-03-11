@@ -3975,6 +3975,39 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
       .replace(/\s+(1ST|2ND)\s+HALF$/i, '')
       .replace(/\s+/g, ' ')
       .trim();
+  const normalizeCyoSauceLabel = (input: string): string => {
+    const text = normalizeLabel(input);
+    if (!text) return '';
+    if (/^red pizza$/i.test(text)) return 'Red Sauce';
+    if (/^white pizza$/i.test(text)) return WHITE_SAUCE_PIZZA_LABEL;
+    if (/^left half red pizza$/i.test(text)) return 'Left Half Red Sauce';
+    if (/^right half red pizza$/i.test(text)) return 'Right Half Red Sauce';
+    if (/^left half white pizza$/i.test(text)) return `Left Half ${WHITE_SAUCE_PIZZA_LABEL}`;
+    if (/^right half white pizza$/i.test(text)) return `Right Half ${WHITE_SAUCE_PIZZA_LABEL}`;
+    if (/^left half no sauce$/i.test(text)) return 'Left Half No Sauce';
+    if (/^right half no sauce$/i.test(text)) return 'Right Half No Sauce';
+    if (/^half white$/i.test(text)) return WHITE_SAUCE_PIZZA_LABEL;
+    if (/^no sauce$/i.test(text)) return 'No Sauce';
+    if (/^white sauce(\s*\(brushed with garlic and olive oil\))?$/i.test(text)) return WHITE_SAUCE_PIZZA_LABEL;
+    if (/^red sauce$/i.test(text)) return 'Red Sauce';
+    return text;
+  };
+  const isCyoSauceLike = (input: string): boolean => {
+    const t = String(input || '').trim().toLowerCase();
+    if (!t) return false;
+    return (
+      t === 'red sauce' ||
+      t === 'red pizza' ||
+      t === 'white sauce' ||
+      t === 'white sauce (brushed with garlic and olive oil)' ||
+      t === 'white pizza' ||
+      t === 'half white' ||
+      t === 'no sauce' ||
+      t.includes('half red') ||
+      t.includes('half white') ||
+      t.includes('half no sauce')
+    );
+  };
 
   rawLines.forEach(line => {
     if (!line.originalSel) {
@@ -4141,6 +4174,33 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
   buckets['SPECIALTY_2ND_HALF'] = dedupeNoQty(buckets['SPECIALTY_2ND_HALF']);
   buckets['SPECIAL_INSTRUCTIONS'] = dedupeNoQty(buckets['SPECIAL_INSTRUCTIONS']);
   buckets['NO_TOPPINGS'] = dedupeNoQty(buckets['NO_TOPPINGS']);
+
+  // CYO pizzas: derive sauce lines from explicit sauce selections first.
+  // This avoids inconsistent reporting when the same sauce appears in special instructions/customizations.
+  if (profile === 'CYO_PIZZA') {
+    const explicitSauceLines = rawLines
+      .filter((line) => {
+        const sel = line.originalSel;
+        if (!sel) return false;
+        const gid = String(sel.groupId || '').toLowerCase();
+        const gtitle = String(sel.groupTitle || '').toLowerCase();
+        const stype = String(sel.type || '').toLowerCase();
+        return gid === 'pizza_sauce' || stype === 'sauce' || gtitle.includes('sauce');
+      })
+      .map((line) => normalizeCyoSauceLabel(line.text))
+      .filter(Boolean);
+
+    if (explicitSauceLines.length > 0) {
+      buckets['SAUCE'] = dedupeNoQty(explicitSauceLines);
+    } else {
+      buckets['SAUCE'] = dedupeNoQty(buckets['SAUCE'].map((line) => normalizeCyoSauceLabel(line)).filter(Boolean));
+    }
+
+    // Prevent sauce labels from leaking into non-sauce sections for CYO.
+    buckets['SPECIAL_INSTRUCTIONS'] = buckets['SPECIAL_INSTRUCTIONS'].filter((line) => !isCyoSauceLike(line));
+    buckets['NO_TOPPINGS'] = buckets['NO_TOPPINGS'].filter((line) => !isCyoSauceLike(line));
+    buckets['OTHER'] = buckets['OTHER'].filter((line) => !isCyoSauceLike(line));
+  }
 
   // For Specialty Pizza, enforce a single toppings block order:
   // Sauce -> Additional Toppings -> Special Instructions -> No Toppings -> Dippings -> Dessert -> Beverages
