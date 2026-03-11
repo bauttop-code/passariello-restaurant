@@ -24691,7 +24691,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                     </div>
                                     <p className="text-gray-900">{item.name}</p>
                                   </div>
-                                  {product.category !== 'minucci-pizzas' && product.id !== 'cyo-minucci' && (
+                                  {product.category !== 'minucci-pizzas' && !product.id.startsWith('cyo-') && product.category !== 'specialty-pizza' && (
                                     <span className="text-sm text-gray-900">{item.price}</span>
                                   )}
                                 </div>
@@ -25222,7 +25222,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   </div>
                                   <p className="text-gray-900">{item.name}</p>
                                 </div>
-                                {product.category !== 'minucci-pizzas' && product.id !== 'cyo-minucci' && (
+                                {product.category !== 'minucci-pizzas' && !product.id.startsWith('cyo-') && product.category !== 'specialty-pizza' && (
                                   <span className="text-sm text-gray-900">{item.price}</span>
                                 )}
                               </div>
@@ -25289,7 +25289,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             </div>
                             <div className="flex-1 flex items-center justify-between">
                               <p className="text-gray-900">{item.name}</p>
-                              <span className="text-sm text-gray-900">${item.price.toFixed(2)}</span>
+                              {item.price > 0 && (
+                                <span className="text-sm text-gray-900">${item.price.toFixed(2)}</span>
+                              )}
                             </div>
                           </div>
                         );
@@ -25322,7 +25324,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             </div>
                             <div className="flex-1 flex items-center justify-between min-w-0">
                               <p className="text-gray-900">{item.name}</p>
-                              <span className="text-sm text-gray-900 ml-2">${item.price.toFixed(2)}</span>
+                              {item.price > 0 && (
+                                <span className="text-sm text-gray-900 ml-2">${item.price.toFixed(2)}</span>
+                              )}
                             </div>
                           </div>
                         );
@@ -26331,7 +26335,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                       </div>
                                       <p className="text-gray-900">{option.name}</p>
                                     </div>
-                                    {product.category !== 'minucci-pizzas' && (
+                                    {product.category !== 'minucci-pizzas' && product.category !== 'specialty-pizza' && (
                                       <span className="text-sm text-gray-900">${option.price.toFixed(2)}</span>
                                     )}
                                   </div>
