@@ -180,7 +180,7 @@ export function Footer() {
             </a>
           </div>
           <div>
-            &copy; 2025 Passariello LLC. All rights reserved
+            &copy; 2026 Passariello LLC. All rights reserved
           </div>
         </div>
       </div>

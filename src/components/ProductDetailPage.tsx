@@ -1026,7 +1026,7 @@ const cateringCafingKitItems: Topping[] = [
     id: 'cfk2',
     name: 'Wire Chafing Dish Racks',
     price: 5.00,
-    description: 'Made from aluminum, ideal for catering and food warming, returnable.',
+    description: 'Get $5 back when you return it.',
     image: 'https://drive.google.com/uc?export=view&id=18CmHAv6GIsKO7Y4mwj58tcaF33jJ1Nnh',
   },
 ];
@@ -7851,7 +7851,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       const labels: string[] = [];
       Object.entries(selectedIncludedRequest).forEach(([id, qty]) => {
         if (!qty || qty <= 0) return;
-        const item = cateringIncludedRequestItems.find((x) => x.id === id);
+        const item = availableIncludedRequestItems.find((x) => x.id === id);
         if (!item) return;
         const isNoQty = id === 'iaru1' || id === 'iaru3';
         const safeQty = isNoQty ? 1 : qty;
@@ -9852,6 +9852,18 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
 
   const showIncludedRequestSection = isIncludedRequestCategory(product.category);
   const showChafingKitSection = isChafingCategory(product.category);
+  const isCateringAppetizersLimitedIncludedRequest =
+    product.category === 'catering-appetizers' &&
+    ['capp1', 'capp2', 'capp3'].includes(product.id);
+  const isCateringPlattersWithoutUtensils =
+    product.category === 'catering-hoagies-wraps' &&
+    ['c13', 'c14', 'c15'].includes(product.id);
+
+  const availableIncludedRequestItems = isCateringAppetizersLimitedIncludedRequest
+    ? cateringIncludedRequestItems.filter((item) => item.id === 'iaru1' || item.id === 'iaru3' || item.id === 'iaru4') // Serving utensils + Napkins + Plates
+    : isCateringPlattersWithoutUtensils
+      ? cateringIncludedRequestItems.filter((item) => item.id !== 'iaru2' && item.id !== 'iaru1')
+      : cateringIncludedRequestItems;
   const showDippingsSection = product.category === 'dippings';
   const showDessertsSection = product.category !== 'catering-beverages' && product.category !== 'beverages' && product.category !== 'dippings';
   const baseOptionalStep = showIncludedRequestSection ? (showChafingKitSection ? 4 : 3) : 2;
@@ -26479,7 +26491,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   }}
                 />
                 <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-5">
-                  {cateringIncludedRequestItems.map((item) => {
+                  {availableIncludedRequestItems.map((item) => {
                     const quantity = selectedIncludedRequest[item.id] || 0;
                     const isActive = activeIncludedRequestItem === item.id;
                     const allowQuantity = item.id !== 'iaru1' && item.id !== 'iaru3';
@@ -29936,7 +29948,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   const includedItemsList: string[] = [];
                   Object.entries(selectedIncludedRequest).forEach(([itemId, qty]) => {
                     if (qty > 0) {
-                      const requestItem = cateringIncludedRequestItems.find(k => k.id === itemId);
+                      const requestItem = availableIncludedRequestItems.find(k => k.id === itemId);
                       if (requestItem) {
                         const isNoQuantityItem = itemId === 'iaru1' || itemId === 'iaru3';
                         const safeQty = isNoQuantityItem ? 1 : qty;
@@ -34844,7 +34856,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     const includedItemsList: string[] = [];
                     Object.entries(selectedIncludedRequest).forEach(([itemId, qty]) => {
                       if (qty > 0) {
-                        const requestItem = cateringIncludedRequestItems.find(k => k.id === itemId);
+                        const requestItem = availableIncludedRequestItems.find(k => k.id === itemId);
                         if (requestItem) {
                           const isNoQuantityItem = itemId === 'iaru1' || itemId === 'iaru3';
                           const safeQty = isNoQuantityItem ? 1 : qty;
