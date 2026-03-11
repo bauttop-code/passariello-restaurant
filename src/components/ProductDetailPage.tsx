@@ -6083,6 +6083,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     (product.category === 'pizzas' &&
       ['cyo-gf12', 'cyo-cauliflower', 'cyo-minucci'].includes(product.id)) ||
     product.category === 'minucci-pizzas';
+  const isCyoWhiteSaucePizza = product.id === 'cyo-white';
   const WHITE_SAUCE_PIZZA_LABEL = 'White Sauce (Brushed with garlic and olive oil)';
 
   const sauceOptions = useMemo(() => {
@@ -6122,7 +6123,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       }
 
       // Pan/Sicilian: optional but mutually exclusive (can't select Red + White at once)
-      if (isPanOrSicilianSaucePizza || isSimpleRedWhiteSaucePizza) {
+      if (isPanOrSicilianSaucePizza || isSimpleRedWhiteSaucePizza || isCyoWhiteSaucePizza) {
         const isSelected = prev.includes(sauceId);
         if (isSelected) {
           setSauceDistribution(prevDist => {
