@@ -3048,6 +3048,16 @@ const buildStromboliCalzoneLines = (item: CartItem, rawLines: { text: string; or
     const lb = String(label || '').toLowerCase();
     return t === 'beverage' || gt.includes('beverage') || gid.includes('beverage') || lb.includes('20oz') || lb.includes('2l') || lb.includes('soda');
   };
+  const isCutOptionLike = (groupTitle?: string, groupId?: string, label?: string): boolean => {
+    const gt = String(groupTitle || '').toLowerCase();
+    const gid = String(groupId || '').toLowerCase();
+    const lb = String(label || '').toLowerCase();
+    return (
+      gid.includes('stromboli_cut') ||
+      gt.includes('cut option') ||
+      /^cut in \d+$/i.test(lb)
+    );
+  };
   const pushUnique = (arr: string[], value: string) => {
     const v = String(value || '').trim();
     if (!v) return;
@@ -3236,6 +3246,30 @@ const buildStromboliCalzoneLines = (item: CartItem, rawLines: { text: string; or
   });
   beverageLines = Array.from(new Set(beverageLines));
 
+  // --- 5. CUT OPTIONS ---
+  let cutOptionsLines: string[] = [];
+  inputCustomizations.forEach((c: any) => {
+    const cat = String(c?.category || c?.groupTitle || '');
+    if (!isCutOptionLike(cat, String(c?.groupId || ''), '')) return;
+    if (Array.isArray(c?.items)) {
+      c.items.map(stromboliLabel).forEach((x: string) => {
+        if (x && !stromboliIsArtifact(x)) pushUnique(cutOptionsLines, x);
+      });
+    }
+  });
+  inputSelections.forEach((s: any) => {
+    const label = stromboliLabel(s);
+    if (!label || stromboliIsArtifact(label)) return;
+    if (isCutOptionLike(s.groupTitle, s.groupId, label)) pushUnique(cutOptionsLines, label);
+  });
+  rawLines.forEach((r) => {
+    const s = r.originalSel as any;
+    const label = stromboliLabel(r);
+    if (!label || stromboliIsArtifact(label)) return;
+    if (isCutOptionLike(s?.groupTitle, s?.groupId, label)) pushUnique(cutOptionsLines, label);
+  });
+  cutOptionsLines = Array.from(new Set(cutOptionsLines));
+
 
   // --- FINAL ASSEMBLY ---
   // Merge dipping required + additional topping dipping when they are the same
@@ -3290,10 +3324,12 @@ const buildStromboliCalzoneLines = (item: CartItem, rawLines: { text: string; or
 
   const finalLines = isTurnoverCalzonePepperoniRoll
     ? [
+        ...cutOptionsLines,
         ...additionalToppingsLines,
         ...extraSauceLines
       ]
     : [
+        ...cutOptionsLines,
         ...mergedDippingLines,
         ...filteredAdditionalLines
       ];

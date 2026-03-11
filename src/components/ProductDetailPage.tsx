@@ -4189,6 +4189,13 @@ const extraSauceOptions = [
   { id: 'es4', name: 'Extra Sauce (16oz)', price: 8.40 },
 ];
 
+// Cut Options - For Stromboli
+const stromboliCutOptions: Topping[] = [
+  { id: 'stco1', name: 'Cut in 2', price: 0.00 },
+  { id: 'stco2', name: 'Cut in 3', price: 0.00 },
+  { id: 'stco3', name: 'Cut in 4', price: 0.00 },
+];
+
 // Substitute Sauce Options - For Chicken Tenders
 const substituteSauceOptions = [
   { id: 'ss1', name: 'BBQ', price: 0.00, image: 'https://drive.google.com/thumbnail?id=15gTOtiE45rp2lo3zJCXZ7c-a76xMOvOB&sz=w1000' },
@@ -4485,8 +4492,10 @@ const HALF_TOPPING_PRICE_BY_ID: Record<string, number> = {
   a24: 1.99, // Pineapple
   a25: 1.99, // Chopped Tomato
 
+  // Mike's Hot Honey ($1.99 half)
+  a26: 1.99, // Mike's Hot Honey
+
   // Premium toppings ($5.99 half)
-  a26: 5.99, // Chicken Steak
   a27: 5.99, // Grilled Chicken
   a28: 5.99, // Buffalo Chicken
   a29: 5.99, // Prosciutto
@@ -4781,6 +4790,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
 
   const [isIncludedOpen, setIsIncludedOpen] = useState(true);
   const [isAdditionalOpen, setIsAdditionalOpen] = useState(true);
+  const [isStromboliCutOpen, setIsStromboliCutOpen] = useState(true);
   const [extraSideSauces, setExtraSideSauces] = useState<Record<string, number>>({});
   const [isExtraDippingOpen, setIsExtraDippingOpen] = useState(true);
   const [isSoupOpen, setIsSoupOpen] = useState(true);
@@ -4899,6 +4909,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
 
   const [selectedSpecialInstructions, setSelectedSpecialInstructions] = useState<string[]>([]);
   const [selectedExtraSauce, setSelectedExtraSauce] = useState<string[]>([]);
+  const [selectedStromboliCut, setSelectedStromboliCut] = useState<string>('');
   const [selectedNoToppings, setSelectedNoToppings] = useState<string[]>([]);
   const [selectedBrooklynInstructions, setSelectedBrooklynInstructions] = useState<string[]>([]);
   const [selectedCheese, setSelectedCheese] = useState<string>('');
@@ -5128,6 +5139,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
             : readArray('selectedSpecialInstructions')
         );
         setSelectedExtraSauce(readArray('selectedExtraSauce'));
+        setSelectedStromboliCut(readSingle('selectedStromboliCut'));
         setSelectedNoToppings(readArray('selectedNoToppings'));
         setSelectedBrooklynInstructions(readArray('selectedBrooklynInstructions'));
         setSelectedSideToppings(readArray('selectedSideToppings'));
@@ -5183,6 +5195,22 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
         const wrapChipsRaw = readSingle('wrapChipsQuantity');
         setChipsQuantity(Number.parseInt(chipsRaw, 10) || 0);
         setWrapChipsQuantity(Number.parseInt(wrapChipsRaw, 10) || 0);
+      }
+
+      if (product.id.startsWith('stromboli-')) {
+        const stromboliCutSelection = resolvedEditSelections.find((sel: any) => {
+          const gid = String(sel?.groupId || '').toLowerCase();
+          const gt = String(sel?.groupTitle || '').toLowerCase();
+          return gid.includes('stromboli_cut') || gt === 'cut options';
+        });
+
+        if (stromboliCutSelection) {
+          const rawId = String(stromboliCutSelection.id || '');
+          const cutId = rawId.includes(':') ? rawId.split(':')[1] : rawId;
+          if (cutId) setSelectedStromboliCut(cutId);
+        } else if (!hasSelectionSources) {
+          setSelectedStromboliCut('');
+        }
       }
 
       const isCheesesteakProduct = (product.category || '').toLowerCase().includes('cheesesteak');
@@ -5889,6 +5917,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     setActiveCafingKitItem(null);
     setSelectedDesserts({});
     setSelectedBeverages({});
+    setSelectedStromboliCut('');
     setActiveDessertItem(null);
     setActiveBeverageItem(null);
     setChipsQuantity(0);
@@ -5914,6 +5943,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
   // Pre-select cheese for specific cheesesteaks
   useEffect(() => {
     if (isEditMode) return;
+
+    if (product.name === 'Chicken Cheesesteak Hoagie') {
+      setSelectedCheese('cheese1'); // cheese1 is American
+      return;
+    }
 
     if (product.name === 'Pizza Steak') {
       setSelectedCheese('cheese4'); // cheese4 is Mozzarella
@@ -8314,6 +8348,17 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     return topping.price || 0;
   };
 
+  // Helper for Specialty Toppings (1ST/2ND HALF) pricing overrides on Gluten Free 12"
+  const getSpecialtyToppingPrice = (topping: Topping): number => {
+    if (product.id === 'cyo-gf12') {
+      const name = String(topping.name || '').toLowerCase().trim();
+      if (name === 'margherita') return 1.49;
+      if (name === 'toscana' || name === 'hawaiian') return 2.99;
+      return 3.99;
+    }
+    return topping.price || 0;
+  };
+
   // Filter out selections that should not be captured for the current product (prevents "ghost selections")
   const filterSelectionsByProduct = (sels: any[], currentProduct: any): any[] => {
     const cleaned = (Array.isArray(sels) ? sels : []).filter((s) => {
@@ -8623,11 +8668,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       }
       const specialtyTopping = specialtyToppings.find(t => t.id === toppingId);
       if (specialtyTopping) {
-        return total + (specialtyTopping.price || 0);
+        return total + getSpecialtyToppingPrice(specialtyTopping);
       }
       const specialtyToppingSecondHalf = specialtyToppingsSecondHalf.find(t => t.id === toppingId);
       if (specialtyToppingSecondHalf) {
-        return total + (specialtyToppingSecondHalf.price || 0);
+        return total + getSpecialtyToppingPrice(specialtyToppingSecondHalf);
       }
       // Check for cheesesteak toppings
       const cheesesteakTopping = cheesesteakToppings.find(t => t.id === toppingId);
@@ -9255,7 +9300,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     
     // STROMBOLI/CALZONE specific
     if (currentProduct.category === 'stromboli-calzone') {
-      const strombKeys = ['selectedSize', 'selectedToppings', 'selectedIncluded'];
+      const strombKeys = ['selectedSize', 'selectedToppings', 'selectedIncluded', 'selectedStromboliCut'];
       strombKeys.forEach(key => {
         if (allSources[key]) filtered[key] = allSources[key];
       });
@@ -13713,7 +13758,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         return (
                           <div
                             key={option.id}
-                            onClick={() => setSelectedHoagiePlatterCut(option.id)}
+                            onClick={() => setSelectedHoagiePlatterCut(isSelected ? '' : option.id)}
                             className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
                               isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
@@ -14174,7 +14219,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         return (
                           <div
                             key={option.id}
-                            onClick={() => setSelectedHotSandwichPlatterCut(option.id)}
+                            onClick={() => setSelectedHotSandwichPlatterCut(isSelected ? '' : option.id)}
                             className={`flex items-center gap-3 rounded-lg px-4 py-3 cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
                               isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
                             }`}
@@ -20339,7 +20384,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   {product.category === 'cheesesteaks' && (
                     <>
                       <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg flex items-center">
-                        <span className="font-semibold">{product.name === 'Pizza Steak' ? 'Substitute Cheese (Optional)' : product.name === 'Cooper Passiesteak' || product.name === 'Chicken Cheesesteak Hoagie' || product.name === 'Cheesesteak Hoagie' || product.name === 'Buffalo Chicken Cheesesteak' || product.name === "Passariello's Cheesesteak" ? 'Cheese (Optional)' : 'Cheese (Required)'}</span>
+                        <span className="font-semibold">{product.name === 'Pizza Steak' ? 'Substitute Cheese (Optional)' : 'Cheese (Required)'}</span>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {cheeseOptions
@@ -21937,7 +21982,13 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     )}
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                    {coldHoagieAddCheese.map((cheese) => {
+                    {coldHoagieAddCheese
+                      .filter((cheese) => {
+                        if (product.id === '17d' && cheese.name === 'No Cheese') return false; // Turkey Hoagie
+                        if (product.id === '17b' && cheese.name === 'Provolone') return false; // Italian Hoagie
+                        return true;
+                      })
+                      .map((cheese) => {
                       const isSelected = selectedColdHoagieCheese === cheese.id;
                       
                       // Calculate cheese price for Tuna Hoagie and Turkey Hoagie
@@ -24621,7 +24672,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                     </div>
                                     <p className="text-gray-900">{item.name}</p>
                                   </div>
-                                  {product.category !== 'minucci-pizzas' && (
+                                  {product.category !== 'minucci-pizzas' && product.id !== 'cyo-minucci' && (
                                     <span className="text-sm text-gray-900">{item.price}</span>
                                   )}
                                 </div>
@@ -24762,7 +24813,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       { id: 'side-bc', name: 'Bleu Cheese', price: 0.99, image: 'https://drive.google.com/thumbnail?id=1l7hbAOb2nRDIZhvXO-PiCHf11TT6ETHa&sz=w1000', isSide: true },
                       { id: 'side-br', name: 'Buttermilk Ranch', price: 0.99, image: 'https://drive.google.com/thumbnail?id=1gg-seSYp4hX9UT15c7A9ZrGTM1TJ5yyn&sz=w1000', isSide: true }
                     ] : []),
-                    ...[...additionalToppings].sort((a, b) => {
+                    ...[...additionalToppings]
+                      .filter((topping) => !(product.id === 'slice-1' && topping.name === 'Extra Cheese'))
+                      .sort((a, b) => {
                     const toppingOrder: Record<string, number> = {
                       'extra cheese': 1,
                       'pepperoni': 2,
@@ -24989,7 +25042,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 </div>
                                 <p className="text-gray-900">{topping.name}</p>
                               </div>
-                              <span className="text-sm text-gray-900">+${topping.price?.toFixed(2)}</span>
+                              <span className="text-sm text-gray-900">+${getSpecialtyToppingPrice(topping).toFixed(2)}</span>
                             </div>
                           </div>
                         );
@@ -25026,7 +25079,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                 </div>
                                 <p className="text-gray-900">{topping.name}</p>
                               </div>
-                              <span className="text-sm text-gray-900">+${topping.price?.toFixed(2)}</span>
+                              <span className="text-sm text-gray-900">+${getSpecialtyToppingPrice(topping).toFixed(2)}</span>
                             </div>
                           </div>
                         );
@@ -25150,7 +25203,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   </div>
                                   <p className="text-gray-900">{item.name}</p>
                                 </div>
-                                {product.category !== 'minucci-pizzas' && (
+                                {product.category !== 'minucci-pizzas' && product.id !== 'cyo-minucci' && (
                                   <span className="text-sm text-gray-900">{item.price}</span>
                                 )}
                               </div>
@@ -25314,6 +25367,60 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         );
                       })
                     }
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+
+          {/* Stromboli Cut Options */}
+          {product.id.startsWith('stromboli-') && (
+            <Collapsible open={isStromboliCutOpen} onOpenChange={setIsStromboliCutOpen}>
+              <CollapsibleTrigger asChild>
+                <button className="w-full bg-[#F5F3EB] text-[#1F2937] p-5 rounded-lg flex items-center justify-between">
+                  <div className="flex flex-col items-start gap-1">
+                    <span className="font-bold" style={{fontSize: 'calc(1em + 3px)'}}>Cut Options (Optional)</span>
+                  </div>
+                  {isStromboliCutOpen ? (
+                    <ChevronUp className="w-6 h-6" />
+                  ) : (
+                    <ChevronDown className="w-6 h-6" />
+                  )}
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="relative border border-t-0 rounded-b-lg p-5">
+                <div
+                  className="absolute inset-0 pointer-events-none opacity-30 rounded-b-lg"
+                  style={{
+                    backgroundImage: `url(${backgroundTexture})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }}
+                />
+                <div className="relative z-10 space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
+                    {stromboliCutOptions.map((option) => {
+                      const isSelected = selectedStromboliCut === option.id;
+                      return (
+                        <div
+                          key={option.id}
+                          onClick={() => setSelectedStromboliCut(isSelected ? '' : option.id)}
+                          className={`flex items-center justify-between gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors selection-tile bg-[#F6F6F6] border ${
+                            isSelected ? 'border-2 border-[#A72020] selection-selected bg-[#A72020]/5' : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3 flex-1">
+                            <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                              isSelected ? 'bg-[#A72020] border-[#A72020]' : 'border-gray-300'
+                            }`}>
+                              {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                            </div>
+                            <span className="text-gray-900">{option.name}</span>
+                          </div>
+                          <span className="text-gray-600">+$0.00</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </CollapsibleContent>
@@ -26893,11 +27000,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
 
         {/* Suggested Items - Now inside left column */}
         <div className="py-8 lg:py-12 bg-white">
-          <div className="max-w-[960px] mx-auto">
+          <div className="w-full max-w-full mx-auto">
             <h2 className="text-[22px] lg:text-[30px] font-semibold text-gray-900 mb-6">Great pairings for this meal</h2>
-            <div className="flex overflow-x-auto gap-4 pb-4 lg:grid lg:grid-cols-3 lg:gap-6 lg:pb-0 scrollbar-hide snap-x snap-mandatory">
+            <div className="flex overflow-x-auto gap-4 pb-4 lg:grid lg:grid-cols-2 2xl:grid-cols-3 lg:gap-6 lg:overflow-visible lg:pb-0 scrollbar-hide snap-x snap-mandatory">
               {suggestedAppetizers.map((item) => (
-                <div key={item.id} className="flex-shrink-0 w-[168px] lg:w-[280px] snap-start">
+                <div key={item.id} className="flex-shrink-0 w-[168px] sm:w-[220px] lg:w-full min-w-0 snap-start">
                   <AddonCard
                     item={item}
                     quantity={pairingQuantities[item.id] || 0}
@@ -28426,6 +28533,13 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                    type: 'sauce'
                 });
 
+                // Register Stromboli Cut Options
+                registerOptionsToLookup(selectionLookup, stromboliCutOptions, {
+                   groupId: 'stromboli_cut',
+                   groupTitle: 'Cut Options',
+                   type: 'required_option'
+                });
+
                 // Register ALL option arrays with their banner/group titles
                 registerOptionsToLookup(selectionLookup, traditionalDinnersSides, {
                   groupId: 'traditional_dinner_sides',
@@ -29610,6 +29724,25 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             : (isStromboliCalzoneItem ? 'Extra Sauce (Optional)' : getToppingGroupInfo(toppingId)?.groupTitle)
                         });
                       }
+                    });
+                  }
+                }
+
+                if (product.id.startsWith('stromboli-') && selectedStromboliCut) {
+                  const cutName = stromboliCutOptions.find((opt) => opt.id === selectedStromboliCut)?.name || getItemName(selectedStromboliCut) || 'Cut Options';
+                  customizations.push({
+                    category: 'Cut Options',
+                    items: [cutName]
+                  });
+                  const selectionId = `stromboli_cut:${selectedStromboliCut}`;
+                  if (!selections.some((s) => s.id === selectionId)) {
+                    selections.push({
+                      id: selectionId,
+                      label: cutName,
+                      type: 'required_option',
+                      groupId: 'stromboli_cut',
+                      groupTitle: 'Cut Options',
+                      productId: product.id
                     });
                   }
                 }
@@ -31736,6 +31869,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   selectedToppings: { kind: "stringArray", value: selectedToppings },
                   selectedSpecialInstructions: { kind: "stringArray", value: selectedSpecialInstructions },
                   selectedExtraSauce: { kind: "stringArray", value: selectedExtraSauce },
+                  selectedStromboliCut: { kind: "singleString", value: selectedStromboliCut },
                   selectedNoToppings: { kind: "stringArray", value: selectedNoToppings },
                   selectedBrooklynInstructions: { kind: "stringArray", value: selectedBrooklynInstructions },
                   selectedCheese: { kind: "singleString", value: (product.category === 'appetizers' ? '' : selectedCheese) },
@@ -33435,6 +33569,13 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                      groupTitle: 'Extra Sauce (Optional)',
                      type: 'sauce'
                   });
+
+                  // Register Stromboli Cut Options
+                  registerOptionsToLookup(selectionLookupDesktop, stromboliCutOptions, {
+                     groupId: 'stromboli_cut',
+                     groupTitle: 'Cut Options',
+                     type: 'required_option'
+                  });
                   
                   // Register ALL option arrays with their banner/group titles
                   registerOptionsToLookup(selectionLookupDesktop, traditionalDinnersSides, {
@@ -34496,6 +34637,25 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       });
                     }
                   }
+
+                  if (product.id.startsWith('stromboli-') && selectedStromboliCut) {
+                    const cutName = stromboliCutOptions.find((opt) => opt.id === selectedStromboliCut)?.name || getItemName(selectedStromboliCut) || 'Cut Options';
+                    customizations.push({
+                      category: 'Cut Options',
+                      items: [cutName]
+                    });
+                    const selectionId = `stromboli_cut:${selectedStromboliCut}`;
+                    if (!selections.some((s) => s.id === selectionId)) {
+                      selections.push({
+                        id: selectionId,
+                        label: cutName,
+                        type: 'required_option',
+                        groupId: 'stromboli_cut',
+                        groupTitle: 'Cut Options',
+                        productId: product.id
+                      });
+                    }
+                  }
                   
                   // Add side toppings
                   if (selectedSideToppings.length > 0) {
@@ -35296,6 +35456,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     selectedToppings: { kind: "stringArray", value: selectedToppings },
                     selectedSpecialInstructions: { kind: "stringArray", value: selectedSpecialInstructions },
                     selectedExtraSauce: { kind: "stringArray", value: selectedExtraSauce },
+                    selectedStromboliCut: { kind: "singleString", value: selectedStromboliCut },
                     selectedNoToppings: { kind: "stringArray", value: selectedNoToppings },
                     selectedBrooklynInstructions: { kind: "stringArray", value: selectedBrooklynInstructions },
                     selectedCheese: { kind: "singleString", value: (product.category === 'appetizers' ? '' : selectedCheese) },
