@@ -3950,7 +3950,7 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
   const debugCart = typeof window !== 'undefined' && window.location.search.includes('debugCart=1');
   const itemId = String(item.productId || item.id || '').toLowerCase();
   const suppressSauceForItem = false;
-  const WHITE_SAUCE_PIZZA_LABEL = 'White Sauce (Brushed with garlic and olive oil)';
+  const WHITE_SAUCE_PIZZA_LABEL = 'White Sauce';
   const allowSpecialtySauceIds = new Set(['sp-10', 'sp-12', 'sp-15']);
   const isSpecialtyPizza = String(item.category || '').toLowerCase() === 'specialty-pizza';
   const normalizeLabel = (input: string): string => {
@@ -3961,6 +3961,10 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
     }
     if (/^left half white pizza$/i.test(text)) return `Left Half ${WHITE_SAUCE_PIZZA_LABEL}`;
     if (/^right half white pizza$/i.test(text)) return `Right Half ${WHITE_SAUCE_PIZZA_LABEL}`;
+    // Normalize verbose white sauce label to cart-friendly label
+    if (/^white sauce\s*\(brushed with garlic and olive oil\)$/i.test(text)) {
+      return WHITE_SAUCE_PIZZA_LABEL;
+    }
     return text;
   };
 
