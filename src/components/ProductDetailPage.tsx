@@ -4659,6 +4659,7 @@ const saladExtraToppingsOptions = [
 
 export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, isEditMode = false, editingCartItem = null, deliveryMode, onDeliveryModeChange, onProductChange, currentLocation, scheduledTime, cartItemsCount = 0, onLocationClick, onCartClick, mode = 'regular', onModeChange, activeCategory, onCategoryChange }: ProductDetailPageProps) {
   const debugCartEnabled = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debugCart') === '1';
+  const debugSauceEnabled = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debugSauce') === '1';
 
   // --- NO SIZE PIZZA LOGIC (Global Flag) ---
   const isMinucci = product.category === 'minucci-pizzas';
@@ -5127,11 +5128,15 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
         return generated;
       };
 
+      const directEditSelections = Array.isArray(editingCartItem.selections) ? editingCartItem.selections : [];
       const restoredFromSources = buildSelectionsFromSources(editingCartItem.selectionSources);
+      const hasDirectDistribution = directEditSelections.some((sel: any) =>
+        sel?.distribution === 'left' || sel?.distribution === 'right' || sel?.distribution === 'whole'
+      );
       const resolvedEditSelections =
-        restoredFromSources.length > 0
-          ? restoredFromSources
-          : (Array.isArray(editingCartItem.selections) ? editingCartItem.selections : []);
+        hasDirectDistribution
+          ? directEditSelections
+          : (directEditSelections.length > 0 ? directEditSelections : restoredFromSources);
 
       const hasSelectionSources =
         !!editingCartItem.selectionSources &&
@@ -5418,6 +5423,121 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
         const allSelIds = editSelections.map((s: any) => String(s?.id || '').trim()).filter(Boolean);
         const allSelLabels = editSelections.map((s: any) => String(s?.label || '').trim()).filter(Boolean);
         const idSet = new Set(allSelIds);
+        const isPizzaSauceProductForEdit =
+          product.category === 'pizzas' ||
+          product.category === 'specialty-pizza' ||
+          product.category === 'minucci-pizzas';
+
+        // Restore sauce + half distribution from canonical selections.
+        // This keeps edit mode aligned with what was actually added to cart.
+        if (isPizzaSauceProductForEdit) {
+          const sauceSelections = editSelections.filter((sel: any) => {
+            const gid = String(sel?.groupId || '').toLowerCase();
+            const gtitle = String(sel?.groupTitle || '').toLowerCase();
+            const stype = String(sel?.type || '').toLowerCase();
+            return gid === 'pizza_sauce' || stype === 'sauce' || gtitle.includes('sauce');
+          });
+
+          if (sauceSelections.length > 0) {
+            const isGeneratedId = (id: string) => id.startsWith('generated-');
+            const explicit = sauceSelections.find((sel: any) => !isGeneratedId(String(sel?.id || '').toLowerCase()));
+
+            const mapLabelToSauceId = (rawLabel: string): string | null => {
+              const label = String(rawLabel || '').toLowerCase();
+              if (!label) return null;
+              // CYO White only exposes white/no sauce in UI.
+              if (product.id === 'cyo-white') {
+                if (label.includes('no sauce')) return 'sauce-none';
+                if (label.includes('white')) return 'sauce-pizza';
+                if (label.includes('red')) return 'sauce-pizza';
+              } else {
+                if (label.includes('white')) return 'sauce-white';
+                if (label.includes('red')) return 'sauce-pizza';
+              }
+              return null;
+            };
+
+            const mapSelectionId = (rawId: string, rawLabel: string): string | null => {
+              const id = String(rawId || '').toLowerCase();
+              if (id === 'sauce-pizza' || id === 'sauce-white' || id === 'sauce-none') {
+                if (product.id === 'cyo-white' && id === 'sauce-white') return 'sauce-pizza';
+                return id;
+              }
+              if (id.startsWith('generated-white-pizza')) return product.id === 'cyo-white' ? 'sauce-pizza' : 'sauce-white';
+              if (id.startsWith('generated-red-pizza')) return 'sauce-pizza';
+              if (id.startsWith('generated-no-sauce')) return 'sauce-none';
+              return mapLabelToSauceId(rawLabel);
+            };
+
+            const explicitId = explicit ? mapSelectionId(String(explicit.id || ''), String(explicit.label || '')) : null;
+            const explicitDist = explicit?.distribution === 'left' || explicit?.distribution === 'right' || explicit?.distribution === 'whole'
+              ? explicit.distribution
+              : null;
+
+            let restoredSauceId: string | null = explicitId;
+            let restoredDist: 'left' | 'right' | 'whole' = explicitDist || 'whole';
+
+            if (!restoredSauceId) {
+              // Fallback inference from half labels when only generated rows are available.
+              const hasLeftNo = sauceSelections.some((s: any) => /left half no sauce/i.test(String(s?.label || '')));
+              const hasRightNo = sauceSelections.some((s: any) => /right half no sauce/i.test(String(s?.label || '')));
+              const hasLeftWhite = sauceSelections.some((s: any) => /left half white/i.test(String(s?.label || '')));
+              const hasRightWhite = sauceSelections.some((s: any) => /right half white/i.test(String(s?.label || '')));
+              const hasLeftRed = sauceSelections.some((s: any) => /left half red/i.test(String(s?.label || '')));
+              const hasRightRed = sauceSelections.some((s: any) => /right half red/i.test(String(s?.label || '')));
+
+              if (product.id === 'cyo-white') {
+                if (hasLeftNo && hasRightWhite) {
+                  restoredSauceId = 'sauce-none';
+                  restoredDist = 'left';
+                } else if (hasRightNo && hasLeftWhite) {
+                  restoredSauceId = 'sauce-none';
+                  restoredDist = 'right';
+                } else if (hasLeftWhite && hasRightNo) {
+                  restoredSauceId = 'sauce-pizza';
+                  restoredDist = 'left';
+                } else if (hasRightWhite && hasLeftNo) {
+                  restoredSauceId = 'sauce-pizza';
+                  restoredDist = 'right';
+                }
+              } else {
+                if (hasLeftRed) {
+                  restoredSauceId = 'sauce-pizza';
+                  restoredDist = 'left';
+                } else if (hasRightRed) {
+                  restoredSauceId = 'sauce-pizza';
+                  restoredDist = 'right';
+                } else if (hasLeftWhite) {
+                  restoredSauceId = 'sauce-white';
+                  restoredDist = 'left';
+                } else if (hasRightWhite) {
+                  restoredSauceId = 'sauce-white';
+                  restoredDist = 'right';
+                }
+              }
+            }
+
+            if (restoredSauceId) {
+              setSelectedSauces([restoredSauceId]);
+              setSauceDistribution({ [restoredSauceId]: restoredDist });
+              if (debugSauceEnabled) {
+                console.log('[SAUCE DEBUG][EDIT RESTORE] restored sauce', {
+                  productId: product.id,
+                  restoredSauceId,
+                  restoredDist,
+                  sauceSelections: sauceSelections.map((s: any) => ({
+                    id: s?.id,
+                    label: s?.label,
+                    distribution: s?.distribution,
+                    groupId: s?.groupId,
+                    groupTitle: s?.groupTitle,
+                    type: s?.type,
+                  })),
+                });
+              }
+            }
+          }
+        }
 
         const parseExtraRecord = (prefix: string) => {
           const record: Record<string, string> = {};
@@ -24616,17 +24736,17 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   }
                                   
                                   if (baseName === 'Red Sauce') {
-                                    if (distribution === 'left') return 'Left Half White Pizza';
-                                    if (distribution === 'right') return 'Right Half White Pizza';
+                                    if (distribution === 'left') return 'Left Half Red Sauce';
+                                    if (distribution === 'right') return 'Right Half Red Sauce';
                                   }
 
                                   if (baseName === WHITE_SAUCE_PIZZA_LABEL && isWhitePizza) {
-                                    if (distribution === 'left') return 'Left Half Red Pizza';
-                                    if (distribution === 'right') return 'Right Half Red Pizza';
+                                    if (distribution === 'left') return `Left Half ${WHITE_SAUCE_PIZZA_LABEL}`;
+                                    if (distribution === 'right') return `Right Half ${WHITE_SAUCE_PIZZA_LABEL}`;
                                   }
 
-                                  if (distribution === 'left') return `Left Half ${baseName}, Right Half No ${baseName}`;
-                                  if (distribution === 'right') return `Right Half ${baseName}, Left Half No ${baseName}`;
+                                  if (distribution === 'left') return `Left Half ${baseName}`;
+                                  if (distribution === 'right') return `Right Half ${baseName}`;
                                   return baseName;
                                 })()}
                               </p>
@@ -32217,10 +32337,27 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       // Preserve distribution so CartSidebar handles the display (e.g. "Red Sauce (Left)")
                       sel.distribution = dist;
                       
-                      const baseName = sel.id === 'sauce-pizza' ? 'Red Sauce' : sel.label;
+                      const isCyoWhite = product.id === 'cyo-white';
+                      const baseName = isCyoWhite
+                        ? (sel.id === 'sauce-pizza'
+                            ? WHITE_SAUCE_PIZZA_LABEL
+                            : (sel.id === 'sauce-none' ? 'No Sauce' : sel.label))
+                        : (sel.id === 'sauce-pizza' ? 'Red Sauce' : sel.label);
                       
                       // For split sauces, explicitly add the complementary half.
-                      if (baseName === 'Red Sauce') {
+                      if (isCyoWhite && (baseName === WHITE_SAUCE_PIZZA_LABEL || baseName === 'White Sauce' || baseName === 'White Pizza')) {
+                        const otherSide = dist === 'left' ? 'right' : 'left';
+                        // For White Pizza, split White Sauce implies complementary No Sauce on the other half.
+                        extraSauceSelections.push({
+                          id: `generated-no-sauce-${Date.now()}`,
+                          label: 'No Sauce',
+                          type: sel.type,
+                          distribution: otherSide,
+                          groupId: sel.groupId,
+                          groupTitle: sel.groupTitle,
+                          productId: sel.productId
+                        });
+                      } else if (baseName === 'Red Sauce') {
                         const otherSide = dist === 'left' ? 'right' : 'left';
                         
                         // Add the complementary White Pizza selection
@@ -32246,7 +32383,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                           groupTitle: sel.groupTitle,
                           productId: sel.productId
                         });
-                      } else if (product.id === 'cyo-white' && (baseName === 'No Sauce' || sel.id === 'sauce-none')) {
+                      } else if (isCyoWhite && (baseName === 'No Sauce' || sel.id === 'sauce-none')) {
                         const otherSide = dist === 'left' ? 'right' : 'left';
                         // For White Pizza, split No Sauce implies complementary White Sauce on the other half.
                         extraSauceSelections.push({
@@ -32267,6 +32404,27 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 
                 // Add generated selections
                 extraSauceSelections.forEach(s => selections.push(s));
+
+                if (debugSauceEnabled && product.category === 'pizzas') {
+                  const sauceRows = selections
+                    .filter((s: any) => {
+                      const gid = String(s?.groupId || '').toLowerCase();
+                      const gt = String(s?.groupTitle || '').toLowerCase();
+                      const typ = String(s?.type || '').toLowerCase();
+                      return gid === 'pizza_sauce' || typ === 'sauce' || gt.includes('sauce');
+                    })
+                    .map((s: any) => ({
+                      id: s?.id,
+                      label: s?.label,
+                      distribution: s?.distribution || 'whole',
+                    }));
+                  console.log('[SAUCE DEBUG][ADD TO CART][MOBILE]', {
+                    productId: product.id,
+                    selectedSauces,
+                    sauceDistribution,
+                    sauceRows,
+                  });
+                }
 
                 // Patch distribution for toppings
                 selections.forEach(sel => {
@@ -35818,10 +35976,27 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         // Preserve distribution
                         sel.distribution = dist;
 
-                        const baseName = sel.id === 'sauce-pizza' ? 'Red Sauce' : sel.label;
+                        const isCyoWhite = product.id === 'cyo-white';
+                        const baseName = isCyoWhite
+                          ? (sel.id === 'sauce-pizza'
+                              ? WHITE_SAUCE_PIZZA_LABEL
+                              : (sel.id === 'sauce-none' ? 'No Sauce' : sel.label))
+                          : (sel.id === 'sauce-pizza' ? 'Red Sauce' : sel.label);
                         
                         // For split sauces, generate complementary half.
-                        if (baseName === 'Red Sauce') {
+                        if (isCyoWhite && (baseName === WHITE_SAUCE_PIZZA_LABEL || baseName === 'White Sauce' || baseName === 'White Pizza')) {
+                          const otherSide = dist === 'left' ? 'right' : 'left';
+                          // For White Pizza, split White Sauce implies complementary No Sauce on the other half.
+                          extraSauceSelectionsDesktop.push({
+                            id: `generated-no-sauce-dt-${Date.now()}`,
+                            label: 'No Sauce',
+                            type: sel.type,
+                            distribution: otherSide,
+                            groupId: sel.groupId,
+                            groupTitle: sel.groupTitle,
+                            productId: sel.productId
+                          });
+                        } else if (baseName === 'Red Sauce') {
                           const otherSide = dist === 'left' ? 'right' : 'left';
                           
                           // Add the complementary White Pizza selection
@@ -35847,7 +36022,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             groupTitle: sel.groupTitle,
                             productId: sel.productId
                           });
-                        } else if (product.id === 'cyo-white' && (baseName === 'No Sauce' || sel.id === 'sauce-none')) {
+                        } else if (isCyoWhite && (baseName === 'No Sauce' || sel.id === 'sauce-none')) {
                           const otherSide = dist === 'left' ? 'right' : 'left';
                           // For White Pizza, split No Sauce implies complementary White Sauce on the other half.
                           extraSauceSelectionsDesktop.push({
@@ -35868,6 +36043,27 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   
                   // Add generated selections
                   extraSauceSelectionsDesktop.forEach(s => selections.push(s));
+
+                  if (debugSauceEnabled && product.category === 'pizzas') {
+                    const sauceRows = selections
+                      .filter((s: any) => {
+                        const gid = String(s?.groupId || '').toLowerCase();
+                        const gt = String(s?.groupTitle || '').toLowerCase();
+                        const typ = String(s?.type || '').toLowerCase();
+                        return gid === 'pizza_sauce' || typ === 'sauce' || gt.includes('sauce');
+                      })
+                      .map((s: any) => ({
+                        id: s?.id,
+                        label: s?.label,
+                        distribution: s?.distribution || 'whole',
+                      }));
+                    console.log('[SAUCE DEBUG][ADD TO CART][DESKTOP]', {
+                      productId: product.id,
+                      selectedSauces,
+                      sauceDistribution,
+                      sauceRows,
+                    });
+                  }
 
                   // Patch distribution for toppings (DESKTOP)
                   selections.forEach(sel => {

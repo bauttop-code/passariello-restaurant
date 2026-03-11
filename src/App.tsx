@@ -3670,6 +3670,7 @@ console.error = (...args: any[]) => {
 // Patch console.log to suppress spam unless debugCart=1
 const originalConsoleLog = console.log;
 const debugCartEnabled = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debugCart') === '1';
+const debugSauceEnabled = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debugSauce') === '1';
 
 console.log = (...args: any[]) => {
   const msg = args.length > 0 && typeof args[0] === 'string' ? args[0] : '';
@@ -4410,6 +4411,29 @@ export default function App() {
         }
         return !isAddon;
       });
+
+      if (debugSauceEnabled && String(product.category || '').toLowerCase() === 'pizzas') {
+        const sauceRows = parentSelections
+          .filter((s) => {
+            const gid = String(s?.groupId || '').toLowerCase();
+            const gt = String(s?.groupTitle || '').toLowerCase();
+            const typ = String(s?.type || '').toLowerCase();
+            return gid === 'pizza_sauce' || typ === 'sauce' || gt.includes('sauce');
+          })
+          .map((s) => ({
+            id: s?.id,
+            label: s?.label,
+            distribution: s?.distribution || 'whole',
+            groupId: s?.groupId,
+            groupTitle: s?.groupTitle,
+            type: s?.type,
+          }));
+        console.log('[SAUCE DEBUG][APP handleAddToCart]', {
+          productId: product.id,
+          parentSelectionsCount: parentSelections.length,
+          sauceRows,
+        });
+      }
 
       const parentCustomizations = (customizations || []).filter(c => {
         const category = String(c.category || '').toLowerCase();

@@ -3948,6 +3948,7 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
   };
 
   const debugCart = typeof window !== 'undefined' && window.location.search.includes('debugCart=1');
+  const debugSauce = typeof window !== 'undefined' && window.location.search.includes('debugSauce=1');
   const itemId = String(item.productId || item.id || '').toLowerCase();
   const suppressSauceForItem = false;
   const WHITE_SAUCE_PIZZA_LABEL = 'White Sauce';
@@ -3990,6 +3991,14 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
     if (/^no sauce$/i.test(text)) return 'No Sauce';
     if (/^white sauce(\s*\(brushed with garlic and olive oil\))?$/i.test(text)) return WHITE_SAUCE_PIZZA_LABEL;
     if (/^red sauce$/i.test(text)) return 'Red Sauce';
+
+    // CYO White Pizza internally can still carry legacy red labels from base ids.
+    // Normalize them to the user-facing White/No Sauce model.
+    if (itemId === 'cyo-white') {
+      if (/^left half red pizza$/i.test(text) || /^left half red sauce$/i.test(text)) return `Left Half ${WHITE_SAUCE_PIZZA_LABEL}`;
+      if (/^right half red pizza$/i.test(text) || /^right half red sauce$/i.test(text)) return `Right Half ${WHITE_SAUCE_PIZZA_LABEL}`;
+      if (/^red pizza$/i.test(text) || /^red sauce$/i.test(text)) return WHITE_SAUCE_PIZZA_LABEL;
+    }
     return text;
   };
   const isCyoSauceLike = (input: string): boolean => {
@@ -4178,6 +4187,30 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
   // CYO pizzas: derive sauce lines from explicit sauce selections first.
   // This avoids inconsistent reporting when the same sauce appears in special instructions/customizations.
   if (profile === 'CYO_PIZZA') {
+    const getCyoSauceNameFromSelection = (sel: CartSelection): string | null => {
+      const sid = String(sel?.id || '').toLowerCase();
+      const label = String(sel?.label || '').toLowerCase();
+      const isCyoWhite = itemId === 'cyo-white';
+
+      if (isCyoWhite) {
+        if (sid === 'sauce-none' || sid.startsWith('generated-no-sauce') || label.includes('no sauce')) return 'No Sauce';
+        if (sid === 'sauce-pizza' || sid === 'sauce-white' || sid.startsWith('generated-white-pizza') || sid.startsWith('generated-red-pizza') || label.includes('white') || label.includes('red')) {
+          return WHITE_SAUCE_PIZZA_LABEL;
+        }
+        return null;
+      }
+
+      if (sid === 'sauce-pizza' || sid.startsWith('generated-red-pizza') || label.includes('red sauce') || label.includes('red pizza')) return 'Red Sauce';
+      if (sid === 'sauce-white' || sid.startsWith('generated-white-pizza') || label.includes('white sauce') || label.includes('white pizza')) return WHITE_SAUCE_PIZZA_LABEL;
+      return null;
+    };
+
+    const asHalfLine = (name: string, distribution?: 'left' | 'right' | 'whole'): string => {
+      if (distribution === 'left') return `Left Half ${name}`;
+      if (distribution === 'right') return `Right Half ${name}`;
+      return name;
+    };
+
     const explicitSauceLines = rawLines
       .filter((line) => {
         const sel = line.originalSel;
@@ -4187,13 +4220,60 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
         const stype = String(sel.type || '').toLowerCase();
         return gid === 'pizza_sauce' || stype === 'sauce' || gtitle.includes('sauce');
       })
-      .map((line) => normalizeCyoSauceLabel(line.text))
+      .map((line) => {
+        const sel = line.originalSel;
+        if (!sel) return '';
+        const mappedName = getCyoSauceNameFromSelection(sel);
+        if (!mappedName) return normalizeCyoSauceLabel(line.text);
+
+        const textLower = String(line.text || '').toLowerCase();
+        const inferredDistFromText: 'left' | 'right' | 'whole' =
+          textLower.includes('left half')
+            ? 'left'
+            : textLower.includes('right half')
+              ? 'right'
+              : 'whole';
+
+        const dist =
+          sel.distribution === 'left' || sel.distribution === 'right' || sel.distribution === 'whole'
+            ? sel.distribution
+            : inferredDistFromText;
+        return asHalfLine(mappedName, dist);
+      })
       .filter(Boolean);
 
     if (explicitSauceLines.length > 0) {
       buckets['SAUCE'] = dedupeNoQty(explicitSauceLines);
     } else {
       buckets['SAUCE'] = dedupeNoQty(buckets['SAUCE'].map((line) => normalizeCyoSauceLabel(line)).filter(Boolean));
+    }
+
+    if (debugSauce) {
+      const rawSauceLines = rawLines
+        .filter((line) => {
+          const sel = line.originalSel;
+          if (!sel) return false;
+          const gid = String(sel.groupId || '').toLowerCase();
+          const gtitle = String(sel.groupTitle || '').toLowerCase();
+          const stype = String(sel.type || '').toLowerCase();
+          return gid === 'pizza_sauce' || stype === 'sauce' || gtitle.includes('sauce');
+        })
+        .map((line) => ({
+          text: line.text,
+          id: line.originalSel?.id,
+          label: line.originalSel?.label,
+          distribution: line.originalSel?.distribution || 'whole',
+          groupId: line.originalSel?.groupId,
+          groupTitle: line.originalSel?.groupTitle,
+          type: line.originalSel?.type,
+        }));
+      console.log('[SAUCE DEBUG][CART FORMATTER]', {
+        itemId,
+        itemName: item.name,
+        rawSauceLines,
+        explicitSauceLines,
+        finalSauceBucket: buckets['SAUCE'],
+      });
     }
 
     // Prevent sauce labels from leaking into non-sauce sections for CYO.
@@ -4945,6 +5025,7 @@ const consolidateSemanticLines = (lines: string[]): string[] => {
 // --- LINES BUILDER ---
 
 export const buildCartDisplayLines = (item: CartItem): string[] => {
+  const WHITE_SAUCE_PIZZA_LABEL = 'White Sauce';
   const isWings = isWingsItem(item);
   const isAppetizer = isAppetizerWithArtifacts(item);
   const itemQty = item.quantity ?? 1;
