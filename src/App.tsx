@@ -613,7 +613,7 @@ const traditionalDinnersProducts: Product[] = [
     name: 'Eggplant Rollatini',
     description: '(3) Fresh baked eggplant cutlets, rolled and stuffed with ricotta, topped with pomodoro sauce and mozzarella. Served with a side of fresh baked homemade bread.',
     price: '$18.99',
-    image: 'https://drive.google.com/thumbnail?id=18B38B5PIemFiZxuErRJRu3hrHaBSs1Wc&sz=w1000',
+    image: 'https://drive.google.com/thumbnail?id=1aveg3uAd4fhVE4-AXzBQArAvGkuZzHx4&sz=w1000',
     category: 'traditional-dinners',
   },
   {

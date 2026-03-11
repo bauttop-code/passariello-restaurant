@@ -4867,7 +4867,26 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
   const isCyoMinucci = product.id === 'cyo-minucci';
   const hideNoSauceInSpecialInstructions =
     ['cyo-gf12', 'cyo-cauliflower', 'cyo-minucci'].includes(product.id) ||
-    product.category === 'minucci-pizzas';
+    product.category === 'minucci-pizzas' ||
+    product.id === 'sp-1' ||
+    ['sp-4', 'sp-5', 'sp-6', 'sp-9', 'sp-17'].includes(product.id);
+  const hideNoCheeseInSpecialInstructions = product.category === 'specialty-pizza';
+  const effectiveCustomizationOptions = useMemo(() => {
+    const base = product.customizationOptions || [];
+    if (product.id !== 'minucci-2') return base;
+    return base.map((customOption) => {
+      if (customOption.title !== 'No Toppings') return customOption;
+      const hasNoCheese = customOption.options?.some((opt: any) => opt.id === 'minucci-2-no-cheese');
+      if (hasNoCheese) return customOption;
+      return {
+        ...customOption,
+        options: [
+          ...(customOption.options || []),
+          { id: 'minucci-2-no-cheese', name: 'No Cheese', price: 0, image: PLACEHOLDER_TOPPING_IMAGE },
+        ],
+      };
+    });
+  }, [product.customizationOptions, product.id]);
   const isMinucciOneToppingMode = isCyoMinucci && selectedSize === 'medium';
   const isMinucciTwoToFourMode = isCyoMinucci && selectedSize === 'large';
   const maxMinucciToppings = isMinucciOneToppingMode ? 1 : (isMinucciTwoToFourMode ? 4 : Number.POSITIVE_INFINITY);
@@ -4978,6 +4997,16 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
        }
     }
   }, [selectedExtraSauce, dippingError]);
+
+  useEffect(() => {
+    if (!hideNoCheeseInSpecialInstructions) return;
+    setSelectedSpecialInstructions((prev) => (prev.includes('si8') ? prev.filter((id) => id !== 'si8') : prev));
+  }, [hideNoCheeseInSpecialInstructions]);
+
+  useEffect(() => {
+    if (product.category !== 'minucci-pizzas') return;
+    setSelectedSpecialInstructions((prev) => (prev.includes('si8') ? prev.filter((id) => id !== 'si8') : prev));
+  }, [product.category]);
   
   // Catering Salads validation states
   const [cateringSaladBaseError, setCateringSaladBaseError] = useState(false);
@@ -24668,6 +24697,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {specialInstructionsOptions
                           .filter((item) => !hideNoSauceInSpecialInstructions || item.id !== 'si3')
+                          .filter((item) => !((product.id === 'minucci-2' || product.category === 'minucci-pizzas') && item.id === 'si8'))
                           .map((item) => {
                             const isSelected = selectedSpecialInstructions.includes(item.id);
                             return (
@@ -24691,7 +24721,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                     </div>
                                     <p className="text-gray-900">{item.name}</p>
                                   </div>
-                                  {product.category !== 'minucci-pizzas' && !product.id.startsWith('cyo-') && product.category !== 'specialty-pizza' && (
+                                  {product.category !== 'minucci-pizzas' && !product.id.startsWith('cyo-') && product.category !== 'specialty-pizza' && !product.id.startsWith('slice-') && (
                                     <span className="text-sm text-gray-900">{item.price}</span>
                                   )}
                                 </div>
@@ -25186,6 +25216,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         if (hideNoSauceInSpecialInstructions) {
                           allInstructions = allInstructions.filter((item) => item.id !== 'si3' && item.name !== 'No Sauce');
                         }
+                        if (hideNoCheeseInSpecialInstructions) {
+                          allInstructions = allInstructions.filter((item) => item.id !== 'si8' && item.name !== 'No Cheese');
+                        }
 
                         // Filter for By the Slice items: Only Double Cut, Well Done, lightly cooked
                         if (product.id.startsWith('slice-')) {
@@ -25222,7 +25255,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   </div>
                                   <p className="text-gray-900">{item.name}</p>
                                 </div>
-                                {product.category !== 'minucci-pizzas' && !product.id.startsWith('cyo-') && product.category !== 'specialty-pizza' && (
+                                {product.category !== 'minucci-pizzas' && !product.id.startsWith('cyo-') && product.category !== 'specialty-pizza' && !product.id.startsWith('slice-') && (
                                   <span className="text-sm text-gray-900">{item.price}</span>
                                 )}
                               </div>
@@ -25440,7 +25473,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                             </div>
                             <span className="text-gray-900">{option.name}</span>
                           </div>
-                          <span className="text-gray-600">+$0.00</span>
+                          {option.price > 0 && (
+                            <span className="text-gray-600">+${option.price.toFixed(2)}</span>
+                          )}
                         </div>
                       );
                     })}
@@ -26273,9 +26308,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
           )}
 
           {/* No Toppings Section for Minucci Pizzas */}
-          {(product.category === 'minucci-pizzas' || product.category === 'specialty-pizza' || (product.category === 'pizzas' && product.id === 'cyo-sicilian-pesto')) && product.customizationOptions && (
+          {(product.category === 'minucci-pizzas' || product.category === 'specialty-pizza' || (product.category === 'pizzas' && product.id === 'cyo-sicilian-pesto')) && effectiveCustomizationOptions && (
             <>
-              {product.customizationOptions.map((customOption) => {
+              {effectiveCustomizationOptions.map((customOption) => {
                 if (customOption.title === 'No Toppings') {
                   return (
                     <Collapsible key={customOption.id} open={isNoToppingsOpen} onOpenChange={setIsNoToppingsOpen} className="mt-6">
@@ -28857,8 +28892,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 });
                 
                 // Register customizationOptions from the current product (e.g., Minucci No Toppings)
-                if (product.customizationOptions) {
-                  product.customizationOptions.forEach((customOption) => {
+                if (effectiveCustomizationOptions) {
+                  effectiveCustomizationOptions.forEach((customOption) => {
                     if (customOption.options && customOption.options.length > 0) {
                       registerOptionsToLookup(selectionLookup, customOption.options, {
                         groupId: customOption.id,
@@ -33896,8 +33931,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   });
                   
                   // Register customizationOptions from the current product (e.g., Minucci No Toppings) (DESKTOP)
-                  if (product.customizationOptions) {
-                    product.customizationOptions.forEach((customOption) => {
+                  if (effectiveCustomizationOptions) {
+                    effectiveCustomizationOptions.forEach((customOption) => {
                       if (customOption.options && customOption.options.length > 0) {
                         registerOptionsToLookup(selectionLookupDesktop, customOption.options, {
                           groupId: customOption.id,
