@@ -8316,9 +8316,16 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       return 0;
     }
 
-    // Gluten Free 12" and Cauliflower Gluten Free 10" share fixed topping pricing
-    // Cup n Char Pepperoni is the only premium topping in these SKUs
-    if (product.id === 'cyo-gf12' || product.id === 'cyo-cauliflower') {
+    // Gluten Free 12" custom Additional Toppings pricing
+    if (product.id === 'cyo-gf12') {
+      if (topping.id === 'a1') return 2.49; // Cup n Char Pepperoni
+      if (topping.id === 'a28' || topping.id === 'a29') return 5.99; // Beef Steak / Chicken Steak
+      if (topping.id === 'a27') return 3.00; // Grilled Chicken
+      return 1.99;
+    }
+
+    // Cauliflower Gluten Free 10" keeps the standard GF topping pricing
+    if (product.id === 'cyo-cauliflower') {
       return topping.id === 'a1' ? 2.49 : 1.99;
     }
 
