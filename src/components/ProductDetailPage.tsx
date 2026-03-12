@@ -24766,8 +24766,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   }
 
                                   if (baseName === WHITE_SAUCE_PIZZA_LABEL && isWhitePizza) {
-                                    if (distribution === 'left') return 'Left Half No Sauce';
-                                    if (distribution === 'right') return 'Right Half No Sauce';
+                                    if (distribution === 'left') return 'Left Half Red Sauce';
+                                    if (distribution === 'right') return 'Right Half Red Sauce';
                                   }
 
                                   if (distribution === 'left') return `Left Half ${baseName}`;
@@ -32390,10 +32390,10 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       // For split sauces, explicitly add the complementary half.
                       if (isCyoWhite && (baseName === WHITE_SAUCE_PIZZA_LABEL || baseName === 'White Sauce' || baseName === 'White Pizza')) {
                         const otherSide = dist === 'left' ? 'right' : 'left';
-                        // For White Pizza, split White Sauce implies complementary No Sauce on the other half.
+                        // For White Pizza, split White Sauce implies complementary Red Sauce on the other half.
                         extraSauceSelections.push({
-                          id: `generated-no-sauce-${Date.now()}`,
-                          label: 'No Sauce',
+                          id: `generated-red-pizza-${Date.now()}`,
+                          label: 'Red Pizza',
                           type: sel.type,
                           distribution: otherSide,
                           groupId: sel.groupId,
@@ -36047,10 +36047,10 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                         // For split sauces, generate complementary half.
                         if (isCyoWhite && (baseName === WHITE_SAUCE_PIZZA_LABEL || baseName === 'White Sauce' || baseName === 'White Pizza')) {
                           const otherSide = dist === 'left' ? 'right' : 'left';
-                          // For White Pizza, split White Sauce implies complementary No Sauce on the other half.
+                          // For White Pizza, split White Sauce implies complementary Red Sauce on the other half.
                           extraSauceSelectionsDesktop.push({
-                            id: `generated-no-sauce-dt-${Date.now()}`,
-                            label: 'No Sauce',
+                            id: `generated-red-pizza-dt-${Date.now()}`,
+                            label: 'Red Pizza',
                             type: sel.type,
                             distribution: otherSide,
                             groupId: sel.groupId,

@@ -4230,13 +4230,13 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
         // New reporting style for complementary halves in CYO.
         if (name === 'Red Sauce') return `Left Half ${WHITE_SAUCE_PIZZA_LABEL}`;
         if (name === 'No Sauce' || name === 'No Red Sauce') return isCyoWhite ? 'Left Half No White Sauce' : `${isNoRedSauceCyo ? 'Left' : 'Right'} Half ${isNoRedSauceCyo ? 'No Red Sauce' : 'No Sauce'}`;
-        if (isCyoWhite && name === WHITE_SAUCE_PIZZA_LABEL) return 'Left Half No Sauce';
+        if (isCyoWhite && name === WHITE_SAUCE_PIZZA_LABEL) return 'Left Half Red Sauce';
         return `Left Half ${name}`;
       }
       if (distribution === 'right') {
         if (name === 'Red Sauce') return `Right Half ${WHITE_SAUCE_PIZZA_LABEL}`;
         if (name === 'No Sauce' || name === 'No Red Sauce') return isCyoWhite ? 'Right Half No White Sauce' : `${isNoRedSauceCyo ? 'Right' : 'Left'} Half ${isNoRedSauceCyo ? 'No Red Sauce' : 'No Sauce'}`;
-        if (isCyoWhite && name === WHITE_SAUCE_PIZZA_LABEL) return 'Right Half No Sauce';
+        if (isCyoWhite && name === WHITE_SAUCE_PIZZA_LABEL) return 'Right Half Red Sauce';
         return `Right Half ${name}`;
       }
       return name;
@@ -5293,8 +5293,8 @@ export const buildCartDisplayLines = (item: CartItem): string[] => {
             const noSide = (isCyoWhite || isNoRedSauceCyo) ? selectedSide : oppositeSide;
             text = `${noSide} Half ${noLabel}`;
           } else if (isCyoWhite && isWhiteSauceLike) {
-            // White pizza convention: selecting white half implies opposite half has no sauce.
-            text = `${selectedSide} Half No Sauce`;
+            // White pizza convention: selecting white half implies same-side red label.
+            text = `${selectedSide} Half Red Sauce`;
           } else if (isWhiteSauceLike) {
             text = `${selectedSide} Half ${WHITE_SAUCE_PIZZA_LABEL}`;
           } else {
