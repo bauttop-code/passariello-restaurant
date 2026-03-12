@@ -4867,7 +4867,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
   );
   const isCyoMinucci = product.id === 'cyo-minucci';
   const hideNoSauceInSpecialInstructions =
-    ['cyo-gf12', 'cyo-cauliflower', 'cyo-minucci'].includes(product.id) ||
+    product.id.startsWith('cyo-') ||
     product.category === 'minucci-pizzas' ||
     product.id === 'sp-1' ||
     ['sp-4', 'sp-5', 'sp-6', 'sp-9', 'sp-17'].includes(product.id);
