@@ -6208,7 +6208,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
   const isCyoSauceProduct = product.id.startsWith('cyo-');
   const noWhiteSauceCyoIds = new Set(['cyo-gf12', 'cyo-cauliflower', 'cyo-minucci']);
   const disallowWhiteSauceForCurrentProduct = noWhiteSauceCyoIds.has(product.id);
-  const WHITE_SAUCE_PIZZA_LABEL = 'White Sauce (Brushed with garlic and olive oil)';
+  const WHITE_SAUCE_PIZZA_LABEL = 'White Sauce';
 
   const sauceOptions = useMemo(() => {
     if (product.id === 'cyo-white') {
@@ -24761,8 +24761,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   }
                                   
                                   if (baseName === 'Red Sauce') {
-                                    if (distribution === 'left') return 'Left Half White Sauce (Brushed with garlic and olive oil)';
-                                    if (distribution === 'right') return 'Right Half White Sauce (Brushed with garlic and olive oil)';
+                                    if (distribution === 'left') return 'Left Half White Sauce';
+                                    if (distribution === 'right') return 'Right Half White Sauce';
                                   }
 
                                   if (baseName === WHITE_SAUCE_PIZZA_LABEL && isWhitePizza) {

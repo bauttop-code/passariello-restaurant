@@ -3952,7 +3952,7 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
   const itemId = String(item.productId || item.id || '').toLowerCase();
   const isNoRedSauceCyo = ['cyo-napoletana', 'cyo-sicilian', 'cyo-pan'].includes(itemId);
   const suppressSauceForItem = false;
-  const WHITE_SAUCE_PIZZA_LABEL = 'White Sauce (Brushed with garlic and olive oil)';
+  const WHITE_SAUCE_PIZZA_LABEL = 'White Sauce';
   const allowSpecialtySauceIds = new Set(['sp-10', 'sp-12', 'sp-15']);
   const isSpecialtyPizza = String(item.category || '').toLowerCase() === 'specialty-pizza';
   const normalizeLabel = (input: string): string => {
@@ -5081,7 +5081,7 @@ const consolidateSemanticLines = (lines: string[]): string[] => {
 // --- LINES BUILDER ---
 
 export const buildCartDisplayLines = (item: CartItem): string[] => {
-  const WHITE_SAUCE_PIZZA_LABEL = 'White Sauce (Brushed with garlic and olive oil)';
+  const WHITE_SAUCE_PIZZA_LABEL = 'White Sauce';
   const isWings = isWingsItem(item);
   const isAppetizer = isAppetizerWithArtifacts(item);
   const itemQty = item.quantity ?? 1;
