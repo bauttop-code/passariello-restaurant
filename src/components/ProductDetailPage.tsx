@@ -5451,6 +5451,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 if (label.includes('white')) return 'sauce-pizza';
                 if (label.includes('red')) return 'sauce-pizza';
               } else {
+                if (label.includes('no sauce')) return 'sauce-none';
                 if (label.includes('white')) return 'sauce-white';
                 if (label.includes('red')) return 'sauce-pizza';
               }
@@ -6204,24 +6205,34 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       ['cyo-gf12', 'cyo-cauliflower', 'cyo-minucci'].includes(product.id)) ||
     product.category === 'minucci-pizzas';
   const isCyoWhiteSaucePizza = product.id === 'cyo-white';
+  const isCyoSauceProduct = product.id.startsWith('cyo-');
   const WHITE_SAUCE_PIZZA_LABEL = 'White Sauce (Brushed with garlic and olive oil)';
 
   const sauceOptions = useMemo(() => {
     if (product.id === 'cyo-white') {
       return [
-        { id: 'sauce-pizza', name: 'Red Sauce', price: 0, image: 'https://images.unsplash.com/photo-1610913729746-9d5d752daf59?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaXp6YSUyMHNhdWNlfGVufDF8fHx8MTc2OTgwNzM2OHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral' }
+        { id: 'sauce-pizza', name: WHITE_SAUCE_PIZZA_LABEL, price: 0, image: 'https://images.unsplash.com/photo-1593560708920-63984d8d606e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200' },
+        { id: 'sauce-none', name: 'No Sauce', price: 0, image: null }
       ];
     }
     if (isSpecialtySaucePizza || isPanOrSicilianSaucePizza || isSimpleRedWhiteSaucePizza) {
-      return [
+      const options = [
         { id: 'sauce-pizza', name: 'Red Sauce', price: 0, image: 'https://images.unsplash.com/photo-1610913729746-9d5d752daf59?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaXp6YSUyMHNhdWNlfGVufDF8fHx8MTc2OTgwNzM2OHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral' },
         { id: 'sauce-white', name: WHITE_SAUCE_PIZZA_LABEL, price: 0, image: 'https://images.unsplash.com/photo-1593560708920-63984d8d606e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200' }
       ];
+      if (isCyoSauceProduct) {
+        options.push({ id: 'sauce-none', name: 'No Sauce', price: 0, image: null });
+      }
+      return options;
     }
-    return [
+    const options = [
       { id: 'sauce-pizza', name: 'Red Sauce', price: 0, image: 'https://images.unsplash.com/photo-1610913729746-9d5d752daf59?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaXp6YSUyMHNhdWNlfGVufDF8fHx8MTc2OTgwNzM2OHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral' }
     ];
-  }, [isSpecialtySaucePizza, isPanOrSicilianSaucePizza, isSimpleRedWhiteSaucePizza]);
+    if (isCyoSauceProduct) {
+      options.push({ id: 'sauce-none', name: 'No Sauce', price: 0, image: null });
+    }
+    return options;
+  }, [isSpecialtySaucePizza, isPanOrSicilianSaucePizza, isSimpleRedWhiteSaucePizza, isCyoSauceProduct]);
 
   const handleSauceToggle = (sauceId: string) => {
     setSauceError(false);
@@ -6241,8 +6252,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
         return [sauceId];
       }
 
-      // Pan/Sicilian: optional but mutually exclusive (can't select Red + White at once)
-      if (isPanOrSicilianSaucePizza || isSimpleRedWhiteSaucePizza || isCyoWhiteSaucePizza) {
+      // CYO/Pan/Sicilian/simple pizzas: optional but mutually exclusive
+      if (isCyoSauceProduct || isPanOrSicilianSaucePizza || isSimpleRedWhiteSaucePizza || isCyoWhiteSaucePizza) {
         const isSelected = prev.includes(sauceId);
         if (isSelected) {
           setSauceDistribution(prevDist => {
@@ -6297,8 +6308,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
 
   const handleSauceDistributionChange = (sauceId: string, type: 'left' | 'right' | 'whole') => {
       setSauceDistribution(prev => ({ ...prev, [sauceId]: type }));
-      if (!selectedSauces.includes(sauceId)) {
-          setSelectedSauces(prev => [...prev, sauceId]);
+      if (isCyoSauceProduct || isPanOrSicilianSaucePizza || isSimpleRedWhiteSaucePizza || isCyoWhiteSaucePizza) {
+        // Keep sauce mutually exclusive when changing half/whole on CYO/simple sauce flows.
+        setSelectedSauces([sauceId]);
+      } else if (!selectedSauces.includes(sauceId)) {
+        setSelectedSauces(prev => [...prev, sauceId]);
       }
   };
   
@@ -29717,23 +29731,41 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                 
                 // Add special instructions
                 if (selectedSpecialInstructions.length > 0) {
-                  const names = selectedSpecialInstructions.map(id => getItemName(id));
-                  // LEGACY
-                  customizations.push({
-                    category: 'Special Instructions',
-                    items: names
+                  const optionNameById = new Map<string, string>();
+                  (specialInstructionsOptions || []).forEach((opt) => {
+                    if (opt?.id && opt?.name) optionNameById.set(String(opt.id), String(opt.name));
                   });
-                  
+                  (product.customizationOptions || []).forEach((group: any) => {
+                    (group?.options || []).forEach((opt: any) => {
+                      if (opt?.id && opt?.name) optionNameById.set(String(opt.id), String(opt.name));
+                    });
+                  });
+
+                  const names = selectedSpecialInstructions
+                    .map((id) => optionNameById.get(String(id)) || getItemName(id))
+                    .filter((name) => String(name || '').trim().length > 0);
+
+                  // LEGACY
+                  if (names.length > 0) {
+                    customizations.push({
+                      category: 'Special Instructions',
+                      items: names
+                    });
+                  }
+
                   // NEW STRUCTURED
-                  selectedSpecialInstructions.forEach(id => {
-                    const name = getItemName(id);
-                    if (name) {
-                      selections.push({
-                        id,
-                        label: name,
-                        type: 'special_instruction'
-                      });
-                    }
+                  selectedSpecialInstructions.forEach((id) => {
+                    const name = optionNameById.get(String(id)) || getItemName(id);
+                    const trimmedName = String(name || '').trim();
+                    if (!trimmedName) return;
+                    const groupInfo = getToppingGroupInfo(id);
+                    selections.push({
+                      id,
+                      label: trimmedName,
+                      type: 'special_instruction',
+                      groupId: groupInfo?.groupId || 'special_instruction',
+                      groupTitle: groupInfo?.groupTitle || 'Special Instructions',
+                    });
                   });
                 }
 
@@ -34678,23 +34710,41 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   
                   // Add special instructions
                   if (selectedSpecialInstructions.length > 0) {
-                    const names = selectedSpecialInstructions.map(id => getItemName(id));
-                    // LEGACY
-                    customizations.push({
-                      category: 'Special Instructions',
-                      items: names
+                    const optionNameById = new Map<string, string>();
+                    (specialInstructionsOptions || []).forEach((opt) => {
+                      if (opt?.id && opt?.name) optionNameById.set(String(opt.id), String(opt.name));
                     });
-                    
+                    (product.customizationOptions || []).forEach((group: any) => {
+                      (group?.options || []).forEach((opt: any) => {
+                        if (opt?.id && opt?.name) optionNameById.set(String(opt.id), String(opt.name));
+                      });
+                    });
+
+                    const names = selectedSpecialInstructions
+                      .map((id) => optionNameById.get(String(id)) || getItemName(id))
+                      .filter((name) => String(name || '').trim().length > 0);
+
+                    // LEGACY
+                    if (names.length > 0) {
+                      customizations.push({
+                        category: 'Special Instructions',
+                        items: names
+                      });
+                    }
+
                     // NEW STRUCTURED
-                    selectedSpecialInstructions.forEach(id => {
-                      const name = getItemName(id);
-                      if (name) {
-                        selections.push({
-                          id,
-                          label: name,
-                          type: 'special_instruction'
-                        });
-                      }
+                    selectedSpecialInstructions.forEach((id) => {
+                      const name = optionNameById.get(String(id)) || getItemName(id);
+                      const trimmedName = String(name || '').trim();
+                      if (!trimmedName) return;
+                      const groupInfo = getToppingGroupInfo(id);
+                      selections.push({
+                        id,
+                        label: trimmedName,
+                        type: 'special_instruction',
+                        groupId: groupInfo?.groupId || 'special_instruction',
+                        groupTitle: groupInfo?.groupTitle || 'Special Instructions',
+                      });
                     });
                   }
 
