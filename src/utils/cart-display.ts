@@ -4201,10 +4201,10 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
   // CYO pizzas: derive sauce lines from explicit sauce selections first.
   // This avoids inconsistent reporting when the same sauce appears in special instructions/customizations.
   if (profile === 'CYO_PIZZA') {
+    const isCyoWhite = itemId === 'cyo-white';
     const getCyoSauceNameFromSelection = (sel: CartSelection): string | null => {
       const sid = String(sel?.id || '').toLowerCase();
       const label = String(sel?.label || '').toLowerCase();
-      const isCyoWhite = itemId === 'cyo-white';
       const isNoRedSauceCyo = ['cyo-napoletana', 'cyo-sicilian', 'cyo-pan'].includes(itemId);
 
       if (isCyoWhite) {
