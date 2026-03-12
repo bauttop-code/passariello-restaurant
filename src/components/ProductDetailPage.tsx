@@ -24743,14 +24743,22 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   if (!isSelected) return baseName;
 
                                   if (baseName === 'No Sauce') {
-                                    if (distribution === 'left') return 'Left Half No Sauce';
-                                    if (distribution === 'right') return 'Right Half No Sauce';
+                                    if (distribution === 'left') {
+                                      return isWhitePizza
+                                        ? `Left Half No Sauce Right Half ${WHITE_SAUCE_PIZZA_LABEL}`
+                                        : 'Left Half No Sauce Right Half Red Sauce';
+                                    }
+                                    if (distribution === 'right') {
+                                      return isWhitePizza
+                                        ? `Right Half No Sauce Left Half ${WHITE_SAUCE_PIZZA_LABEL}`
+                                        : 'Right Half No Sauce Left Half Red Sauce';
+                                    }
                                     return 'No Sauce';
                                   }
                                   
                                   if (baseName === 'Red Sauce') {
-                                    if (distribution === 'left') return 'Left Half Red Sauce';
-                                    if (distribution === 'right') return 'Right Half Red Sauce';
+                                    if (distribution === 'left') return 'Left Half Red Sauce Right Half White Sauce';
+                                    if (distribution === 'right') return 'Right Half Red Sauce Left Half White Sauce';
                                   }
 
                                   if (baseName === WHITE_SAUCE_PIZZA_LABEL && isWhitePizza) {
