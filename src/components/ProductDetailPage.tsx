@@ -6206,6 +6206,8 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     product.category === 'minucci-pizzas';
   const isCyoWhiteSaucePizza = product.id === 'cyo-white';
   const isCyoSauceProduct = product.id.startsWith('cyo-');
+  const noWhiteSauceCyoIds = new Set(['cyo-gf12', 'cyo-cauliflower', 'cyo-minucci']);
+  const disallowWhiteSauceForCurrentProduct = noWhiteSauceCyoIds.has(product.id);
   const WHITE_SAUCE_PIZZA_LABEL = 'White Sauce (Brushed with garlic and olive oil)';
 
   const sauceOptions = useMemo(() => {
@@ -6217,9 +6219,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
     }
     if (isSpecialtySaucePizza || isPanOrSicilianSaucePizza || isSimpleRedWhiteSaucePizza) {
       const options = [
-        { id: 'sauce-pizza', name: 'Red Sauce', price: 0, image: 'https://images.unsplash.com/photo-1610913729746-9d5d752daf59?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaXp6YSUyMHNhdWNlfGVufDF8fHx8MTc2OTgwNzM2OHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral' },
-        { id: 'sauce-white', name: WHITE_SAUCE_PIZZA_LABEL, price: 0, image: 'https://images.unsplash.com/photo-1593560708920-63984d8d606e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200' }
+        { id: 'sauce-pizza', name: 'Red Sauce', price: 0, image: 'https://images.unsplash.com/photo-1610913729746-9d5d752daf59?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaXp6YSUyMHNhdWNlfGVufDF8fHx8MTc2OTgwNzM2OHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral' }
       ];
+      if (!disallowWhiteSauceForCurrentProduct) {
+        options.push({ id: 'sauce-white', name: WHITE_SAUCE_PIZZA_LABEL, price: 0, image: 'https://images.unsplash.com/photo-1593560708920-63984d8d606e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200' });
+      }
       if (isCyoSauceProduct) {
         options.push({ id: 'sauce-none', name: 'No Sauce', price: 0, image: null });
       }
@@ -6232,7 +6236,7 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
       options.push({ id: 'sauce-none', name: 'No Sauce', price: 0, image: null });
     }
     return options;
-  }, [isSpecialtySaucePizza, isPanOrSicilianSaucePizza, isSimpleRedWhiteSaucePizza, isCyoSauceProduct]);
+  }, [isSpecialtySaucePizza, isPanOrSicilianSaucePizza, isSimpleRedWhiteSaucePizza, isCyoSauceProduct, disallowWhiteSauceForCurrentProduct]);
 
   const handleSauceToggle = (sauceId: string) => {
     setSauceError(false);
