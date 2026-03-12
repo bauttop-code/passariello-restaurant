@@ -3950,6 +3950,7 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
   const debugCart = typeof window !== 'undefined' && window.location.search.includes('debugCart=1');
   const debugSauce = typeof window !== 'undefined' && window.location.search.includes('debugSauce=1');
   const itemId = String(item.productId || item.id || '').toLowerCase();
+  const isNoRedSauceCyo = ['cyo-napoletana', 'cyo-sicilian', 'cyo-pan'].includes(itemId);
   const suppressSauceForItem = false;
   const WHITE_SAUCE_PIZZA_LABEL = 'White Sauce';
   const allowSpecialtySauceIds = new Set(['sp-10', 'sp-12', 'sp-15']);
@@ -3993,8 +3994,11 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
     if (/^right half white pizza$/i.test(text)) return `Right Half ${WHITE_SAUCE_PIZZA_LABEL}`;
     if (/^left half no sauce$/i.test(text)) return 'Left Half No Sauce';
     if (/^right half no sauce$/i.test(text)) return 'Right Half No Sauce';
+    if (/^left half no red sauce$/i.test(text)) return 'Left Half No Red Sauce';
+    if (/^right half no red sauce$/i.test(text)) return 'Right Half No Red Sauce';
     if (/^half white$/i.test(text)) return WHITE_SAUCE_PIZZA_LABEL;
     if (/^no sauce$/i.test(text)) return 'No Sauce';
+    if (/^no red sauce$/i.test(text)) return 'No Red Sauce';
     if (/^white sauce(\s*\(brushed with garlic and olive oil\))?$/i.test(text)) return WHITE_SAUCE_PIZZA_LABEL;
     if (/^red sauce$/i.test(text)) return 'Red Sauce';
 
@@ -4018,10 +4022,12 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
       t === 'white pizza' ||
       t === 'half white' ||
       t === 'no sauce' ||
+      t === 'no red sauce' ||
       t === 'no white sauce' ||
       t.includes('half red') ||
       t.includes('half white') ||
       t.includes('half no sauce') ||
+      t.includes('half no red sauce') ||
       t.includes('half no white sauce')
     );
   };
@@ -4199,6 +4205,7 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
       const sid = String(sel?.id || '').toLowerCase();
       const label = String(sel?.label || '').toLowerCase();
       const isCyoWhite = itemId === 'cyo-white';
+      const isNoRedSauceCyo = ['cyo-napoletana', 'cyo-sicilian', 'cyo-pan'].includes(itemId);
 
       if (isCyoWhite) {
         if (sid === 'sauce-none' || sid.startsWith('generated-no-sauce') || label.includes('no sauce')) return 'No Sauce';
@@ -4208,7 +4215,9 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
         return null;
       }
 
-      if (sid === 'sauce-none' || sid.startsWith('generated-no-sauce') || label.includes('no sauce')) return 'No Sauce';
+      if (sid === 'sauce-none' || sid.startsWith('generated-no-sauce') || label.includes('no sauce')) {
+        return isNoRedSauceCyo ? 'No Red Sauce' : 'No Sauce';
+      }
       if (sid === 'sauce-pizza' || sid.startsWith('generated-red-pizza') || label.includes('red sauce') || label.includes('red pizza')) return 'Red Sauce';
       if (sid === 'sauce-white' || sid.startsWith('generated-white-pizza') || label.includes('white sauce') || label.includes('white pizza')) return WHITE_SAUCE_PIZZA_LABEL;
       return null;
@@ -4216,17 +4225,18 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
 
     const asHalfLine = (name: string, distribution?: 'left' | 'right' | 'whole'): string => {
       const isCyoWhite = itemId === 'cyo-white';
+      const isNoRedSauceCyo = ['cyo-napoletana', 'cyo-sicilian', 'cyo-pan'].includes(itemId);
       if (distribution === 'left') {
         // New reporting style for complementary halves in CYO.
-        if (name === 'Red Sauce') return `Right Half ${WHITE_SAUCE_PIZZA_LABEL}`;
-        if (name === 'No Sauce') return isCyoWhite ? 'Right Half No White Sauce' : 'Right Half No Sauce';
-        if (isCyoWhite && name === WHITE_SAUCE_PIZZA_LABEL) return 'Right Half No Sauce';
+        if (name === 'Red Sauce') return `Left Half ${WHITE_SAUCE_PIZZA_LABEL}`;
+        if (name === 'No Sauce' || name === 'No Red Sauce') return isCyoWhite ? 'Left Half No White Sauce' : `${isNoRedSauceCyo ? 'Left' : 'Right'} Half ${isNoRedSauceCyo ? 'No Red Sauce' : 'No Sauce'}`;
+        if (isCyoWhite && name === WHITE_SAUCE_PIZZA_LABEL) return 'Left Half No Sauce';
         return `Left Half ${name}`;
       }
       if (distribution === 'right') {
-        if (name === 'Red Sauce') return `Left Half ${WHITE_SAUCE_PIZZA_LABEL}`;
-        if (name === 'No Sauce') return isCyoWhite ? 'Left Half No White Sauce' : 'Left Half No Sauce';
-        if (isCyoWhite && name === WHITE_SAUCE_PIZZA_LABEL) return 'Left Half No Sauce';
+        if (name === 'Red Sauce') return `Right Half ${WHITE_SAUCE_PIZZA_LABEL}`;
+        if (name === 'No Sauce' || name === 'No Red Sauce') return isCyoWhite ? 'Right Half No White Sauce' : `${isNoRedSauceCyo ? 'Right' : 'Left'} Half ${isNoRedSauceCyo ? 'No Red Sauce' : 'No Sauce'}`;
+        if (isCyoWhite && name === WHITE_SAUCE_PIZZA_LABEL) return 'Right Half No Sauce';
         return `Right Half ${name}`;
       }
       return name;
@@ -5252,6 +5262,7 @@ export const buildCartDisplayLines = (item: CartItem): string[] => {
 
       const isPizzaCategory = ['pizzas', 'specialty-pizza', 'brooklyn-pizza'].includes((item.category || '').toLowerCase());
       const isCyoWhite = item.productId === 'cyo-white';
+      const isNoRedSauceCyo = ['cyo-napoletana', 'cyo-sicilian', 'cyo-pan'].includes(item.productId || '');
       const isPizzaSauceSelection =
         isPizzaCategory &&
         (sel.groupId === 'pizza_sauce' || sel.type === 'sauce' || String(sel.groupTitle || '').toLowerCase().includes('sauce'));
@@ -5264,6 +5275,7 @@ export const buildCartDisplayLines = (item: CartItem): string[] => {
         /^red sauce$/i.test(text) || sel.id === 'sauce-pizza';
       const isNoSauceLike =
         /^no sauce$/i.test(text) ||
+        /^no red sauce$/i.test(text) ||
         /^no white sauce$/i.test(text) ||
         sel.id === 'sauce-none' ||
         sel.id.startsWith('generated-no-sauce');
@@ -5274,13 +5286,15 @@ export const buildCartDisplayLines = (item: CartItem): string[] => {
           const oppositeSide = selectedSide === 'Left' ? 'Right' : 'Left';
 
           if (isRedSauceLike) {
-            // CYO convention: selecting red half implies opposite half white.
-            text = `${oppositeSide} Half ${WHITE_SAUCE_PIZZA_LABEL}`;
+            // Requested CYO display: same-side white label for split red.
+            text = `${selectedSide} Half ${WHITE_SAUCE_PIZZA_LABEL}`;
           } else if (isNoSauceLike) {
-            text = isCyoWhite ? `${oppositeSide} Half No White Sauce` : `${oppositeSide} Half No Sauce`;
+            const noLabel = isCyoWhite ? 'No White Sauce' : (isNoRedSauceCyo ? 'No Red Sauce' : 'No Sauce');
+            const noSide = (isCyoWhite || isNoRedSauceCyo) ? selectedSide : oppositeSide;
+            text = `${noSide} Half ${noLabel}`;
           } else if (isCyoWhite && isWhiteSauceLike) {
             // White pizza convention: selecting white half implies opposite half has no sauce.
-            text = `${oppositeSide} Half No Sauce`;
+            text = `${selectedSide} Half No Sauce`;
           } else if (isWhiteSauceLike) {
             text = `${selectedSide} Half ${WHITE_SAUCE_PIZZA_LABEL}`;
           } else {
@@ -5289,7 +5303,7 @@ export const buildCartDisplayLines = (item: CartItem): string[] => {
         } else {
           if (isWhiteSauceLike) text = WHITE_SAUCE_PIZZA_LABEL;
           else if (isRedSauceLike) text = 'Red Sauce';
-          else if (isNoSauceLike) text = isCyoWhite ? 'No White Sauce' : 'No Sauce';
+          else if (isNoSauceLike) text = isCyoWhite ? 'No White Sauce' : (isNoRedSauceCyo ? 'No Red Sauce' : 'No Sauce');
         }
       }
       

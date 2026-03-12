@@ -325,13 +325,13 @@ const DistributionIcon = ({
         </defs>
         <circle cx="12" cy="12" r="10" stroke={fillColor} strokeWidth="2" fill="none" />
         {type === 'left' && (
-          <circle cx="12" cy="12" r="10" fill={fillColor} clipPath="url(#clip-left-half)" />
+          <circle cx="12" cy="12" r="10" fill={fillColor} clipPath="url(#clip-right-half)" />
         )}
         {type === 'whole' && (
           <circle cx="12" cy="12" r="9" fill={fillColor} />
         )}
         {type === 'right' && (
-          <circle cx="12" cy="12" r="10" fill={fillColor} clipPath="url(#clip-right-half)" />
+          <circle cx="12" cy="12" r="10" fill={fillColor} clipPath="url(#clip-left-half)" />
         )}
       </svg>
     </button>
@@ -24735,31 +24735,39 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   }
 
                                   const isWhitePizza = product.id === 'cyo-white';
+                                  const isNoRedSauceCyo = ['cyo-napoletana', 'cyo-sicilian', 'cyo-pan'].includes(product.id);
                                   let baseName = sauce.name;
                                   
                                   if (sauce.id === 'sauce-pizza') {
                                     baseName = isWhitePizza ? WHITE_SAUCE_PIZZA_LABEL : 'Red Sauce';
                                   }
                                   if (sauce.id === 'sauce-none') {
-                                    baseName = 'No Sauce';
+                                    baseName = isNoRedSauceCyo ? 'No Red Sauce' : 'No Sauce';
                                   }
                                   
                                   if (!isSelected) return baseName;
 
-                                  if (baseName === 'No Sauce') {
-                                    if (distribution === 'left') return 'Right Half No Sauce';
-                                    if (distribution === 'right') return 'Left Half No Sauce';
-                                    return 'No Sauce';
+                                  if (baseName === 'No Sauce' || baseName === 'No Red Sauce') {
+                                    const noSauceName = baseName === 'No Red Sauce' ? 'No Red Sauce' : (isWhitePizza ? 'No White Sauce' : 'No Sauce');
+                                    if (distribution === 'left') {
+                                      if (isWhitePizza && noSauceName === 'No White Sauce') return 'Left Half No White Sauce';
+                                      return `${baseName === 'No Red Sauce' ? 'Left' : 'Right'} Half ${noSauceName}`;
+                                    }
+                                    if (distribution === 'right') {
+                                      if (isWhitePizza && noSauceName === 'No White Sauce') return 'Right Half No White Sauce';
+                                      return `${baseName === 'No Red Sauce' ? 'Right' : 'Left'} Half ${noSauceName}`;
+                                    }
+                                    return noSauceName;
                                   }
                                   
                                   if (baseName === 'Red Sauce') {
-                                    if (distribution === 'left') return 'Right Half White Sauce';
-                                    if (distribution === 'right') return 'Left Half White Sauce';
+                                    if (distribution === 'left') return 'Left Half White Sauce (Brushed with garlic and olive oil)';
+                                    if (distribution === 'right') return 'Right Half White Sauce (Brushed with garlic and olive oil)';
                                   }
 
                                   if (baseName === WHITE_SAUCE_PIZZA_LABEL && isWhitePizza) {
-                                    if (distribution === 'left') return `Left Half ${WHITE_SAUCE_PIZZA_LABEL}`;
-                                    if (distribution === 'right') return `Right Half ${WHITE_SAUCE_PIZZA_LABEL}`;
+                                    if (distribution === 'left') return 'Left Half No Sauce';
+                                    if (distribution === 'right') return 'Right Half No Sauce';
                                   }
 
                                   if (distribution === 'left') return `Left Half ${baseName}`;
