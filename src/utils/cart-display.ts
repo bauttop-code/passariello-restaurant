@@ -4228,13 +4228,13 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
       const isNoRedSauceCyo = ['cyo-napoletana', 'cyo-sicilian', 'cyo-pan'].includes(itemId);
       if (distribution === 'left') {
         // New reporting style for complementary halves in CYO.
-        if (name === 'Red Sauce') return `Left Half ${WHITE_SAUCE_PIZZA_LABEL}`;
+        if (name === 'Red Sauce') return 'Left Half Red Sauce';
         if (name === 'No Sauce' || name === 'No Red Sauce') return isCyoWhite ? 'Left Half No White Sauce' : `${isNoRedSauceCyo ? 'Left' : 'Right'} Half ${isNoRedSauceCyo ? 'No Red Sauce' : 'No Sauce'}`;
         if (isCyoWhite && name === WHITE_SAUCE_PIZZA_LABEL) return 'Left Half Red Sauce';
         return `Left Half ${name}`;
       }
       if (distribution === 'right') {
-        if (name === 'Red Sauce') return `Right Half ${WHITE_SAUCE_PIZZA_LABEL}`;
+        if (name === 'Red Sauce') return 'Right Half Red Sauce';
         if (name === 'No Sauce' || name === 'No Red Sauce') return isCyoWhite ? 'Right Half No White Sauce' : `${isNoRedSauceCyo ? 'Right' : 'Left'} Half ${isNoRedSauceCyo ? 'No Red Sauce' : 'No Sauce'}`;
         if (isCyoWhite && name === WHITE_SAUCE_PIZZA_LABEL) return 'Right Half Red Sauce';
         return `Right Half ${name}`;
@@ -4251,11 +4251,12 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
         const stype = String(sel.type || '').toLowerCase();
         return gid === 'pizza_sauce' || stype === 'sauce' || gtitle.includes('sauce');
       })
-      .map((line) => {
+      .flatMap((line) => {
         const sel = line.originalSel;
-        if (!sel) return '';
+        if (!sel) return [];
         const mappedName = getCyoSauceNameFromSelection(sel);
-        if (!mappedName) return normalizeCyoSauceLabel(line.text);
+        if (!mappedName) return [normalizeCyoSauceLabel(line.text)];
+        const sid = String(sel.id || '').toLowerCase();
 
         const textLower = String(line.text || '').toLowerCase();
         const inferredDistFromText: 'left' | 'right' | 'whole' =
@@ -4269,7 +4270,31 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
           sel.distribution === 'left' || sel.distribution === 'right' || sel.distribution === 'whole'
             ? sel.distribution
             : inferredDistFromText;
-        return asHalfLine(mappedName, dist);
+
+        // Special case for CYO White:
+        // if the row is a generated complementary white half (created from No Sauce),
+        // keep it as explicit white-half text instead of converting to red-half alias.
+        const primaryLine =
+          isCyoWhite &&
+          mappedName === WHITE_SAUCE_PIZZA_LABEL &&
+          sid.startsWith('generated-white-pizza') &&
+          (dist === 'left' || dist === 'right')
+            ? `${dist === 'left' ? 'Left' : 'Right'} Half ${WHITE_SAUCE_PIZZA_LABEL}`
+            : asHalfLine(mappedName, dist);
+        const lines: string[] = [primaryLine];
+
+        // Complementary guidance for all non-white CYO pizzas when "No Sauce" (or No Red Sauce) is selected by half.
+        // Example expected report: "Left Half No Red Sauce" + "Right Half Red Sauce".
+        if (
+          !isCyoWhite &&
+          (mappedName === 'No Sauce' || mappedName === 'No Red Sauce') &&
+          (dist === 'left' || dist === 'right')
+        ) {
+          const oppositeDist: 'left' | 'right' = dist === 'left' ? 'right' : 'left';
+          lines.push(asHalfLine('Red Sauce', oppositeDist));
+        }
+
+        return lines;
       })
       .filter(Boolean);
 
@@ -5286,8 +5311,8 @@ export const buildCartDisplayLines = (item: CartItem): string[] => {
           const oppositeSide = selectedSide === 'Left' ? 'Right' : 'Left';
 
           if (isRedSauceLike) {
-            // Requested CYO display: same-side white label for split red.
-            text = `${selectedSide} Half ${WHITE_SAUCE_PIZZA_LABEL}`;
+            // Split red should remain red on its selected side.
+            text = `${selectedSide} Half Red Sauce`;
           } else if (isNoSauceLike) {
             const noLabel = isCyoWhite ? 'No White Sauce' : (isNoRedSauceCyo ? 'No Red Sauce' : 'No Sauce');
             const noSide = (isCyoWhite || isNoRedSauceCyo) ? selectedSide : oppositeSide;
