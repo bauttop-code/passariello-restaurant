@@ -24748,13 +24748,11 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   if (!isSelected) return baseName;
 
                                   if (baseName === 'No Sauce' || baseName === 'No Red Sauce') {
-                                    const noSauceName = baseName === 'No Red Sauce' ? 'No Red Sauce' : (isWhitePizza ? 'No White Sauce' : 'No Sauce');
+                                    const noSauceName = baseName === 'No Red Sauce' ? 'No Red Sauce' : 'No Sauce';
                                     if (distribution === 'left') {
-                                      if (isWhitePizza && noSauceName === 'No White Sauce') return 'Left Half No White Sauce';
                                       return `${baseName === 'No Red Sauce' ? 'Left' : 'Right'} Half ${noSauceName}`;
                                     }
                                     if (distribution === 'right') {
-                                      if (isWhitePizza && noSauceName === 'No White Sauce') return 'Right Half No White Sauce';
                                       return `${baseName === 'No Red Sauce' ? 'Right' : 'Left'} Half ${noSauceName}`;
                                     }
                                     return noSauceName;
