@@ -4415,9 +4415,37 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
         const hasRightNoSauce = normalizedSauceLines.some((x) => /^Right Half No Sauce$/i.test(String(x || '')));
         const hasLeftRed = normalizedSauceLines.some((x) => /^Left Half Red Sauce$/i.test(String(x || '')));
         const hasRightRed = normalizedSauceLines.some((x) => /^Right Half Red Sauce$/i.test(String(x || '')));
+        const hasLeftWhite = normalizedSauceLines.some((x) => /^Left Half White Sauce$/i.test(String(x || '')));
+        const hasRightWhite = normalizedSauceLines.some((x) => /^Right Half White Sauce$/i.test(String(x || '')));
+
+        const selectedWhiteHalfDist = rawLines
+          .map((line) => {
+            const sel = line.originalSel;
+            if (!sel) return null;
+            const sid = String(sel.id || '').toLowerCase();
+            const label = String(sel.label || '').toLowerCase();
+            const text = String(line.text || '').toLowerCase();
+            const looksLikeWhiteSauce =
+              sid === 'sauce-white' ||
+              sid === 'sauce-pizza' ||
+              sid.startsWith('generated-red-pizza') ||
+              label.includes('white sauce') ||
+              label.includes('white pizza') ||
+              text.includes('left half red sauce') ||
+              text.includes('right half red sauce');
+            if (!looksLikeWhiteSauce) return null;
+            if (sel.distribution === 'left' || text.includes('left half')) return 'left';
+            if (sel.distribution === 'right' || text.includes('right half')) return 'right';
+            return null;
+          })
+          .find((x): x is 'left' | 'right' => x === 'left' || x === 'right');
 
         if (hasLeftNoSauce) normalizedSauceLines = ['Left Half No Sauce', 'Right Half No White Sauce'];
         else if (hasRightNoSauce) normalizedSauceLines = ['Right Half No Sauce', 'Left Half No White Sauce'];
+        else if (hasLeftWhite) normalizedSauceLines = ['Left Half White Sauce', 'Right Half Red Sauce'];
+        else if (hasRightWhite) normalizedSauceLines = ['Right Half White Sauce', 'Left Half Red Sauce'];
+        else if (hasLeftRed && hasRightRed && selectedWhiteHalfDist === 'left') normalizedSauceLines = ['Left Half Red Sauce', 'Right Half White Sauce'];
+        else if (hasLeftRed && hasRightRed && selectedWhiteHalfDist === 'right') normalizedSauceLines = ['Right Half Red Sauce', 'Left Half White Sauce'];
         else if (hasLeftRed) normalizedSauceLines = ['Left Half Red Sauce', 'Right Half White Sauce'];
         else if (hasRightRed) normalizedSauceLines = ['Right Half Red Sauce', 'Left Half White Sauce'];
       }
