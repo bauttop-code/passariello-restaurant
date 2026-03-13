@@ -24750,26 +24750,26 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                                   if (baseName === 'No Sauce' || baseName === 'No Red Sauce') {
                                     const noSauceName = baseName === 'No Red Sauce' ? 'No Red Sauce' : 'No Sauce';
                                     if (distribution === 'left') {
-                                      return `${baseName === 'No Red Sauce' ? 'Left' : 'Right'} Half ${noSauceName}`;
+                                      return `${baseName === 'No Red Sauce' ? '1ST' : '2ND'} Half ${noSauceName}`;
                                     }
                                     if (distribution === 'right') {
-                                      return `${baseName === 'No Red Sauce' ? 'Right' : 'Left'} Half ${noSauceName}`;
+                                      return `${baseName === 'No Red Sauce' ? '2ND' : '1ST'} Half ${noSauceName}`;
                                     }
                                     return noSauceName;
                                   }
                                   
                                   if (baseName === 'Red Sauce') {
-                                    if (distribution === 'left') return 'Left Half White Sauce';
-                                    if (distribution === 'right') return 'Right Half White Sauce';
+                                    if (distribution === 'left') return '1ST Half White Sauce';
+                                    if (distribution === 'right') return '2ND Half White Sauce';
                                   }
 
                                   if (baseName === WHITE_SAUCE_PIZZA_LABEL && isWhitePizza) {
-                                    if (distribution === 'left') return 'Left Half Red Sauce';
-                                    if (distribution === 'right') return 'Right Half Red Sauce';
+                                    if (distribution === 'left') return '1ST Half Red Sauce';
+                                    if (distribution === 'right') return '2ND Half Red Sauce';
                                   }
 
-                                  if (distribution === 'left') return `Left Half ${baseName}`;
-                                  if (distribution === 'right') return `Right Half ${baseName}`;
+                                  if (distribution === 'left') return `1ST Half ${baseName}`;
+                                  if (distribution === 'right') return `2ND Half ${baseName}`;
                                   return baseName;
                                 })()}
                               </p>

@@ -4012,6 +4012,10 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
 
     return text;
   };
+  const toOrdinalHalfLabel = (input: string): string =>
+    String(input || '')
+      .replace(/\bLeft Half\b/gi, '1ST Half')
+      .replace(/\bRight Half\b/gi, '2ND Half');
   const isCyoSauceLike = (input: string): boolean => {
     const t = String(input || '').trim().toLowerCase();
     if (!t) return false;
@@ -4450,9 +4454,9 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
         else if (hasRightRed) normalizedSauceLines = ['Right Half Red Sauce', 'Left Half White Sauce'];
       }
 
-      buckets['SAUCE'] = normalizedSauceLines;
+      buckets['SAUCE'] = normalizedSauceLines.map(toOrdinalHalfLabel);
     } else {
-      buckets['SAUCE'] = dedupeNoQty(buckets['SAUCE'].map((line) => normalizeCyoSauceLabel(line)).filter(Boolean));
+      buckets['SAUCE'] = dedupeNoQty(buckets['SAUCE'].map((line) => normalizeCyoSauceLabel(line)).filter(Boolean)).map(toOrdinalHalfLabel);
     }
 
     if (debugSauce) {
