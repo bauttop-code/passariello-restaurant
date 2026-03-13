@@ -4403,6 +4403,25 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
         else if (hasRightWhite) normalizedSauceLines = ['Right Half White Sauce', 'Left Half Red Sauce'];
       }
 
+      // Enforce exactly two complementary half-sauce lines for CYO White Pizza.
+      // White Sauce half selection must report:
+      // - Left Half Red Sauce + Right Half White Sauce
+      // - Right Half Red Sauce + Left Half White Sauce
+      // No Sauce half selection must report:
+      // - Left Half No Sauce + Right Half No White Sauce
+      // - Right Half No Sauce + Left Half No White Sauce
+      if (itemId === 'cyo-white') {
+        const hasLeftNoSauce = normalizedSauceLines.some((x) => /^Left Half No Sauce$/i.test(String(x || '')));
+        const hasRightNoSauce = normalizedSauceLines.some((x) => /^Right Half No Sauce$/i.test(String(x || '')));
+        const hasLeftRed = normalizedSauceLines.some((x) => /^Left Half Red Sauce$/i.test(String(x || '')));
+        const hasRightRed = normalizedSauceLines.some((x) => /^Right Half Red Sauce$/i.test(String(x || '')));
+
+        if (hasLeftNoSauce) normalizedSauceLines = ['Left Half No Sauce', 'Right Half No White Sauce'];
+        else if (hasRightNoSauce) normalizedSauceLines = ['Right Half No Sauce', 'Left Half No White Sauce'];
+        else if (hasLeftRed) normalizedSauceLines = ['Left Half Red Sauce', 'Right Half White Sauce'];
+        else if (hasRightRed) normalizedSauceLines = ['Right Half Red Sauce', 'Left Half White Sauce'];
+      }
+
       buckets['SAUCE'] = normalizedSauceLines;
     } else {
       buckets['SAUCE'] = dedupeNoQty(buckets['SAUCE'].map((line) => normalizeCyoSauceLabel(line)).filter(Boolean));
