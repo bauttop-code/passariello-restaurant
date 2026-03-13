@@ -4234,7 +4234,7 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
         // New reporting style for complementary halves in CYO.
         if (isCyoWhite) {
           if (name === 'Red Sauce') return 'Left Half Red Sauce';
-          if (name === WHITE_SAUCE_PIZZA_LABEL) return `Left Half ${WHITE_SAUCE_PIZZA_LABEL}`;
+          if (name === WHITE_SAUCE_PIZZA_LABEL) return 'Left Half Red Sauce';
           if (name === 'No Sauce') return 'Left Half No Sauce';
         }
         if (name === 'Red Sauce') return `Left Half ${WHITE_SAUCE_PIZZA_LABEL}`;
@@ -4244,7 +4244,7 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
       if (distribution === 'right') {
         if (isCyoWhite) {
           if (name === 'Red Sauce') return 'Right Half Red Sauce';
-          if (name === WHITE_SAUCE_PIZZA_LABEL) return `Right Half ${WHITE_SAUCE_PIZZA_LABEL}`;
+          if (name === WHITE_SAUCE_PIZZA_LABEL) return 'Right Half Red Sauce';
           if (name === 'No Sauce') return 'Right Half No Sauce';
         }
         if (name === 'Red Sauce') return `Right Half ${WHITE_SAUCE_PIZZA_LABEL}`;
@@ -4262,6 +4262,42 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
         const gtitle = String(sel.groupTitle || '').toLowerCase();
         const stype = String(sel.type || '').toLowerCase();
         return gid === 'pizza_sauce' || stype === 'sauce' || gtitle.includes('sauce');
+      })
+      .flatMap((line, _idx, allSauceLines) => {
+        const sel = line.originalSel;
+        if (!sel) return [];
+        const sid = String(sel.id || '').toLowerCase();
+        if (!sid.startsWith('generated-white-pizza')) return [line];
+        if (!isCyoWhite) {
+          // For non-white CYO pizzas, when Red Sauce half is selected, we already render
+          // the complementary White half explicitly. Drop legacy generated helper rows.
+          const hasRedHalf = allSauceLines.some((candidate) => {
+            const csel = candidate.originalSel;
+            if (!csel) return false;
+            const cid = String(csel.id || '').toLowerCase();
+            const clabel = String(csel.label || '').toLowerCase();
+            const cdist = csel.distribution;
+            return (
+              (cid === 'sauce-pizza' || cid.startsWith('generated-red-pizza') || clabel.includes('red sauce') || clabel.includes('red pizza')) &&
+              (cdist === 'left' || cdist === 'right' || clabel.includes('left half') || clabel.includes('right half'))
+            );
+          });
+          return hasRedHalf ? [] : [line];
+        }
+        // When No Sauce half is selected in White Pizza, the complementary line is now
+        // explicitly "No White Sauce"; drop legacy generated White Sauce helper lines.
+        const hasNoSauceHalf = allSauceLines.some((candidate) => {
+          const csel = candidate.originalSel;
+          if (!csel) return false;
+          const cid = String(csel.id || '').toLowerCase();
+          const clabel = String(csel.label || '').toLowerCase();
+          const cdist = csel.distribution;
+          return (
+            (cid === 'sauce-none' || cid.startsWith('generated-no-sauce') || clabel.includes('no sauce')) &&
+            (cdist === 'left' || cdist === 'right' || clabel.includes('left half') || clabel.includes('right half'))
+          );
+        });
+        return hasNoSauceHalf ? [] : [line];
       })
       .flatMap((line) => {
         const sel = line.originalSel;
@@ -4295,13 +4331,32 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
             : asHalfLine(mappedName, dist);
         const lines: string[] = [primaryLine];
 
+        // CYO Red Sauce half rule for Napoletana/Sicilian/Pan:
+        // Red Sauce half selections must be reported as complementary pair:
+        // - Left selected => "Left Half White Sauce" + "Right Half Red Sauce"
+        // - Right selected => "Right Half White Sauce" + "Left Half Red Sauce"
+        if (['cyo-napoletana', 'cyo-sicilian', 'cyo-pan'].includes(itemId) && mappedName === 'Red Sauce' && (dist === 'left' || dist === 'right')) {
+          const oppositeDist: 'left' | 'right' = dist === 'left' ? 'right' : 'left';
+          lines.push(`${oppositeDist === 'left' ? 'Left' : 'Right'} Half Red Sauce`);
+        }
+
         // Complementary guidance for all non-white CYO pizzas when "No Sauce" (or No Red Sauce) is selected by half.
         // Example expected report: "Left Half No Red Sauce" + "Right Half Red Sauce".
         if ((mappedName === 'No Sauce' || mappedName === 'No Red Sauce') && (dist === 'left' || dist === 'right')) {
           const oppositeDist: 'left' | 'right' = dist === 'left' ? 'right' : 'left';
           // CYO White: No Sauce half must be complemented by White Sauce on the other half.
-          if (isCyoWhite) lines.push(asHalfLine(WHITE_SAUCE_PIZZA_LABEL, oppositeDist));
-          else lines.push(asHalfLine('Red Sauce', oppositeDist));
+          if (isCyoWhite) lines.push(`${oppositeDist === 'left' ? 'Left' : 'Right'} Half No White Sauce`);
+          else lines.push(`${oppositeDist === 'left' ? 'Left' : 'Right'} Half Red Sauce`);
+        }
+
+        // Sicilian/Pan White Sauce half must include complementary Red Sauce half.
+        if (
+          ['cyo-sicilian', 'cyo-pan'].includes(itemId) &&
+          mappedName === WHITE_SAUCE_PIZZA_LABEL &&
+          (dist === 'left' || dist === 'right')
+        ) {
+          const oppositeDist: 'left' | 'right' = dist === 'left' ? 'right' : 'left';
+          lines.push(`${oppositeDist === 'left' ? 'Left' : 'Right'} Half Red Sauce`);
         }
 
         if (
@@ -4311,8 +4366,9 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
           !sid.startsWith('generated-')
         ) {
           const oppositeDist: 'left' | 'right' = dist === 'left' ? 'right' : 'left';
-          // CYO White: White Sauce half must be complemented by Red Sauce on the other half.
-          lines.push(asHalfLine('Red Sauce', oppositeDist));
+          // CYO White: White Sauce half (UI semantics) reports Red on selected half
+          // and White on the complementary half.
+          lines.push(asHalfLine(WHITE_SAUCE_PIZZA_LABEL, oppositeDist));
         }
 
         if (
