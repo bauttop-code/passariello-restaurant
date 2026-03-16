@@ -15474,28 +15474,30 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     </div>
                   )}
 
-                  {/* Choose Your Toppings Section (up to 5 free) */}
+                  {/* Extra Toppings Section */}
                   <div className="bg-[#F5F3EB] text-[#1F2937] px-4 py-3 rounded-lg mt-6 flex items-center" ref={saladToppingsRef}>
                     <span className="font-semibold" style={{fontSize: 'calc(1em + 3px)'}}>Extra Toppings (Optional)</span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {saladToppingsOptions.map((topping) => {
-                      const isSelected = selectedSaladToppings.includes(topping.id);
-                      const canSelect = selectedSaladToppings.length < 5 || isSelected;
+                    {saladExtraToppingsOptions.map((topping) => {
+                      const isSelected = selectedExtraToppings.includes(topping.id);
                       return (
                         <div
                           key={topping.id}
                           onClick={() => {
-                            if (!canSelect && !isSelected) return;
-                            handleSaladToppingToggle(topping.id);
+                            if (isSelected) {
+                              setSelectedExtraToppings(selectedExtraToppings.filter(id => id !== topping.id));
+                            } else {
+                              setSelectedExtraToppings([...selectedExtraToppings, topping.id]);
+                            }
                           }}
                           className={`flex items-center gap-0 rounded-lg overflow-hidden cursor-pointer transition-colors selection-tile bg-[#F6F6F6] ${
                             isSelected ? 'border-2 border-[#A72020] selection-selected' : 'border border-gray-200'
-                          } ${!canSelect && !isSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          }`}
                         >
                           <div className="w-14 h-14 flex-shrink-0 relative">
                             <ImageWithFallback
-                              src={SALAD_TOPPING_IMAGES[topping.id]}
+                              src={SALAD_EXTRA_TOPPING_IMAGES[topping.id]}
                               alt={topping.name}
                               className="w-full h-full object-cover"
                             />
