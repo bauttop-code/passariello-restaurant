@@ -5856,7 +5856,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                   .replace(' (Left)', '')
                   .replace(' (Right)', '')
                   .replace(/\s+1ST HALF/i, '')
-                  .replace(/\s+2ND HALF/i, '');
+                  .replace(/\s+2ND HALF/i, '')
+                  .replace(/^1ST HALF\s+/i, '')
+                  .replace(/^2ND HALF\s+/i, '');
                 const toppingIds = findIdsByNames([cleanName], [includedToppings, additionalToppings, specialtyToppings]);
                 if (toppingIds[0]) {
                   setSelectedToppings(prev => [...new Set([...prev, toppingIds[0]])]);
@@ -29710,9 +29712,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     if (distribution === 'whole') {
                       wholeToppings.push(name);
                     } else if (distribution === 'left') {
-                      leftToppings.push(`${name} 1ST HALF`);
+                      leftToppings.push(`1ST HALF ${name}`);
                     } else if (distribution === 'right') {
-                      rightToppings.push(`${name} 2ND HALF`);
+                      rightToppings.push(`2ND HALF ${name}`);
                     }
                     
                     // NEW STRUCTURED - Add each topping with group info to selections
@@ -34689,9 +34691,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       if (distribution === 'whole') {
                         wholeToppings.push(name);
                       } else if (distribution === 'left') {
-                        leftToppings.push(`${name} 1ST HALF`);
+                        leftToppings.push(`1ST HALF ${name}`);
                       } else if (distribution === 'right') {
-                        rightToppings.push(`${name} 2ND HALF`);
+                        rightToppings.push(`2ND HALF ${name}`);
                       }
                       
                       // NEW STRUCTURED - Add each topping with group info to selections

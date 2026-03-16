@@ -4047,9 +4047,9 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
     let text = normalizeLabel(line.text);
 
     if (bucket === 'SPECIALTY_1ST_HALF') {
-        text = `${normalizeSpecialtyLabel(text)} 1ST HALF`;
+        text = `1ST HALF ${normalizeSpecialtyLabel(text)}`;
     } else if (bucket === 'SPECIALTY_2ND_HALF') {
-        text = `${normalizeSpecialtyLabel(text)} 2ND HALF`;
+        text = `2ND HALF ${normalizeSpecialtyLabel(text)}`;
     }
 
     buckets[bucket].push(text);
@@ -4084,8 +4084,8 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
         if (/\b2ND HALF\b/i.test(text) || /\(RIGHT\)/i.test(text)) itemTarget = 'SPECIALTY_2ND_HALF';
         else if (/\b1ST HALF\b/i.test(text) || /\(LEFT\)/i.test(text)) itemTarget = 'SPECIALTY_1ST_HALF';
       }
-      if (itemTarget === 'SPECIALTY_1ST_HALF') text = `${normalizeSpecialtyLabel(text)} 1ST HALF`;
-      if (itemTarget === 'SPECIALTY_2ND_HALF') text = `${normalizeSpecialtyLabel(text)} 2ND HALF`;
+      if (itemTarget === 'SPECIALTY_1ST_HALF') text = `1ST HALF ${normalizeSpecialtyLabel(text)}`;
+      if (itemTarget === 'SPECIALTY_2ND_HALF') text = `2ND HALF ${normalizeSpecialtyLabel(text)}`;
       buckets[itemTarget].push(text);
     });
   });
@@ -4499,8 +4499,8 @@ const buildStructuredProfileDisplayLines = (item: CartItem, rawLines: { text: st
   if (profile === 'SPECIALTY_PIZZA') {
     buckets['ADDITIONAL_TOPPINGS'] = dedupeNoQty([
       ...buckets['ADDITIONAL_TOPPINGS'],
-      ...buckets['SPECIALTY_1ST_HALF'].map((x) => String(x || '').replace(/\s+1ST HALF$/i, '').trim()),
-      ...buckets['SPECIALTY_2ND_HALF'].map((x) => String(x || '').replace(/\s+2ND HALF$/i, '').trim()),
+      ...buckets['SPECIALTY_1ST_HALF'].map((x) => String(x || '').replace(/\s+1ST HALF$/i, '').replace(/^1ST HALF\s+/i, '').trim()),
+      ...buckets['SPECIALTY_2ND_HALF'].map((x) => String(x || '').replace(/\s+2ND HALF$/i, '').replace(/^2ND HALF\s+/i, '').trim()),
     ]);
     buckets['SPECIALTY_1ST_HALF'] = [];
     buckets['SPECIALTY_2ND_HALF'] = [];
@@ -5491,7 +5491,7 @@ export const buildCartDisplayLines = (item: CartItem): string[] => {
       // Distribution
       if ((sel.type === 'topping' || sel.type === 'extra_topping') && 
            sel.distribution && sel.distribution !== 'whole') {
-          text += ` ${sel.distribution === 'left' ? '1ST HALF' : '2ND HALF'}`;
+          text = `${sel.distribution === 'left' ? '1ST HALF' : '2ND HALF'} ${text}`;
       }
       
       // Clean up sizes
