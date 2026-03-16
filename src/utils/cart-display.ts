@@ -5491,7 +5491,7 @@ export const buildCartDisplayLines = (item: CartItem): string[] => {
       // Distribution
       if ((sel.type === 'topping' || sel.type === 'extra_topping') && 
            sel.distribution && sel.distribution !== 'whole') {
-          text += ` (${sel.distribution === 'left' ? 'Left' : 'Right'})`;
+          text += ` ${sel.distribution === 'left' ? '1ST HALF' : '2ND HALF'}`;
       }
       
       // Clean up sizes

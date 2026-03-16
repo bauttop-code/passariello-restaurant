@@ -5850,9 +5850,13 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
             
             case 'Half Toppings':
               items.forEach(item => {
-                const isLeft = item.includes('(Left)');
-                const isRight = item.includes('(Right)');
-                const cleanName = item.replace(' (Left)', '').replace(' (Right)', '');
+                const isLeft = item.includes('(Left)') || /\b1ST HALF\b/i.test(item);
+                const isRight = item.includes('(Right)') || /\b2ND HALF\b/i.test(item);
+                const cleanName = item
+                  .replace(' (Left)', '')
+                  .replace(' (Right)', '')
+                  .replace(/\s+1ST HALF/i, '')
+                  .replace(/\s+2ND HALF/i, '');
                 const toppingIds = findIdsByNames([cleanName], [includedToppings, additionalToppings, specialtyToppings]);
                 if (toppingIds[0]) {
                   setSelectedToppings(prev => [...new Set([...prev, toppingIds[0]])]);
@@ -29706,9 +29710,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                     if (distribution === 'whole') {
                       wholeToppings.push(name);
                     } else if (distribution === 'left') {
-                      leftToppings.push(`${name} (Left)`);
+                      leftToppings.push(`${name} 1ST HALF`);
                     } else if (distribution === 'right') {
-                      rightToppings.push(`${name} (Right)`);
+                      rightToppings.push(`${name} 2ND HALF`);
                     }
                     
                     // NEW STRUCTURED - Add each topping with group info to selections
@@ -34685,9 +34689,9 @@ export function ProductDetailPage({ product, onBack, onAddToCart, allProducts, i
                       if (distribution === 'whole') {
                         wholeToppings.push(name);
                       } else if (distribution === 'left') {
-                        leftToppings.push(`${name} (Left)`);
+                        leftToppings.push(`${name} 1ST HALF`);
                       } else if (distribution === 'right') {
-                        rightToppings.push(`${name} (Right)`);
+                        rightToppings.push(`${name} 2ND HALF`);
                       }
                       
                       // NEW STRUCTURED - Add each topping with group info to selections
