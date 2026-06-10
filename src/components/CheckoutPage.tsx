@@ -1,6 +1,6 @@
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { useState, useEffect } from 'react';
-import { MapPin, Calendar, Lock, CreditCard, Info } from 'lucide-react';
+import { MapPin, Calendar, Lock, CreditCard, Info, Store } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -56,6 +56,13 @@ interface CreateCheckoutSessionRequest {
     scheduledTime: string;
     deliveryAddress?: any;
     specialInstructions?: string;
+    pickupDetails?: {
+      method: 'carside' | 'instore';
+      vehicleType?: string;
+      vehicleColor?: string;
+      mobilePhone?: string;
+      pickupName?: string;
+    };
     contactInfo: {
       firstName: string;
       lastName: string;
@@ -224,10 +231,11 @@ export function CheckoutPage({
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [someoneElsePickup, setSomeoneElsePickup] = useState<'no' | 'yes'>('no');
   const [someoneElseName, setSomeoneElseName] = useState('');
-  const [pickupMethod, setPickupMethod] = useState<'carside' | 'walkin'>('carside');
+  const [pickupMethod, setPickupMethod] = useState<'carside' | 'instore'>('instore');
   const [vehicleType, setVehicleType] = useState('');
   const [vehicleColor, setVehicleColor] = useState('');
   const [mobilePhone, setMobilePhone] = useState('');
+  const [inStorePickupName, setInStorePickupName] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
@@ -292,6 +300,7 @@ export function CheckoutPage({
       vehicleType,
       vehicleColor,
       mobilePhone,
+      inStorePickupName,
       paymentMethod,
       firstName,
       lastName,
@@ -329,9 +338,16 @@ export function CheckoutPage({
 
       // Pickup-specific validations
       if (deliveryMode === 'Pickup') {
-        if (!vehicleType || !vehicleColor || !mobilePhone) {
-          alert('Please fill in all required pickup details');
-          return;
+        if (pickupMethod === 'carside') {
+          if (!vehicleType || !vehicleColor || !mobilePhone) {
+            alert('Please fill in all required pickup details');
+            return;
+          }
+        } else {
+          if (!inStorePickupName || !mobilePhone) {
+            alert('Please fill in all required pickup details');
+            return;
+          }
         }
       }
 
@@ -353,6 +369,15 @@ export function CheckoutPage({
           scheduledTime,
           deliveryAddress: deliveryAddress || undefined,
           specialInstructions,
+          pickupDetails: deliveryMode === 'Pickup'
+            ? {
+                method: pickupMethod,
+                vehicleType: pickupMethod === 'carside' ? vehicleType : undefined,
+                vehicleColor: pickupMethod === 'carside' ? vehicleColor : undefined,
+                mobilePhone,
+                pickupName: pickupMethod === 'instore' ? inStorePickupName : undefined,
+              }
+            : undefined,
           contactInfo: {
             firstName,
             lastName,
@@ -547,85 +572,157 @@ export function CheckoutPage({
                 {deliveryMode === 'Pickup' && (
                   <div>
                     <h3 className="font-semibold text-lg mb-4">Pickup Method</h3>
-                    
+
                     <div className="border-2 border-gray-300 rounded-lg p-6">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-8 h-8 rounded-full border-2 border-[#A72020] flex items-center justify-center">
-                          <div className="w-3 h-3 rounded-full bg-[#A72020]" />
-                        </div>
-                        <svg className="w-16 h-8" viewBox="0 0 64 32" fill="none">
-                          <path d="M8 16C8 10.4772 12.4772 6 18 6H48C53.5228 6 58 10.4772 58 16C58 21.5228 53.5228 26 48 26H18C12.4772 26 8 21.5228 8 16Z" stroke="currentColor" strokeWidth="2"/>
-                          <circle cx="18" cy="16" r="4" stroke="currentColor" strokeWidth="2"/>
-                          <circle cx="48" cy="16" r="4" stroke="currentColor" strokeWidth="2"/>
-                          <path d="M22 16H44" stroke="currentColor" strokeWidth="2"/>
-                        </svg>
-                        <span className="text-lg font-semibold">Carside</span>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <button
+                          type="button"
+                          onClick={() => setPickupMethod('instore')}
+                          className={`rounded-lg border-2 p-4 text-left transition-colors ${
+                            pickupMethod === 'instore'
+                              ? 'border-[#A72020] bg-orange-50'
+                              : 'border-gray-300 hover:border-gray-400'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
+                              pickupMethod === 'instore' ? 'border-[#A72020]' : 'border-gray-300'
+                            }`}>
+                              {pickupMethod === 'instore' && <div className="w-3 h-3 rounded-full bg-[#A72020]" />}
+                            </div>
+                            <Store className="w-8 h-8" />
+                            <span className="text-lg font-semibold">In-Store Pickup</span>
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setPickupMethod('carside')}
+                          className={`rounded-lg border-2 p-4 text-left transition-colors ${
+                            pickupMethod === 'carside'
+                              ? 'border-[#A72020] bg-orange-50'
+                              : 'border-gray-300 hover:border-gray-400'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
+                              pickupMethod === 'carside' ? 'border-[#A72020]' : 'border-gray-300'
+                            }`}>
+                              {pickupMethod === 'carside' && <div className="w-3 h-3 rounded-full bg-[#A72020]" />}
+                            </div>
+                            <svg className="w-16 h-8" viewBox="0 0 64 32" fill="none">
+                              <path d="M8 16C8 10.4772 12.4772 6 18 6H48C53.5228 6 58 10.4772 58 16C58 21.5228 53.5228 26 48 26H18C12.4772 26 8 21.5228 8 16Z" stroke="currentColor" strokeWidth="2"/>
+                              <circle cx="18" cy="16" r="4" stroke="currentColor" strokeWidth="2"/>
+                              <circle cx="48" cy="16" r="4" stroke="currentColor" strokeWidth="2"/>
+                              <path d="M22 16H44" stroke="currentColor" strokeWidth="2"/>
+                            </svg>
+                            <span className="text-lg font-semibold">Carside</span>
+                          </div>
+                        </button>
                       </div>
 
-                      <p className="text-sm text-gray-600 mb-4">
-                        Please park in designated Carside Pickup spot. Help us identify your vehicle:
-                      </p>
-
-                      <div className="space-y-4">
-                        <div>
-                          <Label htmlFor="vehicle-type" className="mb-2 block">
-                            Vehicle Type <span className="text-red-500">*</span>
-                          </Label>
-                          <Select value={vehicleType} onValueChange={setVehicleType}>
-                            <SelectTrigger id="vehicle-type">
-                              <SelectValue placeholder="Select vehicle type" />
-                            </SelectTrigger>
-                            <SelectContent className="z-[300]">
-                              <SelectItem value="sedan">Car</SelectItem>
-                              <SelectItem value="suv">SUV</SelectItem>
-                              <SelectItem value="truck">Truck</SelectItem>
-                              <SelectItem value="van">Van</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div>
-                          <Label htmlFor="vehicle-color" className="mb-2 block">
-                            Select Color <span className="text-red-500">*</span>
-                          </Label>
-                          <Select value={vehicleColor} onValueChange={setVehicleColor}>
-                            <SelectTrigger id="vehicle-color">
-                              <SelectValue placeholder="Select vehicle color" />
-                            </SelectTrigger>
-                            <SelectContent className="z-[300]">
-                              <SelectItem value="white">White</SelectItem>
-                              <SelectItem value="black">Black</SelectItem>
-                              <SelectItem value="silver">Silver</SelectItem>
-                              <SelectItem value="gray">Gray</SelectItem>
-                              <SelectItem value="red">Red</SelectItem>
-                              <SelectItem value="blue">Blue</SelectItem>
-                              <SelectItem value="green">Green</SelectItem>
-                              <SelectItem value="brown">Brown</SelectItem>
-                              <SelectItem value="beige">Beige</SelectItem>
-                              <SelectItem value="yellow">Yellow</SelectItem>
-                              <SelectItem value="orange">Orange</SelectItem>
-                              <SelectItem value="gold">Gold</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div>
-                          <Label htmlFor="mobile-phone" className="mb-2 block">
-                            Mobile Phone <span className="text-red-500">*</span>
-                          </Label>
-                          <Input
-                            id="mobile-phone"
-                            type="tel"
-                            placeholder="(555) 555-5555"
-                            value={mobilePhone}
-                            onChange={(e) => setMobilePhone(e.target.value)}
-                          />
-                          <p className="text-xs text-gray-500 mt-1">
-                            Please enter the mobile phone number of the person picking up the order. We will text you a link shortly before your pick-up time to check-in when you arrive.
+                      {pickupMethod === 'carside' ? (
+                        <>
+                          <p className="text-sm text-gray-600 mb-4">
+                            Please park in designated Carside Pickup spot. Help us identify your vehicle:
                           </p>
-                        </div>
-                      </div>
+
+                          <div className="space-y-4">
+                            <div>
+                              <Label htmlFor="vehicle-type" className="mb-2 block">
+                                Vehicle Type <span className="text-red-500">*</span>
+                              </Label>
+                              <Select value={vehicleType} onValueChange={setVehicleType}>
+                                <SelectTrigger id="vehicle-type">
+                                  <SelectValue placeholder="Select vehicle type" />
+                                </SelectTrigger>
+                                <SelectContent className="z-[300]">
+                                  <SelectItem value="sedan">Car</SelectItem>
+                                  <SelectItem value="suv">SUV</SelectItem>
+                                  <SelectItem value="truck">Truck</SelectItem>
+                                  <SelectItem value="van">Van</SelectItem>
+                                  <SelectItem value="other">Other</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div>
+                              <Label htmlFor="vehicle-color" className="mb-2 block">
+                                Select Color <span className="text-red-500">*</span>
+                              </Label>
+                              <Select value={vehicleColor} onValueChange={setVehicleColor}>
+                                <SelectTrigger id="vehicle-color">
+                                  <SelectValue placeholder="Select vehicle color" />
+                                </SelectTrigger>
+                                <SelectContent className="z-[300]">
+                                  <SelectItem value="white">White</SelectItem>
+                                  <SelectItem value="black">Black</SelectItem>
+                                  <SelectItem value="silver">Silver</SelectItem>
+                                  <SelectItem value="gray">Gray</SelectItem>
+                                  <SelectItem value="red">Red</SelectItem>
+                                  <SelectItem value="blue">Blue</SelectItem>
+                                  <SelectItem value="green">Green</SelectItem>
+                                  <SelectItem value="brown">Brown</SelectItem>
+                                  <SelectItem value="beige">Beige</SelectItem>
+                                  <SelectItem value="yellow">Yellow</SelectItem>
+                                  <SelectItem value="orange">Orange</SelectItem>
+                                  <SelectItem value="gold">Gold</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div>
+                              <Label htmlFor="mobile-phone" className="mb-2 block">
+                                Mobile Phone <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="mobile-phone"
+                                type="tel"
+                                placeholder="(555) 555-5555"
+                                value={mobilePhone}
+                                onChange={(e) => setMobilePhone(e.target.value)}
+                              />
+                              <p className="text-xs text-gray-500 mt-1">
+                                Please enter the mobile phone number of the person picking up the order. We will text you a link shortly before your pick-up time to check in when you arrive.
+                              </p>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-sm text-gray-600 mb-4">
+                            Pick up your order inside the restaurant. Please share the name and phone number for the person picking up.
+                          </p>
+
+                          <div className="space-y-4">
+                            <div>
+                              <Label htmlFor="in-store-pickup-name" className="mb-2 block">
+                                Pickup Name <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="in-store-pickup-name"
+                                type="text"
+                                placeholder="Enter the name of the person picking up"
+                                value={inStorePickupName}
+                                onChange={(e) => setInStorePickupName(e.target.value)}
+                              />
+                            </div>
+
+                            <div>
+                              <Label htmlFor="in-store-mobile-phone" className="mb-2 block">
+                                Mobile Phone <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="in-store-mobile-phone"
+                                type="tel"
+                                placeholder="(555) 555-5555"
+                                value={mobilePhone}
+                                onChange={(e) => setMobilePhone(e.target.value)}
+                              />
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 )}
